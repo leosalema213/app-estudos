@@ -5,4 +5,5 @@ import './styles.css';
 import './theme.css';
 import './density.css';
 import './plans.css';
+import './notebook.css';
 createRoot(document.getElementById('root')).render(<App />);

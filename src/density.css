@@ -22,6 +22,8 @@
 .sidebar { width:var(--sidebar-width); }
 .brand { height:var(--brand-height);font-size:24px;padding:0 8px;gap:8px; }
 .brand-mark { flex-shrink:0; }
+.brand .app-version { display:block;font-size:9px;line-height:1;font-weight:400;letter-spacing:.2px;color:#999;margin-top:5px; }
+[data-theme="dark"] .brand .app-version { color:#666; }
 .sidebar nav button,.settings-button { white-space:nowrap; }
 .workspace-label { padding-top:12px;padding-bottom:9px; }
 .sidebar nav button { height:38px; }

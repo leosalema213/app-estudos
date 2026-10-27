@@ -37,7 +37,7 @@ else {
       version: app.getVersion(), cacheDir: path.join(app.getPath('userData'), 'updates'), fetchImpl: net.fetch.bind(net),
       emit: status => { if (!win.isDestroyed()) win.webContents.send('updates:status', status); },
       launchInstaller: file => new Promise((resolve, reject) => {
-        const child = spawn(file, ['--updated', '--force-run'], { detached: true, stdio: 'ignore' });
+        const child = spawn(file, ['/S', '--updated', '--force-run'], { detached: true, stdio: 'ignore', windowsHide: true });
         child.once('error', reject); child.once('spawn', () => { child.unref(); resolve(); });
       }),
       onQuit: () => setTimeout(() => app.quit(), 100),

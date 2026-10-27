@@ -1,5 +1,16 @@
 # Histórico de versões
 
+## 0.4.1
+
+- Caderno de anotações ampliado, com busca, lista recolhível e editor preparado para textos longos.
+- Nova anotação no cabeçalho; data e vínculo com aula disponíveis em Detalhes, sem ocupar o editor por padrão.
+- Ícone próprio de caderno e prévia recolhível das últimas anotações nos planos.
+- Exclusão pelo botão da nota, com confirmação separada e preservação das demais notas.
+- Arraste de aulas no editor de plano restrito à alça da esquerda, permitindo selecionar texto normalmente nos campos.
+- Regra do projeto para solicitar confirmação de encerramento do lote antes de commit, push ou Release e incrementar PATCH por padrão.
+- Atualizações em segundo plano, sem repetir o assistente, com reinício automático; a instalação inicial continua guiada.
+- Versão do aplicativo exibida discretamente abaixo da logo na sidebar.
+
 ## 0.4.0
 
 - Instalador assistido em português com apresentação, escolha da pasta, confirmação e tela de sucesso com opção de abrir o aplicativo.

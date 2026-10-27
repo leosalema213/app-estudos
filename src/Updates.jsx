@@ -34,7 +34,7 @@ const messages = {
   available: 'Há uma nova versão disponível.',
   downloading: 'Baixando a atualização…',
   ready: 'Atualização pronta para instalar.',
-  installing: 'Abrindo o instalador…',
+  installing: 'Aplicando atualização… O app será reaberto.',
   error: 'Não foi possível verificar ou baixar agora. Tente novamente.',
 };
 export function UpdateSettings({ updates }) {
@@ -49,5 +49,5 @@ export function UpdateDialog({ updates, onInstall, Modal }) {
   const { state, dismiss } = updates;
   const ready = state.status === 'ready';
   const busy = ['downloading', 'installing'].includes(state.status);
-  return <Modal title={ready ? 'Pronto para atualizar' : 'Nova versão disponível'} subtitle={`Compasso ${state.currentVersion} → ${state.version}`} onClose={dismiss} small><div className="update-body"><p>{state.status === 'error' ? state.message : ready ? 'O app será fechado para abrir o instalador. Ao concluir, você poderá escolher abrir o Compasso. Seus dados serão mantidos.' : busy ? 'Você pode continuar estudando enquanto o download termina.' : 'Deseja baixar e atualizar o aplicativo?'}</p>{busy && <><progress max="100" value={state.percent || 0} /><span>{Math.round(state.percent || 0)}%</span></>}<div className="modal-actions"><button className="secondary" onClick={dismiss}>{busy ? 'Continuar estudando' : 'Depois'}</button>{!busy && <button className="primary" onClick={ready ? onInstall : updates.download}><Download size={15} />{ready ? 'Abrir instalador' : 'Baixar atualização'}</button>}</div></div></Modal>;
+  return <Modal title={state.status === 'installing' ? 'Atualizando o Compasso' : ready ? 'Pronto para atualizar' : 'Nova versão disponível'} subtitle={`Compasso ${state.currentVersion} → ${state.version}`} onClose={dismiss} small><div className="update-body"><p>{state.status === 'error' ? state.message : state.status === 'installing' ? 'Aplicando a atualização em segundo plano. O aplicativo será reaberto ao terminar.' : ready ? 'O app será fechado por alguns instantes, atualizado em segundo plano e reaberto. Seus dados serão mantidos.' : busy ? 'Você pode continuar estudando enquanto o download termina.' : 'Deseja baixar e atualizar o aplicativo?'}</p>{busy && <><progress max="100" value={state.status === 'installing' ? undefined : state.percent || 0} /><span>{state.status === 'installing' ? 'Reiniciando…' : `${Math.round(state.percent || 0)}%`}</span></>}<div className="modal-actions">{state.status !== 'installing' && <button className="secondary" onClick={dismiss}>{busy ? 'Continuar estudando' : 'Depois'}</button>}{!busy && <button className="primary" onClick={ready ? onInstall : updates.download}><Download size={15} />{ready ? 'Atualizar e reiniciar' : 'Baixar atualização'}</button>}</div></div></Modal>;
 }

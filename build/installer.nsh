@@ -1,5 +1,14 @@
 ﻿!include "nsDialogs.nsh"
 
+; Older app versions send these flags without /S. Keep their updates silent too.
+; Opening the installer normally still shows the full first-install wizard.
+!macro customInit
+  ${If} ${isUpdated}
+  ${AndIf} ${isForceRun}
+    SetSilent silent
+  ${EndIf}
+!macroend
+
 !macro customWelcomePage
   !define MUI_WELCOMEPAGE_TITLE "Bem-vindo ao Compasso"
   !define MUI_WELCOMEPAGE_TEXT "Aplicativo de estudos para Windows com planos por dia da semana, cronômetro de aulas e descansos, caderno com imagens e histórico de estudo.$\r$\n$\r$\nFunciona localmente, sem conta e sem servidor.$\r$\n$\r$\nNas próximas etapas, escolha onde instalar e confirme a instalação.$\r$\n$\r$\nClique em Próximo para continuar."

@@ -12,11 +12,13 @@ O link de download permanece o mesmo em todas as versões publicadas. A versão 
 
 ![Planos de estudo na visualização em lista](docs/planos-lista.png)
 
+![Caderno de anotações ampliado](docs/caderno.png)
+
 ## Abrir
 
 Baixe e execute o instalador acima para adicionar o Compasso ao menu Iniciar e à área de trabalho. O aplicativo verifica novas versões ao abrir e pergunta antes de baixar ou instalar uma atualização. Também é possível verificar manualmente nas preferências. Seus planos, histórico e anotações são mantidos na atualização.
 
-O instalador apresenta o aplicativo, permite escolher a pasta e pede confirmação antes de instalar. Ao concluir, mostra **Instalado com sucesso**, com a opção **Abrir o Compasso agora** desmarcada para você escolher. Nas atualizações, a pasta já instalada é preservada.
+Na instalação inicial, o instalador apresenta o aplicativo, permite escolher a pasta e pede confirmação antes de instalar. Ao concluir, mostra **Instalado com sucesso**, com a opção **Abrir o Compasso agora** desmarcada para você escolher. As atualizações iniciadas pelo app são silenciosas: preservam a pasta existente e reabrem o Compasso ao terminar, sem repetir o assistente.
 
 Para testar uma compilação local, abra `Abrir Compasso.lnk` ou `release/<versão>/win-unpacked/Compasso.exe`. Mantenha a pasta `win-unpacked` completa. O instalador gerado fica em `release/<versão>/Compasso-Instalar.exe`. Nenhuma dessas versões precisa de Node ou de um servidor para usar.
 
@@ -56,6 +58,7 @@ npm run dist
 - Novos perfis seguem o tema do dispositivo. Alterações manuais pelo sol/lua ou pelas preferências ficam salvas, independentemente do Windows. Nas preferências, **Seguir dispositivo** restaura o modo automático. O escuro usa preto e cinzas neutros, com vidro nativo Acrylic no Windows 11 22H2 ou superior e fundo sólido nos sistemas sem suporte.
 - Consultar horas reais de estudo, aulas concluídas e médias semanais e mensais. Descansos e pausas não contam como foco. Marcar uma aula manualmente não acrescenta horas.
 - Usar um caderno por plano, com páginas datadas, vínculo opcional com a aula, texto, imagens, prints colados e rabiscos. Imagens PNG/JPG/WebP até 4 MB cada.
+- Expandir as últimas notas no próprio plano ou abrir o caderno ampliado. A lista tem busca e pode ser recolhida; textos longos crescem no editor, com uma única área de rolagem. A exclusão de uma nota pede confirmação separada.
 - Exportar e restaurar backup JSON, incluindo histórico e imagens.
 
 ## Persistência e comportamento do relógio
@@ -80,9 +83,13 @@ Os testes de modelo verificam conclusão automática, pausa, troca de aulas, des
 
 Os testes também verificam edição individual, preferências de densidade, aviso de atualização, download e instalação somente após confirmação, além da rejeição de downloads corrompidos. Os testes de atualização simulam a execução do instalador; não instalam nada no computador.
 
+Depois de `npm run dist`, execute `npm run test:installer` para validar o modo silencioso. O teste compila um programa NSIS mínimo usando a mesma macro de inicialização do instalador e os mesmos parâmetros do electron-builder. Ele apenas grava o modo escolhido e sai, sem instalar arquivos do app, criar atalhos ou alterar o registro. Cobre a instalação normal, os atualizadores antigos e o atual.
+
 ## Publicar uma versão
 
-1. Atualize a versão em `package.json` e `package-lock.json` com `npm version patch --no-git-tag-version` (ou `minor`).
+Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lote está encerrado e que ele autoriza a publicação, conforme `AGENTS.md`. Por padrão, incremente apenas PATCH; use MINOR ou MAJOR somente se o usuário pedir explicitamente.
+
+1. Atualize a versão em `package.json` e `package-lock.json` com `npm version patch --no-git-tag-version`.
 2. Execute `npm test`, `npm run build` e `npm run test:ui`.
 3. Gere os arquivos com `npm run dist` e `npm run checksums`.
 4. Faça commit e envie para `origin/main`.
@@ -92,6 +99,8 @@ O script usa a autenticação existente do Git, ou `GH_TOKEN`/`GITHUB_TOKEN` no 
 
 ## Atualizações no aplicativo
 
-Ao abrir, o Compasso consulta a última Release pública de `leosalema213/app-estudos` sem bloquear a interface. Uma versão mais nova abre o aviso com as opções **Depois** e **Baixar atualização**. O download só começa após essa escolha. Quando termina, **Abrir instalador** pausa o cronômetro, salva os dados e abre o assistente de instalação. Na tela final você escolhe se deseja abrir o aplicativo.
+Ao abrir, o Compasso consulta a última Release pública de `leosalema213/app-estudos` sem bloquear a interface. Uma versão mais nova abre o aviso com as opções **Depois** e **Baixar atualização**. O download só começa após essa escolha e mostra uma barra de progresso. Quando termina, **Atualizar e reiniciar** pausa o cronômetro, salva os dados e aplica a atualização em segundo plano. O app fecha brevemente e reabre ao concluir. O instalador reconhece também os parâmetros enviados pelas versões 0.3 e 0.4, tornando esta atualização silenciosa para elas.
+
+O pacote completo ainda é baixado a cada versão; não há download diferencial. O modo silencioso remove as etapas repetidas do assistente, mas não elimina o tempo necessário para baixar e substituir os arquivos. A versão instalada aparece abaixo da logo e nas preferências.
 
 O instalador é baixado exclusivamente das Releases deste repositório. O tamanho e SHA-256 são conferidos antes de oferecer a instalação e novamente antes de executar o arquivo. Sem conexão, o app continua funcionando e permite tentar novamente nas preferências. Versões antigas (0.1 e 0.2) precisam ser atualizadas manualmente uma vez para receber esse recurso.

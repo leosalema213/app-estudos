@@ -20,8 +20,12 @@ let app;
   await page.getByRole('button', { name: 'Cadernos', exact: true }).click();
   await page.getByRole('button', { name: 'Novo caderno', exact: true }).click();
   let modal = page.getByRole('dialog', { name: 'Novo caderno', exact: true });
+  async function chooseIcon(name) {
+    await modal.getByRole('button', { name: 'Escolher ícone do caderno', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Escolher ícone', exact: true }).getByRole('button', { name, exact: true }).click();
+  }
   await modal.getByRole('textbox', { name: 'Nome do caderno', exact: true }).fill('Diário');
-  await modal.getByRole('button', { name: 'Diário', exact: true }).click();
+  await chooseIcon('Diário');
   await modal.getByRole('button', { name: 'Cor Rosa', exact: true }).click();
   const png = await page.evaluate(() => {
     const canvas = document.createElement('canvas'); canvas.width = 160; canvas.height = 80;
@@ -99,7 +103,7 @@ let app;
   await page.getByRole('button', { name: 'Editar caderno', exact: true }).click();
   modal = page.getByRole('dialog', { name: 'Editar caderno', exact: true });
   await modal.getByRole('textbox', { name: 'Nome do caderno', exact: true }).fill('Meu diário');
-  await modal.getByRole('button', { name: 'Sem ícone', exact: true }).click();
+  await chooseIcon('Sem ícone');
   await modal.getByLabel('Cor personalizada do caderno', { exact: true }).evaluate(el => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, '#203628');
     el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
@@ -112,7 +116,7 @@ let app;
     await page.getByRole('button', { name: 'Novo caderno', exact: true }).click();
     modal = page.getByRole('dialog', { name: 'Novo caderno', exact: true });
     await modal.getByRole('textbox', { name: 'Nome do caderno', exact: true }).fill(name);
-    await modal.getByRole('button', { name: icon, exact: true }).click();
+    await chooseIcon(icon);
     await modal.getByRole('button', { name: `Cor ${color}`, exact: true }).click();
     await modal.getByRole('button', { name: 'Salvar caderno', exact: true }).click();
     await page.getByRole('button', { name: 'Todos os cadernos', exact: true }).click();

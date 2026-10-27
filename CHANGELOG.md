@@ -1,5 +1,23 @@
 # Histórico de versões
 
+## 0.4.5
+
+- Planos com escolha independente de ícone e cor, incluindo cor personalizada; ícones anteriores preservados até editar.
+- Biblioteca compartilhada com mais de 70 ícones e busca, disponível em planos e cadernos.
+- Escolha de ícone em popup separado, sem expandir o formulário; seleção fecha o popup e Escape cancela sem fechar a edição.
+- Ação de concluir o plano inteiro, separada dos checks diários, com confirmação e possibilidade de reabrir.
+- Filtros Em andamento, Finalizados e Todos; planos finalizados saem de Meu dia e mantêm histórico e anotações.
+- Meu progresso mostra planos concluídos por semana/mês, total geral e lista com datas de conclusão.
+- Duplicar um plano finalizado cria uma cópia em andamento, com o mesmo ícone e cor e sem copiar o histórico.
+- Nova área Notas com título, descrição, data específica ou recorrência diária.
+- Notas pendentes aparecem abaixo dos indicadores de Meu dia, com destaque visual; marcar como vista oculta a nota e a seção some quando vazia.
+- Confirmações independentes por dia, com opção de marcar como não vista, editar e excluir com confirmação.
+- Preferência global para contabilizar a duração ao concluir manualmente, desativada por padrão.
+- O check completa apenas o tempo que falta, evitando duplicação; desfazer retira só o acréscimo manual e mantém o tempo real do cronômetro.
+- Notas, confirmações e tempo manual incluídos nos backups; dados anteriores preservados.
+- Meu dia acompanha a virada da data quando está mostrando o dia atual, inclusive com o cronômetro parado.
+- Edições de cadernos e notas são salvas sem aguardar o intervalo do cronômetro ativo.
+
 ## 0.4.4
 
 - Área Cadernos independente dos planos de estudo, com vários cadernos e páginas.

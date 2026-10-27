@@ -1,6 +1,6 @@
 {
   "name": "compasso-estudos",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": true,
   "description": "Seu ritmo de estudo, um bloco de cada vez.",
   "author": "Compasso",
@@ -17,6 +17,8 @@
     "test:ui": "node tests/ui.cjs",
     "test:notebook": "node tests/notebook.cjs",
     "test:library": "node tests/library.cjs",
+    "test:reminders": "node tests/reminders.cjs",
+    "test:plans": "node tests/plans.cjs",
     "test:installer": "node tests/installer-mode.cjs",
     "dist": "npm run build && electron-builder --win nsis --x64",
     "dist:portable": "npm run build && electron-builder --win portable --x64",

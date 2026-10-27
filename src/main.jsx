@@ -9,4 +9,5 @@ import './notebook.css';
 import './preferences.css';
 import './palettes.css';
 import './library.css';
+import './reminders.css';
 createRoot(document.getElementById('root')).render(<App />);

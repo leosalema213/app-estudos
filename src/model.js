@@ -1,5 +1,6 @@
 import { isNoteImage, validNoteDocument } from './note-document.js';
 import { isNotebookColor, notebookIcons } from './book-appearance.js';
+import { calendarDate, validReminders } from './reminders.js';
 
 export const uid = () => crypto.randomUUID();
 export const dayKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -14,16 +15,16 @@ export const themePresets = [
 ];
 export function orderedNotes(notes) { return [...notes].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)); }
 export function preferences(settings = {}) {
-  return { sound: settings.sound !== false, theme: ['light', 'dark', 'custom'].includes(settings.theme) ? settings.theme : 'system', palette: themePresets.some(p => p.id === settings.palette) ? settings.palette : 'pink', density: densities.includes(settings.density) ? settings.density : 'compact', plansView: settings.plansView === 'list' ? 'list' : 'cards' };
+  return { sound: settings.sound !== false, creditManualTime: settings.creditManualTime === true, theme: ['light', 'dark', 'custom'].includes(settings.theme) ? settings.theme : 'system', palette: themePresets.some(p => p.id === settings.palette) ? settings.palette : 'pink', density: densities.includes(settings.density) ? settings.density : 'compact', plansView: settings.plansView === 'list' ? 'list' : 'cards' };
 }
 export const recordKey = (date, planId, blockId) => `${date}|${planId}|${blockId}`;
 export function newBlock(type = 'lesson') { return { id: uid(), type, name: type === 'break' ? 'Pausa para respirar' : 'Nova aula', minutes: type === 'break' ? 5 : 25 }; }
-export function newPlan() { return { id: uid(), name: '', description: '', color: 'violet', days: [1, 2, 3, 4, 5], blocks: [newBlock(), newBlock('break'), newBlock()], notes: [] }; }
+export function newPlan() { return { id: uid(), name: '', description: '', color: 'violet', icon: 'sparkles', completedAt: null, days: [1, 2, 3, 4, 5], blocks: [newBlock(), newBlock('break'), newBlock()], notes: [] }; }
 export { notebookIcons } from './book-appearance.js';
 export function newPage() { return { id: uid(), title: '', date: dayKey(), text: '', images: [] }; }
 export function newNotebook() { return { id: uid(), name: '', icon: 'book', color: 'violet', cover: null, pages: [newPage()] }; }
 export function seed() {
-  return { version: 1, plans: [], notebooks: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
+  return { version: 1, plans: [], notebooks: [], reminders: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
 }
 export function firstPlan() {
   const plan = newPlan();
@@ -32,7 +33,7 @@ export function firstPlan() {
 export function getRecord(state, date, planId, blockId) { return state.records[recordKey(date, planId, blockId)] || { elapsedMs: 0, done: false }; }
 export function dailySummary(state, date) {
   const weekday = new Date(`${date}T12:00:00`).getDay();
-  const plans = state.plans.filter(plan => plan.days.includes(weekday));
+  const plans = state.plans.filter(plan => !plan.completedAt && plan.days.includes(weekday));
   const blocks = plans.flatMap(plan => plan.blocks.map(block => ({ plan, block })));
   const completed = blocks.filter(({ plan, block }) => getRecord(state, date, plan.id, block.id).done).length;
   const studyMinutes = blocks.reduce((total, { block }) => total + (block.type === 'lesson' ? block.minutes : 0), 0);
@@ -43,6 +44,20 @@ export function setDone(state, date, planId, blockId, done) {
   const plan = state.plans.find(p => p.id === planId);
   const block = plan?.blocks.find(b => b.id === blockId);
   return { ...state, records: { ...state.records, [key]: { ...getRecord(state, date, planId, blockId), done, type: block?.type || 'lesson', planName: plan?.name, blockName: block?.name } } };
+}
+export function setManualDone(state, date, planId, blockId, done, now = Date.now()) {
+  const block = state.plans.find(plan => plan.id === planId)?.blocks.find(value => value.id === blockId);
+  if (!block) return state;
+  const matches = state.active?.planId === planId && state.active?.blockId === blockId && state.active.date === date;
+  const settled = matches ? pause(state, now) : state;
+  const previous = getRecord(settled, date, planId, blockId);
+  const credit = done && !previous.done && settled.settings.creditManualTime === true ? Math.max(0, block.minutes * 60000 - previous.elapsedMs) : 0;
+  const manualMs = done ? (previous.manualMs || 0) + credit : 0;
+  const elapsedMs = previous.elapsedMs + credit - (done ? 0 : previous.manualMs || 0);
+  const next = setDone(settled, date, planId, blockId, done);
+  next.records[recordKey(date, planId, blockId)] = { ...getRecord(next, date, planId, blockId), elapsedMs, manualMs };
+  if (matches && ((done && settled.settings.creditManualTime) || (!done && previous.manualMs))) next.active = { ...next.active, remainingMs: done ? 0 : Math.max(0, next.active.totalMs - elapsedMs), running: false };
+  return next;
 }
 // Accrue wall-clock time rather than counting interval ticks. Split sessions at local midnight.
 export function tick(state, now = Date.now()) {
@@ -70,6 +85,7 @@ export function tick(state, now = Date.now()) {
   return { state: { ...state, records, active: { ...active, remainingMs, startedAt: Math.max(now, active.startedAt), running: !finished } }, finished };
 }
 export function play(state, plan, block, date = dayKey(), now = Date.now()) {
+  if (state.plans.find(value => value.id === plan.id)?.completedAt) return state;
   const settled = tick(state, now).state;
   if (settled.active?.planId === plan.id && settled.active.blockId === block.id && settled.active.date === date && settled.active.remainingMs > 0) {
     return { ...settled, active: { ...settled.active, running: !settled.active.running, startedAt: now } };
@@ -77,6 +93,17 @@ export function play(state, plan, block, date = dayKey(), now = Date.now()) {
   return { ...settled, active: { planId: plan.id, blockId: block.id, date, type: block.type, planName: plan.name, blockName: block.name, totalMs: block.minutes * 60000, remainingMs: block.minutes * 60000, startedAt: now, running: true } };
 }
 export function pause(state, now = Date.now()) { const next = tick(state, now).state; return { ...next, active: next.active ? { ...next.active, running: false } : null }; }
+export function setPlanCompleted(state, planId, completed, now = Date.now()) {
+  const plan = state.plans.find(value => value.id === planId);
+  if (!plan || !!plan.completedAt === completed) return state;
+  let next = state;
+  if (completed && state.active?.planId === planId) next = { ...pause(state, now), active: null };
+  return { ...next, plans: next.plans.map(value => value.id === planId ? { ...value, completedAt: completed ? dayKey(new Date(now)) : null } : value) };
+}
+export function completedPlanSummary(plans, from, to) {
+  const all = plans.filter(plan => !!plan.completedAt);
+  return { total: all.length, inPeriod: all.filter(plan => plan.completedAt >= from && plan.completedAt <= to).sort((a, b) => b.completedAt.localeCompare(a.completedAt)) };
+}
 export function resetTimer(state, now = Date.now()) { const next = pause(state, now); return { ...next, active: next.active ? { ...next.active, remainingMs: next.active.totalMs } : null }; }
 export function editBlock(state, planId, blockId, fields, now = Date.now()) {
   const name = fields.name.trim(); const minutes = Number(fields.minutes);
@@ -99,7 +126,7 @@ export function validateData(data) {
   if (data?.version !== 1 || !Array.isArray(data.plans) || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw new Error('O arquivo não é um backup válido do Compasso.');
   const ids = new Set();
   for (const p of data.plans) {
-    if (!p.id || ids.has(p.id) || typeof p.name !== 'string' || !colors.includes(p.color) || !Array.isArray(p.days) || p.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || !Array.isArray(p.blocks) || !Array.isArray(p.notes)) throw new Error('Plano inválido no backup.');
+    if (!p.id || ids.has(p.id) || typeof p.name !== 'string' || !isNotebookColor(p.color) || (p.icon !== undefined && !notebookIcons.includes(p.icon)) || (p.completedAt !== undefined && p.completedAt !== null && !calendarDate(p.completedAt)) || !Array.isArray(p.days) || p.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || !Array.isArray(p.blocks) || !Array.isArray(p.notes)) throw new Error('Plano inválido no backup.');
     ids.add(p.id);
     for (const b of p.blocks) {
       if (!b.id || ids.has(b.id) || !['lesson', 'break'].includes(b.type) || typeof b.name !== 'string' || !Number.isFinite(b.minutes) || b.minutes < 1 || b.minutes > 360) throw new Error('Bloco inválido no backup.');
@@ -116,6 +143,7 @@ export function validateData(data) {
       ids.add(page.id);
     }
   }
-  for (const [key, rec] of Object.entries(data.records)) if (!/^\d{4}-\d{2}-\d{2}\|/.test(key) || !rec || !Number.isFinite(rec.elapsedMs) || rec.elapsedMs < 0 || typeof rec.done !== 'boolean') throw new Error('Histórico inválido no backup.');
-  return { ...data, notebooks: data.notebooks || [], active: null, settings: preferences(data.settings) };
+  if (data.reminders !== undefined && !validReminders(data.reminders)) throw new Error('Notas inválidas no backup.');
+  for (const [key, rec] of Object.entries(data.records)) if (!/^\d{4}-\d{2}-\d{2}\|/.test(key) || !rec || !Number.isFinite(rec.elapsedMs) || rec.elapsedMs < 0 || typeof rec.done !== 'boolean' || (rec.manualMs !== undefined && (!Number.isFinite(rec.manualMs) || rec.manualMs < 0 || rec.manualMs > rec.elapsedMs))) throw new Error('Histórico inválido no backup.');
+  return { ...data, notebooks: data.notebooks || [], reminders: data.reminders || [], active: null, settings: preferences(data.settings) };
 }

@@ -11,6 +11,15 @@ Não comitar nem publicar este lote até o usuário encerrar os pedidos e confir
 
 ## Próximo lote (após publicar a 0.4.4)
 
-- [ ] Notas com título, descrição, dia específico ou recorrência diária; exibir em Meu dia e ocultar ao marcar como vista.
-- [ ] Preferência global, desativada por padrão, para contabilizar a duração cadastrada ao concluir manualmente um bloco.
-- [ ] Confirmar o encerramento deste novo lote antes de comitar ou publicar a próxima versão.
+- [x] Notas com título, descrição, dia específico ou recorrência diária; exibir em Meu dia e ocultar ao marcar como vista.
+- [x] Preferência global, desativada por padrão, para contabilizar a duração cadastrada ao concluir manualmente um bloco.
+- [x] Escolha de ícone e cor para planos, com biblioteca ampla e busca compartilhada com cadernos.
+- [x] Abrir a biblioteca de ícones em popup separado, mantendo a edição do plano ou caderno aberta.
+- [x] Concluir e reabrir planos, filtros por situação e indicadores de planos concluídos no progresso.
+- [x] Usuário autorizou encerrar e publicar a 0.4.5.
+
+## Próximo lote
+
+- [ ] Preferência de iniciar com o Windows, ativada por padrão.
+- [ ] Opção Lembrar-me nas notas, desativada por padrão, e notificação ao abrir com notas pendentes.
+- [ ] Confirmar o encerramento antes de comitar ou publicar a próxima versão.

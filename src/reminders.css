@@ -1,0 +1,31 @@
+.daily-notes,.reminders-page { --note-bg:#fff8e9;--note-line:#e5d19f;--note-ink:#644e24;--note-muted:#806a3c; }
+[data-theme="dark"] :is(.daily-notes,.reminders-page) { --note-bg:#292419;--note-line:#6e5a32;--note-ink:#f2dcaa;--note-muted:#c4af82; }
+.daily-notes { margin:0 0 22px; }
+.daily-notes-heading { display:flex;align-items:center;gap:7px;margin-bottom:9px;color:var(--note-muted); }
+.daily-notes-heading h2 { font-size:12px;letter-spacing:0;flex:1;color:inherit; }
+.daily-notes-heading h2 span { font-size:10px;margin-left:5px;font-weight:400; }
+.daily-notes-heading>button { display:flex;align-items:center;gap:4px;font-size:10px;padding:5px 7px;color:inherit;border-radius:5px; }
+.daily-notes-heading>button:hover { background:#88888810; }
+.reminder-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,265px),1fr));gap:10px; }
+.reminder-card { display:flex;align-items:flex-start;gap:10px;border:1px solid var(--note-line);border-left-width:3px;border-radius:7px;background:var(--note-bg);color:var(--note-ink);padding:12px;min-width:0; }
+.reminder-check { display:grid;place-items:center;width:18px;height:18px;border:1px solid var(--note-muted);border-radius:4px;flex-shrink:0;margin-top:1px;color:var(--note-ink); }
+.reminder-check:hover { background:#88888818; }
+.reminder-copy { min-width:0;flex:1; }
+.reminder-title { padding:0;font-size:12px;font-weight:600;text-align:left;color:var(--note-ink);overflow-wrap:anywhere; }
+.reminder-copy p { font-size:11px;line-height:1.65;margin:5px 0 7px;color:var(--note-ink);white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden; }
+.reminder-copy small { display:flex;align-items:center;gap:4px;margin-top:7px;font-size:9px;color:var(--note-muted); }
+.reminder-actions { display:flex;gap:2px;flex-shrink:0; }
+.reminder-actions .icon-button { width:22px;height:22px;color:var(--note-muted); }
+.reminder-card.is-seen { opacity:.6;border-left-width:1px; }
+.reminder-card.is-seen .reminder-title { text-decoration:line-through; }
+.reminders-hint,.reminder-day-label { font-size:10px;color:#999; }
+.reminders-hint { margin-top:17px; }
+.reminders-empty { display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;min-height:220px;color:#999;font-size:12px; }
+.reminder-form { padding:20px 24px 0; }
+.reminder-form>label { display:flex;flex-direction:column;gap:7px;color:#999;font-size:11px;margin-bottom:16px; }
+.reminder-form textarea { resize:vertical;min-height:100px;max-height:240px; }
+.reminder-schedule { display:flex;gap:8px;margin-bottom:16px; }
+.reminder-schedule button { display:flex;align-items:center;gap:6px;border:1px solid #88888830;border-radius:6px;padding:8px 10px;font-size:11px;color:#999; }
+.reminder-schedule button.selected { border-color:currentColor;color:inherit;background:#88888810; }
+.reminder-form .modal-actions { margin:20px 0 0!important; }
+@media(max-width:680px) { .reminder-day-label { display:none; }.reminder-card { padding:10px;gap:8px; } }

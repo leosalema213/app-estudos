@@ -20,6 +20,12 @@ O link de download permanece o mesmo em todas as versões publicadas. A versão 
 
 ![Página com formatação e índice de títulos](docs/pagina-caderno.png)
 
+![Notas do dia abaixo dos indicadores](docs/notas-do-dia.png)
+
+![Ícones e cores personalizáveis nos planos](docs/aparencia-plano.png)
+
+![Planos concluídos no progresso](docs/planos-concluidos.png)
+
 ## Abrir
 
 Baixe e execute o instalador acima para adicionar o Compasso ao menu Iniciar e à área de trabalho. O aplicativo verifica novas versões ao abrir e pergunta antes de baixar ou instalar uma atualização. Também é possível verificar manualmente nas preferências. Seus planos, histórico e anotações são mantidos na atualização.
@@ -52,6 +58,10 @@ npm run dist
 
 - No primeiro uso, um tutorial curto orienta a criação do seu primeiro plano, com **Aula 1**, **Descanso** e **Aula 2** editáveis. Nenhum plano é adicionado automaticamente. O tutorial pode ser pulado; dados de versões anteriores são mantidos.
 - Criar, editar, duplicar e excluir planos; escolher dias da semana e cores.
+- Escolher o ícone de cada plano independentemente da cor, com mais de 70 opções e busca. A paleta oferece tons pastéis e uma cor personalizada.
+- O seletor de ícones abre em um popup separado nos planos e cadernos. Escolher um ícone fecha o popup; X ou Escape volta à edição sem alterar a seleção.
+- Concluir um plano inteiro para retirá-lo do Meu dia, preservando histórico e anotações. Em Planos de estudo, alterne entre **Em andamento**, **Finalizados** e **Todos**; planos finalizados podem ser reabertos.
+- Em Meu progresso, consultar quantos planos foram concluídos na semana ou no mês selecionado, o total geral e a lista com as datas. Os checks de aulas e descansos continuam sendo diários e não encerram o plano automaticamente.
 - Exibir os planos em **cards** ou **lista**, pelo seletor ao lado de Seus planos. A preferência fica salva.
 - Adicionar aulas e descansos, renomear, ajustar duração e reordenar arrastando ou pelas setas.
 - Ver o roteiro da data selecionada, filtrando planos pendentes, em progresso e concluídos.
@@ -64,7 +74,7 @@ npm run dist
 - Usar uma janela compacta de **340 × 112 px**, de tamanho fixo, arrastável pelo título e sempre sobre as outras janelas. O acesso fica em um ícone discreto no player. Expandir ou fechar esse modo retorna ao app e mantém o cronômetro.
 - O modo compacto lembra sua última posição, inclusive após reiniciar. Se o monitor usado não estiver mais disponível, a janela retorna para uma área visível. Tamanhos personalizados de versões anteriores voltam ao padrão.
 - Novos perfis seguem o tema do dispositivo. Alterações manuais pelo sol/lua ou pelas preferências ficam salvas, independentemente do Windows. Nas preferências, **Seguir dispositivo** restaura o modo automático. O escuro usa preto e cinzas neutros, com vidro nativo Acrylic no Windows 11 22H2 ou superior e fundo sólido nos sistemas sem suporte.
-- Consultar horas reais de estudo, aulas concluídas e médias semanais e mensais. Descansos e pausas não contam como foco. Marcar uma aula manualmente não acrescenta horas.
+- Consultar horas de estudo, aulas concluídas e médias semanais e mensais. Descansos e pausas não contam como foco. Por padrão, marcar uma aula manualmente não acrescenta horas; nas preferências, a contagem manual pode ser ativada.
 - Usar um caderno por plano, com páginas datadas, vínculo opcional com a aula, texto, imagens, prints colados e rabiscos. Imagens PNG/JPG/WebP até 4 MB cada.
 - Escrever como em um documento: cole prints ou insira imagens e rabiscos na posição do cursor, continue o texto abaixo e intercale novos trechos. Desfazer/refazer e a ordem do documento são preservados durante a edição; conteúdo e posição ficam salvos ao reabrir. Notas antigas mantêm o texto seguido das imagens na ordem anterior.
 - Expandir as últimas notas no próprio plano ou abrir o caderno ampliado. A lista tem busca e pode ser recolhida; textos longos crescem no editor, com uma única área de rolagem. A exclusão de uma nota pede confirmação separada.
@@ -75,11 +85,17 @@ npm run dist
 
 ## Cadernos pessoais
 
-Abra **Cadernos** na sidebar para criar espaços independentes dos planos, como Diário, Casa ou Pensamentos. Escolha nome, cor pastel ou personalizada, e um dos 24 ícones. Tanto a imagem de capa quanto o ícone são opcionais: use **Sem ícone** para deixar somente a imagem ou a cor. Cada caderno pode ter várias páginas, com busca pelo título ou conteúdo.
+Abra **Cadernos** na sidebar para criar espaços independentes dos planos, como Diário, Casa ou Pensamentos. Escolha nome, cor pastel ou personalizada e um ícone da biblioteca com busca, compartilhada com os planos. Tanto a imagem de capa quanto o ícone são opcionais: use **Sem ícone** para deixar somente a imagem ou a cor. Cada caderno pode ter várias páginas, com busca pelo título ou conteúdo.
 
 O título da página aparece no índice da esquerda. Se ele estiver vazio, o primeiro título do texto identifica a página automaticamente. Dentro da página, títulos de nível 1, 2 e 3 formam outro índice clicável. Digite `# `, `## ` ou `### ` no início de uma linha para criar um título, ou use o seletor de estilo da barra.
 
 A barra oferece negrito, itálico, tamanho de fonte, títulos, listas e desfazer/refazer. Imagens podem ser coladas, escolhidas por arquivo ou arrastadas para o texto; rabiscos usam a mesma posição do cursor. Páginas, capas e formatação ficam salvas localmente e entram no backup. Excluir uma página ou um caderno exige confirmação.
+
+## Notas do dia e tempo manual
+
+Em **Notas**, crie lembretes com título, descrição e uma data ou a opção **Todos os dias**. As notas pendentes aparecem abaixo dos indicadores de Meu dia, respeitando a data selecionada. Marcar como vista oculta a nota; quando todas forem vistas, a seção desaparece. Notas diárias voltam no dia seguinte. Na área Notas é possível editar, excluir ou desfazer a confirmação.
+
+Em **Preferências → Geral**, **Tempo ao concluir manualmente** vem desativado. Ao ativar, dar check completa o tempo cadastrado sem duplicar o que o cronômetro já registrou. Por exemplo, uma aula de 25 minutos com 3 cronometrados recebe 22 minutos manuais. Desfazer o check retira esses 22 minutos e mantém os 3 reais. Descansos continuam fora do tempo de foco. A preferência vale para todos os planos e fica salva.
 
 ## Persistência e comportamento do relógio
 
@@ -99,6 +115,8 @@ npm run build
 npm run test:ui
 npm run test:notebook
 npm run test:library
+npm run test:reminders
+npm run test:plans
 ```
 
 Os testes de modelo verificam conclusão automática, pausa, troca de aulas, descansos, distribuição diária, marcação manual e backups. O teste de interface abre uma instância isolada do Electron com dados temporários e verifica os fluxos principais. As capturas ficam em `test-output/`.
@@ -116,7 +134,7 @@ Depois de `npm run dist`, execute `npm run test:installer` para validar o modo s
 Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lote está encerrado e que ele autoriza a publicação, conforme `AGENTS.md`. Por padrão, incremente apenas PATCH; use MINOR ou MAJOR somente se o usuário pedir explicitamente.
 
 1. Atualize a versão em `package.json` e `package-lock.json` com `npm version patch --no-git-tag-version`.
-2. Execute `npm test`, `npm run build`, `npm run test:ui`, `npm run test:notebook` e `npm run test:library`.
+2. Execute `npm test`, `npm run build`, `npm run test:ui`, `npm run test:notebook`, `npm run test:library`, `npm run test:reminders` e `npm run test:plans`.
 3. Gere os arquivos com `npm run dist` e `npm run checksums`.
 4. Faça commit e envie para `origin/main`.
 5. Execute `npm run release`.

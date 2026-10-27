@@ -4,14 +4,17 @@ export const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 export const colors = ['violet', 'blue', 'orange', 'green', 'pink'];
 export const densities = ['minimal', 'compact', 'comfortable'];
 export function preferences(settings = {}) {
-  return { sound: settings.sound !== false, theme: settings.theme === 'light' ? 'light' : 'dark', density: densities.includes(settings.density) ? settings.density : 'compact' };
+  return { sound: settings.sound !== false, theme: ['light', 'dark'].includes(settings.theme) ? settings.theme : 'system', density: densities.includes(settings.density) ? settings.density : 'compact', plansView: settings.plansView === 'list' ? 'list' : 'cards' };
 }
 export const recordKey = (date, planId, blockId) => `${date}|${planId}|${blockId}`;
 export function newBlock(type = 'lesson') { return { id: uid(), type, name: type === 'break' ? 'Pausa para respirar' : 'Nova aula', minutes: type === 'break' ? 5 : 25 }; }
 export function newPlan() { return { id: uid(), name: '', description: '', color: 'violet', days: [1, 2, 3, 4, 5], blocks: [newBlock(), newBlock('break'), newBlock()], notes: [] }; }
 export function seed() {
-  const names = [['Desenvolvimento', 'Um pouco de código, todos os dias.', 'violet', 'JavaScript e frontend', 'Prática e projeto'], ['Infraestrutura', 'Entender o que acontece por trás.', 'blue', 'Fundamentos de infraestrutura', 'Laboratório prático'], ['Inglês', 'Pequenos passos para ir mais longe.', 'orange', 'Listening e vocabulário', 'Leitura e conversação']];
-  return { version: 1, plans: names.map(([name, description, color, a, b]) => ({ ...newPlan(), name, description, color, blocks: [{ ...newBlock(), name: a }, newBlock('break'), { ...newBlock(), name: b }, { ...newBlock('break'), minutes: 10 }] })), records: {}, active: null, settings: { sound: true }, createdAt: dayKey() };
+  return { version: 1, plans: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
+}
+export function firstPlan() {
+  const plan = newPlan();
+  return { ...plan, name: 'Meu primeiro plano', blocks: plan.blocks.map((block, i) => ({ ...block, name: block.type === 'lesson' ? `Aula ${i === 0 ? 1 : 2}` : 'Descanso' })) };
 }
 export function getRecord(state, date, planId, blockId) { return state.records[recordKey(date, planId, blockId)] || { elapsedMs: 0, done: false }; }
 export function setDone(state, date, planId, blockId, done) {

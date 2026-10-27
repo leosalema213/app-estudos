@@ -26,10 +26,10 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (win) { win.restore(); win.show(); win.focus(); } });
   app.whenReady().then(() => {
-    nativeTheme.themeSource = 'dark';
+    nativeTheme.themeSource = 'system';
     app.setAppUserModelId('br.com.compasso.estudos');
     win = new BrowserWindow({ width: 1260, height: 850, minWidth: 840, minHeight: 620, frame: false,
-      backgroundColor: supportsGlass ? '#00000000' : '#101010', backgroundMaterial: supportsGlass ? 'acrylic' : 'none',
+      backgroundColor: supportsGlass ? '#00000000' : nativeTheme.shouldUseDarkColors ? '#101010' : '#f6f7f9', backgroundMaterial: supportsGlass ? 'acrylic' : 'none',
       icon: path.join(__dirname, '../assets/icon.ico'), title: 'Compasso',
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
     win.setMenu(null);
@@ -53,9 +53,12 @@ else {
     ipcMain.handle('data:save', (e, data) => { if (trusted(e)) writeData(data); });
     ipcMain.handle('window:appearance', (e, theme) => {
       if (!trusted(e)) return;
-      nativeTheme.themeSource = theme === 'light' ? 'light' : 'dark';
-      if (!supportsGlass) win.setBackgroundColor(theme === 'light' ? '#f6f7f9' : '#101010');
+      nativeTheme.themeSource = ['light', 'dark'].includes(theme) ? theme : 'system';
+      if (!supportsGlass) win.setBackgroundColor(nativeTheme.shouldUseDarkColors ? '#101010' : '#f6f7f9');
       return { glass: supportsGlass };
+    });
+    nativeTheme.on('updated', () => {
+      if (!win.isDestroyed() && !supportsGlass) win.setBackgroundColor(nativeTheme.shouldUseDarkColors ? '#101010' : '#f6f7f9');
     });
     ipcMain.handle('window:compact', (e, value) => {
       if (!trusted(e) || compact === !!value) return;
@@ -66,7 +69,7 @@ else {
         if (wasMaximized) win.unmaximize();
         win.setMinimumSize(280, 100);
         win.setSize(340, 112);
-        win.setAlwaysOnTop(true, 'floating');
+        win.setAlwaysOnTop(true, 'pop-up-menu');
       } else {
         win.setAlwaysOnTop(false);
         win.setMinimumSize(840, 620);

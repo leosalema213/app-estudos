@@ -1,0 +1,32 @@
+.view-switch { display:flex;gap:3px;border:1px solid #e6e1eb;padding:3px;border-radius:6px;background:#fff; }
+.view-switch .icon-button { width:28px;height:26px; }
+.view-switch [aria-pressed="true"] { background:#eee8f7;color:#71558e; }
+[data-theme="dark"] .view-switch { background:#ffffff03;border-color:#ffffff12; }
+[data-theme="dark"] .view-switch [aria-pressed="true"] { background:#ffffff0c;color:#eee; }
+.plans-grid.plans-list { grid-template-columns:minmax(0,1fr);gap:9px; }
+.plans-list .overview-card { display:grid;grid-template-columns:36px minmax(100px,1fr) auto 26px auto;grid-template-areas:"icon title days edit actions" "icon meta days edit actions";align-items:center;column-gap:13px;row-gap:6px;padding:13px 16px; }
+.plans-list .overview-top { display:contents; }
+.plans-list .overview-top .plan-icon { grid-area:icon;width:34px;height:34px; }
+.plans-list .overview-top>.icon-button { grid-area:edit;width:26px; }
+.plans-list .overview-card h2 { grid-area:title;font-size:13px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.plans-list .overview-card>p { display:none; }
+.plans-list .weekdays { grid-area:days;margin:0;gap:4px; }
+.plans-list .weekdays span { width:20px;height:23px;font-size:9px; }
+.plans-list .overview-meta { grid-area:meta;font-size:10px;margin:0; }
+.plans-list .overview-actions { grid-area:actions;border:0;padding:0;gap:5px; }
+.plans-list .overview-actions>button:first-child { margin-right:8px;font-size:11px; }
+.plans-list .add-plan-card { min-height:55px;flex-direction:row;gap:10px; }
+.plans-list .add-plan-card>span { height:27px;width:27px;margin:0; }
+.plans-list .add-plan-card>span svg { width:17px;height:17px; }
+.plans-list .add-plan-card small { display:none; }
+.tutorial-body { padding:20px 25px 0; }
+.tutorial-body ol { list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:21px; }
+.tutorial-body li { display:flex;gap:12px;align-items:flex-start; }
+.tutorial-body li>svg { margin-top:2px;color:#a18ab4; }
+.tutorial-body strong { font-size:12px;font-weight:600;color:#6b557a; }
+.tutorial-body p { font-size:11px;color:#a591b0;line-height:1.7;margin-top:5px; }
+[data-theme="dark"] .tutorial-body strong { color:#ddd; }
+[data-theme="dark"] .tutorial-body p { color:#999; }
+[data-theme="dark"] .tutorial-body li>svg { color:#aaa; }
+@media(max-width:1000px) { .plans-list .weekdays { display:none; }.plans-list .overview-card { grid-template-columns:34px minmax(90px,1fr) 26px auto;grid-template-areas:"icon title edit actions" "icon meta edit actions"; } }
+@media(max-width:640px) { .plans-list .overview-card { gap:7px;padding:12px; }.plans-list .overview-actions>button:first-child { font-size:0;margin:0; }.plans-list .overview-meta { font-size:8px;gap:7px; }.plans-list .overview-card h2 { font-size:11px; }.plans-list .overview-actions { gap:0; }.plans-list .overview-actions .icon-button { width:22px; } }

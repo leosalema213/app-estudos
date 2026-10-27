@@ -1,6 +1,6 @@
 {
   "name": "compasso-estudos",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Seu ritmo de estudo, um bloco de cada vez.",
   "author": "Compasso",
@@ -50,10 +50,13 @@
     },
     "nsis": {
       "artifactName": "Compasso-Instalar.exe",
-      "oneClick": true,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "include": "build/installer.nsh",
+      "installerLanguages": ["pt_BR"],
       "perMachine": false,
       "createDesktopShortcut": true,
-      "runAfterFinish": false,
+      "runAfterFinish": true,
       "deleteAppDataOnUninstall": false
     },
     "portable": { "artifactName": "Compasso-${version}-Portatil.exe" }

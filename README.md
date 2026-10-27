@@ -10,9 +10,13 @@ O link de download permanece o mesmo em todas as versões publicadas. A versão 
 
 ![Compasso no modo compacto de espaçamento, com tema escuro](docs/interface.png)
 
+![Planos de estudo na visualização em lista](docs/planos-lista.png)
+
 ## Abrir
 
 Baixe e execute o instalador acima para adicionar o Compasso ao menu Iniciar e à área de trabalho. O aplicativo verifica novas versões ao abrir e pergunta antes de baixar ou instalar uma atualização. Também é possível verificar manualmente nas preferências. Seus planos, histórico e anotações são mantidos na atualização.
+
+O instalador apresenta o aplicativo, permite escolher a pasta e pede confirmação antes de instalar. Ao concluir, mostra **Instalado com sucesso**, com a opção **Abrir o Compasso agora** desmarcada para você escolher. Nas atualizações, a pasta já instalada é preservada.
 
 Para testar uma compilação local, abra `Abrir Compasso.lnk` ou `release/<versão>/win-unpacked/Compasso.exe`. Mantenha a pasta `win-unpacked` completa. O instalador gerado fica em `release/<versão>/Compasso-Instalar.exe`. Nenhuma dessas versões precisa de Node ou de um servidor para usar.
 
@@ -38,8 +42,9 @@ npm run dist
 
 ## O que você pode testar
 
-- Três planos de exemplo editáveis: Desenvolvimento, Infraestrutura e Inglês.
+- No primeiro uso, um tutorial curto orienta a criação do seu primeiro plano, com **Aula 1**, **Descanso** e **Aula 2** editáveis. Nenhum plano é adicionado automaticamente. O tutorial pode ser pulado; dados de versões anteriores são mantidos.
 - Criar, editar, duplicar e excluir planos; escolher dias da semana e cores.
+- Exibir os planos em **cards** ou **lista**, pelo seletor ao lado de Seus planos. A preferência fica salva.
 - Adicionar aulas e descansos, renomear, ajustar duração e reordenar arrastando ou pelas setas.
 - Ver o roteiro da data selecionada, filtrando planos pendentes, em progresso e concluídos.
 - Iniciar ou pausar qualquer bloco. Existe apenas um cronômetro ativo de cada vez.
@@ -48,7 +53,7 @@ npm run dist
 - Editar o nome e a duração de cada aula ou descanso pelo lápis na própria linha, mantendo o tempo já estudado.
 - Escolher três densidades nas preferências: **Mínimo**, **Compacto** (padrão) e **Confortável**. A escolha fica salva.
 - Usar uma janela compacta de **340 × 112 px**, arrastável pelo título, redimensionável e sempre sobre as outras janelas. Expandir ou fechar esse modo retorna ao app e mantém o cronômetro.
-- Alternar entre tema claro e escuro pelo sol/lua no cabeçalho ou nas preferências. O escuro usa preto e cinzas neutros, com vidro nativo Acrylic no Windows 11 22H2 ou superior e fundo sólido nos sistemas sem suporte. A preferência fica salva; dados anteriores são mantidos.
+- Novos perfis seguem o tema do dispositivo. Alterações manuais pelo sol/lua ou pelas preferências ficam salvas, independentemente do Windows. Nas preferências, **Seguir dispositivo** restaura o modo automático. O escuro usa preto e cinzas neutros, com vidro nativo Acrylic no Windows 11 22H2 ou superior e fundo sólido nos sistemas sem suporte.
 - Consultar horas reais de estudo, aulas concluídas e médias semanais e mensais. Descansos e pausas não contam como foco. Marcar uma aula manualmente não acrescenta horas.
 - Usar um caderno por plano, com páginas datadas, vínculo opcional com a aula, texto, imagens, prints colados e rabiscos. Imagens PNG/JPG/WebP até 4 MB cada.
 - Exportar e restaurar backup JSON, incluindo histórico e imagens.
@@ -87,6 +92,6 @@ O script usa a autenticação existente do Git, ou `GH_TOKEN`/`GITHUB_TOKEN` no 
 
 ## Atualizações no aplicativo
 
-Ao abrir, o Compasso consulta a última Release pública de `leosalema213/app-estudos` sem bloquear a interface. Uma versão mais nova abre o aviso com as opções **Depois** e **Baixar atualização**. O download só começa após essa escolha. Quando termina, **Instalar e reiniciar** pausa o cronômetro, salva os dados e abre o instalador.
+Ao abrir, o Compasso consulta a última Release pública de `leosalema213/app-estudos` sem bloquear a interface. Uma versão mais nova abre o aviso com as opções **Depois** e **Baixar atualização**. O download só começa após essa escolha. Quando termina, **Abrir instalador** pausa o cronômetro, salva os dados e abre o assistente de instalação. Na tela final você escolhe se deseja abrir o aplicativo.
 
 O instalador é baixado exclusivamente das Releases deste repositório. O tamanho e SHA-256 são conferidos antes de oferecer a instalação e novamente antes de executar o arquivo. Sem conexão, o app continua funcionando e permite tentar novamente nas preferências. Versões antigas (0.1 e 0.2) precisam ser atualizadas manualmente uma vez para receber esse recurso.

@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 0.4.0
+
+- Instalador assistido em português com apresentação, escolha da pasta, confirmação e tela de sucesso com opção de abrir o aplicativo.
+- Novos perfis seguem o tema do dispositivo; escolhas manuais são preservadas e o modo automático pode ser restaurado nas preferências.
+- Primeiro uso sem planos pré-cadastrados: tutorial curto para criar um plano com Aula 1, Descanso e Aula 2.
+- Alternância entre cards e lista em Planos de estudo, com a escolha salva.
+- Ajuste da janela compacta para permanecer sobre as outras janelas no Windows.
+- Preservação de planos, histórico, anotações e preferências existentes na atualização.
+
 ## 0.3.0
 
 - Interface mais compacta por padrão, com opções Mínimo, Compacto e Confortável nas preferências.

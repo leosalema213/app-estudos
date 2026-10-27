@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dayKey, editBlock, focusMs, getRecord, pause, play, preferences, resetTimer, seed, setDone, tick, validateData } from '../src/model.js';
+import { dayKey, editBlock, focusMs, getRecord, pause, play, preferences, resetTimer, seed as emptySeed, firstPlan, setDone, tick, validateData } from '../src/model.js';
+function seed() { const state = emptySeed(); state.plans = [firstPlan(), firstPlan(), firstPlan()]; return state; }
 const baseTime = new Date(2026, 9, 27, 12).getTime();
 function fixture() { const state = seed(); const plan = state.plans[0]; const block = plan.blocks[0]; return { state, plan, block, date: dayKey(new Date(baseTime)) }; }
 
@@ -76,9 +77,9 @@ test('malformed backups and duplicate ids are rejected', () => {
   const duplicate = seed(); duplicate.plans[1].id = duplicate.plans[0].id;
   assert.throws(() => validateData(duplicate));
 });
-test('older backups migrate to dark mode and the light preference survives import', () => {
+test('older backups migrate to device mode and the light preference survives import', () => {
   const old = seed(); delete old.settings.theme;
-  assert.equal(validateData(old).settings.theme, 'dark');
+  assert.equal(validateData(old).settings.theme, 'system');
   old.settings.theme = 'light';
   assert.equal(validateData(old).settings.theme, 'light');
 });
@@ -89,7 +90,7 @@ test('clock moving backwards cannot credit negative time', () => {
   assert.equal(focusMs(s, date, date), 0);
 });
 test('density preferences migrate without losing theme or sound', () => {
-  assert.deepEqual(preferences({ theme: 'light', sound: false }), { theme: 'light', sound: false, density: 'compact' });
+  assert.deepEqual(preferences({ theme: 'light', sound: false }), { theme: 'light', sound: false, density: 'compact', plansView: 'cards' });
   assert.equal(preferences({ density: 'minimal' }).density, 'minimal');
   assert.equal(preferences({ density: 'comfortable' }).density, 'comfortable');
   assert.equal(preferences({ density: 'invalid' }).density, 'compact');
@@ -121,4 +122,20 @@ test('invalid individual edits leave existing state intact', () => {
   assert.throws(() => editBlock(state, plan.id, block.id, { name: 'Aula', minutes: 361 }));
   assert.throws(() => editBlock(state, plan.id, block.id, { name: 'Aula', minutes: 0.5 }));
   assert.equal(state.plans[0].blocks[0], block);
+});
+
+test('fresh installs start empty and the tutorial offers one generic plan', () => {
+  const state = emptySeed();
+  assert.equal(state.plans.length, 0);
+  assert.equal(state.onboardingCompleted, false);
+  assert.equal(state.settings.theme, 'system');
+  const plan = firstPlan();
+  assert.deepEqual(plan.blocks.map(b => b.name), ['Aula 1', 'Descanso', 'Aula 2']);
+});
+test('manual themes and list preferences survive normalization and backup import', () => {
+  const state = seed(); state.settings = { theme: 'dark', plansView: 'list' };
+  const restored = validateData(state);
+  assert.equal(restored.settings.theme, 'dark');
+  assert.equal(restored.settings.plansView, 'list');
+  assert.equal(restored.plans.length, 3);
 });

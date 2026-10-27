@@ -184,7 +184,7 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   const canvas = page.locator('canvas'); const box = await canvas.boundingBox();
   await page.mouse.move(box.x + 20, box.y + 20); await page.mouse.down(); await page.mouse.move(box.x + 120, box.y + 90); await page.mouse.up();
   await page.getByRole('button', { name: 'Guardar no caderno' }).click();
-  await page.locator('.note-images img').waitFor();
+  await page.locator('.note-document-image img').waitFor();
   const notebook = page.getByRole('dialog', { name: /^Anotações/ });
   await page.evaluate(async()=>{
     const canvas=document.createElement('canvas');canvas.width=96;canvas.height=48;
@@ -193,10 +193,10 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
     const clipboard=new DataTransfer();clipboard.items.add(new File([blob],'print.png',{type:'image/png'}));
     document.querySelector('.notebook-text').dispatchEvent(new ClipboardEvent('paste',{clipboardData:clipboard,bubbles:true,cancelable:true}));
   });
-  await page.waitForFunction(()=>document.querySelectorAll('.notebook-assets img').length===2);
+  await page.waitForFunction(()=>document.querySelectorAll('.note-document-image img').length===2);
   const imageGeometry=await page.evaluate(()=>{
-    const text=document.querySelector('.notebook-text').getBoundingClientRect();
-    const figures=[...document.querySelectorAll('.notebook-assets>div')];
+    const text=document.querySelector('.notebook-text>p').getBoundingClientRect();
+    const figures=[...document.querySelectorAll('.note-document-image')];
     const first=figures[0].querySelector('img').getBoundingClientRect();
     const image=figures[1].querySelector('img').getBoundingClientRect();
     const frame=figures[1].getBoundingClientRect();const x=figures[1].querySelector('button').getBoundingClientRect();
@@ -206,7 +206,7 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   assert(imageGeometry.textHeight<60,JSON.stringify(imageGeometry));
   assert(Math.abs(imageGeometry.imageWidth-imageGeometry.frameWidth)<2,JSON.stringify(imageGeometry));
   assert(imageGeometry.xInside,JSON.stringify(imageGeometry));
-  await notebook.getByRole('button',{name:'Remover imagem 2',exact:true}).click();
+  await notebook.getByRole('button',{name:'Remover imagem',exact:true}).nth(1).click();
 
   const notebookBounds = await notebook.boundingBox(); assert(notebookBounds.width > 1000); assert(notebookBounds.height > 700);
   const longText = Array.from({ length: 65 }, (_, i) => 'Parágrafo ' + (i + 1) + ': uma anotação extensa precisa de espaço e rolagem confortável.').join('\n\n');
@@ -217,6 +217,9 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   assert.equal(await notebook.locator('.notebook-list').count(), 0);
   await notebook.getByRole('button', { name: 'Mostrar lista de notas' }).click();
   await notebook.getByRole('textbox', { name: 'Texto da anotação' }).fill('Uma anotação persistida no disco.');
+  await page.keyboard.press('End'); await page.keyboard.press('Enter');
+  await notebook.getByRole('button', { name: 'Rabiscar', exact: true }).click();
+  await page.getByRole('button', { name: 'Guardar no caderno', exact: true }).click();
   await notebook.getByRole('button', { name: 'Nova anotação', exact: true }).click();
   await notebook.getByRole('textbox', { name: 'Título da anotação' }).fill('Nota temporária');
   await notebook.getByRole('button',{name:'Fixar anotação Minha descoberta',exact:true}).click();
@@ -238,7 +241,7 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   await confirmation.getByRole('button', { name: 'Excluir anotação', exact: true }).click();
   assert.equal(await notebook.locator('.notebook-list-row').count(), 1);
   assert.equal(await notebook.getByRole('textbox', { name: 'Título da anotação' }).inputValue(), 'Minha descoberta');
-  assert.equal(await notebook.locator('.note-images img').count(), 1);
+  assert.equal(await notebook.locator('.note-document-image img').count(), 1);
   await notebook.getByRole('button', { name: 'Detalhes da anotação', exact: true }).click();
   await notebook.getByLabel('Vincular anotação à aula', { exact: true }).selectOption({ label: 'Aula de teste editada' });
   const selectStyle=await notebook.getByLabel('Vincular anotação à aula',{exact:true}).evaluate(el=>({scheme:getComputedStyle(el).colorScheme,background:getComputedStyle(el).backgroundColor}));
@@ -295,11 +298,11 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   const file = path.join(userData, 'compasso.json');
   let saved;
   for (let i = 0; i < 60; i++) {
-    try { saved = JSON.parse(fs.readFileSync(file, 'utf8')); if (saved.plans.find(p => p.name === 'Plano de teste')?.notes[0]?.images.length && saved.settings.theme === 'light') break; } catch {}
+    try { saved = JSON.parse(fs.readFileSync(file, 'utf8')); if (saved.plans.find(p => p.name === 'Plano de teste')?.notes[0]?.document?.content.some(n => n.type === 'image') && saved.settings.theme === 'light') break; } catch {}
     await new Promise(r => setTimeout(r, 100));
   }
   assert.equal(saved.plans.find(p => p.name === 'Plano de teste').notes[0].text, 'Uma anotação persistida no disco.');
-  assert.equal(saved.plans.find(p => p.name === 'Plano de teste').notes[0].images.length, 1);
+  assert.equal(saved.plans.find(p => p.name === 'Plano de teste').notes[0].document.content.filter(n => n.type === 'image').length, 1);
   assert.equal(saved.settings.theme, 'light');
   assert.equal(saved.plans.find(p=>p.name==='Plano de teste').notes[0].pinned,true);
   assert.equal(saved.settings.density, 'minimal');

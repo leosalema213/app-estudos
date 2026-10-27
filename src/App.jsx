@@ -278,7 +278,7 @@ function Modal({ title, subtitle, onClose, children, small, wide, className = ''
       if (dialogs[dialogs.length - 1] !== ref.current) return;
       if (e.key === 'Escape') onClose();
       if (e.key === 'Tab') {
-        const items = [...ref.current.querySelectorAll('button:not(:disabled), input, textarea, select, [tabindex="0"]')].filter(el => el.offsetParent !== null);
+        const items = [...ref.current.querySelectorAll('button:not(:disabled), input, textarea, select, [tabindex="0"], [contenteditable="true"]')].filter(el => el.offsetParent !== null);
         const first = items[0]; const last = items[items.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }

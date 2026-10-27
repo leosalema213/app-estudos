@@ -62,8 +62,10 @@ npm run dist
 - Novos perfis seguem o tema do dispositivo. Alterações manuais pelo sol/lua ou pelas preferências ficam salvas, independentemente do Windows. Nas preferências, **Seguir dispositivo** restaura o modo automático. O escuro usa preto e cinzas neutros, com vidro nativo Acrylic no Windows 11 22H2 ou superior e fundo sólido nos sistemas sem suporte.
 - Consultar horas reais de estudo, aulas concluídas e médias semanais e mensais. Descansos e pausas não contam como foco. Marcar uma aula manualmente não acrescenta horas.
 - Usar um caderno por plano, com páginas datadas, vínculo opcional com a aula, texto, imagens, prints colados e rabiscos. Imagens PNG/JPG/WebP até 4 MB cada.
+- Escrever como em um documento: cole prints ou insira imagens e rabiscos na posição do cursor, continue o texto abaixo e intercale novos trechos. Desfazer/refazer e a ordem do documento são preservados durante a edição; conteúdo e posição ficam salvos ao reabrir. Notas antigas mantêm o texto seguido das imagens na ordem anterior.
 - Expandir as últimas notas no próprio plano ou abrir o caderno ampliado. A lista tem busca e pode ser recolhida; textos longos crescem no editor, com uma única área de rolagem. A exclusão de uma nota pede confirmação separada.
 - Fixar notas pelo ícone de alfinete: elas ficam primeiro no caderno e nas prévias do plano. A escolha é preservada ao reabrir e nos backups.
+- Filtrar notas por uma data específica pelo calendário ao lado de Buscar notas, combinando com a busca por texto. A rolagem permanece dentro das modais enquanto estiverem abertas.
 - Usar preferências separadas em Aparência, Geral, Backup e Atualizações. Em Aparência, escolha Dispositivo, Claro, Escuro ou Personalizado; o último oferece temas prontos em rosa, azul, verde e roxo. Tema, cor e espaçamento ficam salvos.
 - Exportar e restaurar backup JSON, incluindo histórico e imagens.
 
@@ -83,9 +85,12 @@ Na visualização web, a persistência usa o armazenamento do navegador, separad
 npm test
 npm run build
 npm run test:ui
+npm run test:notebook
 ```
 
 Os testes de modelo verificam conclusão automática, pausa, troca de aulas, descansos, distribuição diária, marcação manual e backups. O teste de interface abre uma instância isolada do Electron com dados temporários e verifica os fluxos principais. As capturas ficam em `test-output/`.
+
+O teste do caderno verifica notas antigas, texto intercalado com prints e rabiscos, posição do cursor, desfazer/refazer, colagem durante troca de notas, backup e persistência após reiniciar. O editor é carregado somente ao abrir uma nota e armazena cada imagem uma única vez no documento.
 
 Os testes também verificam edição individual, preferências de densidade, aviso de atualização, download e instalação somente após confirmação, além da rejeição de downloads corrompidos. Os testes de atualização simulam a execução do instalador; não instalam nada no computador.
 
@@ -96,7 +101,7 @@ Depois de `npm run dist`, execute `npm run test:installer` para validar o modo s
 Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lote está encerrado e que ele autoriza a publicação, conforme `AGENTS.md`. Por padrão, incremente apenas PATCH; use MINOR ou MAJOR somente se o usuário pedir explicitamente.
 
 1. Atualize a versão em `package.json` e `package-lock.json` com `npm version patch --no-git-tag-version`.
-2. Execute `npm test`, `npm run build` e `npm run test:ui`.
+2. Execute `npm test`, `npm run build`, `npm run test:ui` e `npm run test:notebook`.
 3. Gere os arquivos com `npm run dist` e `npm run checksums`.
 4. Faça commit e envie para `origin/main`.
 5. Execute `npm run release`.

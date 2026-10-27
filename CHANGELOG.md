@@ -1,5 +1,15 @@
 # Histórico de versões
 
+## 0.4.3
+
+- Anotações em documento contínuo: texto, prints, imagens e rabiscos intercalados na posição do cursor.
+- É possível continuar escrevendo após cada imagem e inserir novos trechos antes ou entre os existentes.
+- Inserção de imagens por colagem, arquivo ou arraste, com desfazer/refazer e remoção individual.
+- Notas anteriores preservam texto, imagens, vínculo com aula, data e fixação; o formato contínuo é salvo ao editar.
+- Editor carregado apenas ao abrir uma nota, mantendo a inicialização do app leve.
+- Modais impedem a rolagem do aplicativo ao fundo, mantendo a rolagem no conteúdo aberto.
+- Filtro por data junto à busca de notas, combinável com o texto pesquisado e com opção de limpar.
+
 ## 0.4.2
 
 - Preferências organizadas em Aparência, Geral, Backup e Atualizações.

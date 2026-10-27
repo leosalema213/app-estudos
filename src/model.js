@@ -1,3 +1,5 @@
+import { validNoteDocument } from './note-document.js';
+
 export const uid = () => crypto.randomUUID();
 export const dayKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 export const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -99,7 +101,7 @@ export function validateData(data) {
       if (!b.id || ids.has(b.id) || !['lesson', 'break'].includes(b.type) || typeof b.name !== 'string' || !Number.isFinite(b.minutes) || b.minutes < 1 || b.minutes > 360) throw new Error('Bloco inválido no backup.');
       ids.add(b.id);
     }
-    for (const n of p.notes) if (!n.id || typeof n.text !== 'string' || typeof n.date !== 'string' || (n.pinned !== undefined && typeof n.pinned !== 'boolean') || !Array.isArray(n.images) || n.images.some(i => typeof i !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(i))) throw new Error('Anotação inválida no backup.');
+    for (const n of p.notes) if (!n.id || typeof n.text !== 'string' || typeof n.date !== 'string' || (n.pinned !== undefined && typeof n.pinned !== 'boolean') || !Array.isArray(n.images) || n.images.some(i => typeof i !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(i)) || (n.document !== undefined && !validNoteDocument(n.document))) throw new Error('Anotação inválida no backup.');
   }
   for (const [key, rec] of Object.entries(data.records)) if (!/^\d{4}-\d{2}-\d{2}\|/.test(key) || !rec || !Number.isFinite(rec.elapsedMs) || rec.elapsedMs < 0 || typeof rec.done !== 'boolean') throw new Error('Histórico inválido no backup.');
   return { ...data, active: null, settings: preferences(data.settings) };

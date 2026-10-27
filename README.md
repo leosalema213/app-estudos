@@ -14,6 +14,8 @@ O link de download permanece o mesmo em todas as versões publicadas. A versão 
 
 ![Caderno de anotações ampliado](docs/caderno.png)
 
+![Preferências em abas e temas personalizados](docs/preferencias.png)
+
 ## Abrir
 
 Baixe e execute o instalador acima para adicionar o Compasso ao menu Iniciar e à área de trabalho. O aplicativo verifica novas versões ao abrir e pergunta antes de baixar ou instalar uma atualização. Também é possível verificar manualmente nas preferências. Seus planos, histórico e anotações são mantidos na atualização.
@@ -52,13 +54,17 @@ npm run dist
 - Iniciar ou pausar qualquer bloco. Existe apenas um cronômetro ativo de cada vez.
 - Ao terminar, o bloco é marcado e um aviso visual, sonoro e uma notificação do Windows são emitidos. O próximo bloco sempre começa manualmente. A notificação nativa depende das permissões de notificações do Windows.
 - Marcar e desmarcar conclusões manualmente, separadamente por dia.
+- O resumo de Meu dia e a meta diária contam todos os blocos programados, incluindo aulas e descansos. As horas de foco continuam excluindo os descansos.
 - Editar o nome e a duração de cada aula ou descanso pelo lápis na própria linha, mantendo o tempo já estudado.
 - Escolher três densidades nas preferências: **Mínimo**, **Compacto** (padrão) e **Confortável**. A escolha fica salva.
 - Usar uma janela compacta de **340 × 112 px**, arrastável pelo título, redimensionável e sempre sobre as outras janelas. Expandir ou fechar esse modo retorna ao app e mantém o cronômetro.
+- O modo compacto lembra sua última posição e tamanho, inclusive após reiniciar. Se o monitor usado não estiver mais disponível, a janela retorna para uma área visível.
 - Novos perfis seguem o tema do dispositivo. Alterações manuais pelo sol/lua ou pelas preferências ficam salvas, independentemente do Windows. Nas preferências, **Seguir dispositivo** restaura o modo automático. O escuro usa preto e cinzas neutros, com vidro nativo Acrylic no Windows 11 22H2 ou superior e fundo sólido nos sistemas sem suporte.
 - Consultar horas reais de estudo, aulas concluídas e médias semanais e mensais. Descansos e pausas não contam como foco. Marcar uma aula manualmente não acrescenta horas.
 - Usar um caderno por plano, com páginas datadas, vínculo opcional com a aula, texto, imagens, prints colados e rabiscos. Imagens PNG/JPG/WebP até 4 MB cada.
 - Expandir as últimas notas no próprio plano ou abrir o caderno ampliado. A lista tem busca e pode ser recolhida; textos longos crescem no editor, com uma única área de rolagem. A exclusão de uma nota pede confirmação separada.
+- Fixar notas pelo ícone de alfinete: elas ficam primeiro no caderno e nas prévias do plano. A escolha é preservada ao reabrir e nos backups.
+- Usar preferências separadas em Aparência, Geral, Backup e Atualizações. Em Aparência, escolha Dispositivo, Claro, Escuro ou Personalizado; o último oferece temas prontos em rosa, azul, verde e roxo. Tema, cor e espaçamento ficam salvos.
 - Exportar e restaurar backup JSON, incluindo histórico e imagens.
 
 ## Persistência e comportamento do relógio

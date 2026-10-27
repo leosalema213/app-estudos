@@ -1,14 +1,33 @@
-const { app, BrowserWindow, ipcMain, Notification, dialog, powerMonitor, nativeTheme, net } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, dialog, powerMonitor, nativeTheme, net, screen } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { AppUpdates } = require('./updates.cjs');
+const { fitCompactBounds } = require('./compact-bounds.cjs');
 let win;
 let normalBounds;
 let wasMaximized = false;
 let compact = false;
+let compactBounds;
+let changingMode = false;
+let windowSaveTimer;
 const supportsGlass = process.platform === 'win32' && Number(require('node:os').release().split('.')[2]) >= 22621;
 const dataPath = () => path.join(app.getPath('userData'), 'compasso.json');
+const windowStatePath = () => path.join(app.getPath('userData'), 'window-state.json');
+function rememberCompact() {
+  if (!compact || changingMode || win.isDestroyed()) return;
+  compactBounds = win.getBounds();
+  clearTimeout(windowSaveTimer);
+  windowSaveTimer = setTimeout(saveWindowState, 350);
+}
+function saveWindowState() {
+  if (!compactBounds) return;
+  try {
+    fs.mkdirSync(path.dirname(windowStatePath()), { recursive: true });
+    fs.writeFileSync(windowStatePath() + '.tmp', JSON.stringify({ compactBounds }));
+    fs.renameSync(windowStatePath() + '.tmp', windowStatePath());
+  } catch { /* Window position is optional; a save failure must not stop studying. */ }
+}
 function readData() {
   if (!fs.existsSync(dataPath())) return null;
   try { return JSON.parse(fs.readFileSync(dataPath(), 'utf8')); }
@@ -26,6 +45,7 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (win) { win.restore(); win.show(); win.focus(); } });
   app.whenReady().then(() => {
+    try { compactBounds = JSON.parse(fs.readFileSync(windowStatePath(), 'utf8')).compactBounds; } catch {}
     nativeTheme.themeSource = 'system';
     app.setAppUserModelId('br.com.compasso.estudos');
     win = new BrowserWindow({ width: 1260, height: 850, minWidth: 840, minHeight: 620, frame: false,
@@ -33,6 +53,9 @@ else {
       icon: path.join(__dirname, '../assets/icon.ico'), title: 'Compasso',
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
     win.setMenu(null);
+    win.on('move', rememberCompact);
+    win.on('resize', rememberCompact);
+    win.on('close', () => { rememberCompact(); clearTimeout(windowSaveTimer); saveWindowState(); });
     const updater = new AppUpdates({
       version: app.getVersion(), cacheDir: path.join(app.getPath('userData'), 'updates'), fetchImpl: net.fetch.bind(net),
       emit: status => { if (!win.isDestroyed()) win.webContents.send('updates:status', status); },
@@ -62,20 +85,26 @@ else {
     });
     ipcMain.handle('window:compact', (e, value) => {
       if (!trusted(e) || compact === !!value) return;
-      compact = !!value;
-      if (compact) {
+      changingMode = true;
+      if (value) {
         wasMaximized = win.isMaximized();
         normalBounds = win.getNormalBounds();
         if (wasMaximized) win.unmaximize();
         win.setMinimumSize(280, 100);
-        win.setSize(340, 112);
+        const primary = screen.getPrimaryDisplay();
+        const areas = [primary, ...screen.getAllDisplays().filter(display => display.id !== primary.id)].map(display => display.workArea);
+        win.setBounds(fitCompactBounds(compactBounds || { ...normalBounds, width: 340, height: 112 }, areas));
+        compact = true;
         win.setAlwaysOnTop(true, 'pop-up-menu');
       } else {
+        compactBounds = win.getBounds(); saveWindowState();
+        compact = false;
         win.setAlwaysOnTop(false);
         win.setMinimumSize(840, 620);
         if (normalBounds) win.setBounds(normalBounds);
         if (wasMaximized) win.maximize();
       }
+      changingMode = false;
     });
     ipcMain.on('window:minimize', e => { if (trusted(e)) win.minimize(); });
     ipcMain.on('window:maximize', e => { if (trusted(e) && !compact) win.isMaximized() ? win.unmaximize() : win.maximize(); });

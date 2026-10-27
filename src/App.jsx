@@ -1,10 +1,11 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpRight, BookOpen, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, CircleHelp, Clock3, Coffee, Copy, Download, Expand, Flame, GripVertical, LayoutDashboard, ListFilter, Maximize2, Minus, MoreHorizontal, Moon, Sun, Pause, Pencil, Play, Plus, RotateCcw, Settings, Sparkles, Target, Trash2, TrendingUp, Upload, Volume2, VolumeX, X, ImagePlus, PenLine, PanelTopClose, LayoutGrid, List, NotebookText } from 'lucide-react';
-import { clock, colors, dayKey, days, duration, editBlock, firstPlan, focusMs, getRecord, newBlock, newPlan, pause, play, preferences, recordKey, resetTimer, seed, setDone, tick, uid, validateData } from './model.js';
+import { clock, colors, dailySummary, dayKey, days, duration, editBlock, firstPlan, focusMs, getRecord, newBlock, newPlan, pause, play, preferences, recordKey, resetTimer, seed, setDone, themePresets, tick, uid, validateData } from './model.js';
 import Tutorial from './Tutorial.jsx';
 import Notebook, { NotesPreview } from './Notebook.jsx';
 import { version as appVersion } from '../package.json';
-import { UpdateDialog, UpdateSettings, useAppUpdates } from './Updates.jsx';
+import Preferences from './Preferences.jsx';
+import { UpdateDialog, useAppUpdates } from './Updates.jsx';
 
 const LOCAL_KEY = 'compasso-v1';
 let audioContext;
@@ -85,7 +86,8 @@ export default function App() {
     persist(data);
   }, [data]);
   const themePreference = data?.settings?.theme || 'system';
-  const theme = themePreference === 'system' ? systemDark ? 'dark' : 'light' : themePreference;
+  const theme = themePreference === 'custom' ? 'dark' : themePreference === 'system' ? systemDark ? 'dark' : 'light' : themePreference;
+  const palette = data?.settings?.palette || 'pink';
   const plansView = data?.settings?.plansView || 'cards';
   const density = data?.settings?.density || 'compact';
   useEffect(() => {
@@ -97,10 +99,15 @@ export default function App() {
   useEffect(() => { document.documentElement.dataset.density = density; }, [density]);
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
-    window.desktop?.appearance(themePreference).then(result => {
+    if (themePreference === 'custom') {
+      const preset = themePresets.find(p => p.id === palette) || themePresets[0];
+      document.documentElement.dataset.palette = preset.id;
+      for (const [key, value] of Object.entries(preset)) if (!['id', 'name'].includes(key)) document.documentElement.style.setProperty('--custom-' + key, value);
+    } else document.documentElement.removeAttribute('data-palette');
+    window.desktop?.appearance(themePreference === 'custom' ? 'dark' : themePreference).then(result => {
       document.documentElement.dataset.glass = result?.glass ? 'native' : 'fallback';
     }).catch(() => { document.documentElement.dataset.glass = 'fallback'; });
-  }, [theme, themePreference]);
+  }, [theme, themePreference, palette]);
   const toggleTheme = () => update(s => ({ ...s, settings: { ...s.settings, theme: theme === 'dark' ? 'light' : 'dark' } }));
   useEffect(() => {
     const interval = setInterval(() => {
@@ -190,16 +197,15 @@ export default function App() {
   if (fatal) return <div className="fatal"><BookOpen size={40} /><h1>Seus dados precisam de atenção</h1><p>{fatal}</p><p>O arquivo original não foi alterado. Feche o app e confira compasso.json na pasta de dados do aplicativo.</p></div>;
   if (!data) return <div className="loading"><span className="brand-mark"><BookOpen /></span>Preparando seu espaço de estudos…</div>;
   const selectedDate = new Date(`${date}T12:00:00`);
-  const todayPlans = data.plans.filter(p => p.days.includes(selectedDate.getDay()));
-  const allLessons = todayPlans.flatMap(p => p.blocks.filter(b => b.type === 'lesson').map(b => ({ plan: p, block: b })));
-  const doneCount = allLessons.filter(({ plan, block }) => getRecord(data, date, plan.id, block.id).done).length;
-  const plannedMinutes = allLessons.reduce((sum, x) => sum + x.block.minutes, 0);
+  const summary = dailySummary(data, date);
+  const todayPlans = summary.plans;
+  const doneCount = summary.completed;
+  const plannedMinutes = summary.studyMinutes;
   const active = data.active;
   const activePlan = active && data.plans.find(p => p.id === active.planId);
   const activeBlock = activePlan?.blocks.find(b => b.id === active.blockId);
   const statusOf = (plan) => {
-    const lessons = plan.blocks.filter(b => b.type === 'lesson');
-    if (lessons.length && lessons.every(b => getRecord(data, date, plan.id, b.id).done)) return 'done';
+    if (plan.blocks.length && plan.blocks.every(b => getRecord(data, date, plan.id, b.id).done)) return 'done';
     if (plan.blocks.some(b => { const r = getRecord(data, date, plan.id, b.id); return r.done || r.elapsedMs > 0; }) || (active?.date === date && active.planId === plan.id && active.running)) return 'progress';
     return 'pending';
   };
@@ -223,7 +229,7 @@ export default function App() {
         <div className="page-heading"><h1>{page === 'today' ? 'Meu dia' : page === 'plans' ? 'Planos de estudo' : 'Meu progresso'}</h1><button className="primary" onClick={() => setEditor(newPlan())}><Plus size={17} /> Novo plano</button></div>
         {saveError && <div className="error-banner">{saveError}<button onClick={backup}>Exportar backup</button></div>}
         {page === 'today' && <>
-          <section className="stats-grid"><Stat icon={Clock3} label="TEMPO DE FOCO" value={duration(focusMs(data, date, date))} detail={`${plannedMinutes} min planejados`} color="violet" /><Stat icon={CheckCheck} label="AULAS CONCLUÍDAS" value={<>{doneCount}<small> / {allLessons.length}</small></>}  color="green" /><Stat icon={Target} label="META DO DIA" value={`${allLessons.length ? Math.round(doneCount / allLessons.length * 100) : 0}%`}  color="orange" /></section>
+          <section className="stats-grid"><Stat icon={Clock3} label="TEMPO DE FOCO" value={duration(focusMs(data, date, date))} detail={`${plannedMinutes} min de estudo planejados`} color="violet" /><Stat icon={CheckCheck} label="BLOCOS CONCLUÍDOS" value={<>{doneCount}<small> / {summary.total}</small></>}  color="green" /><Stat icon={Target} label="META DO DIA" value={`${summary.percent}%`}  color="orange" /></section>
           <div className="section-heading"><div><h2>Seu roteiro <span>{todayPlans.length} planos</span></h2></div><div className="date-switch"><IconButton title="Dia anterior" onClick={() => { selectedDate.setDate(selectedDate.getDate() - 1); setDate(dayKey(selectedDate)); }}><ChevronLeft size={16} /></IconButton><button title="Voltar para hoje" onClick={() => setDate(dayKey())}><CalendarDays size={15} />{date === dayKey() ? 'Hoje, ' : ''}{selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')}</button><IconButton title="Próximo dia" onClick={() => { selectedDate.setDate(selectedDate.getDate() + 1); setDate(dayKey(selectedDate)); }}><ChevronRight size={16} /></IconButton></div></div>
           <div className="filter-row"><div className="tabs">{[['all', 'Todos'], ['pending', 'Pendentes'], ['progress', 'Em progresso'], ['done', 'Concluídos']].map(([key, label]) => <button key={key} className={filter === key ? 'selected' : ''} onClick={() => setFilter(key)}>{label}{key === 'all' && <span>{todayPlans.length}</span>}</button>)}</div></div>
           <div className="plan-list">{shownPlans.map(plan => <StudyCard key={plan.id} {...{ plan, data, date, status: statusOf(plan), togglePlay, toggleDone }} onEdit={() => setEditor(structuredClone(plan))} onEditBlock={block => openBlockEditor(plan, block)} onNotes={noteId => openNotebook(plan.id, noteId)} onDuplicate={() => duplicate(plan)} />)}{!shownPlans.length && <Empty icon={CalendarDays} title={todayPlans.length ? 'Nenhum plano com esse status.' : 'Um dia livre no seu roteiro.'} text={todayPlans.length ? 'Experimente outro filtro para ver suas aulas.' : 'Você pode descansar ou ajustar os dias de um plano em “Planos de estudo”.'} />}</div>
@@ -239,7 +245,7 @@ export default function App() {
     {editor && <PlanEditor plan={editor} firstRun={tutorial === 'creating'} onClose={() => { setEditor(null); if (tutorial === 'creating') setTutorial('welcome'); }} onSave={savePlan} />}
     {['welcome', 'tips'].includes(tutorial) && <Tutorial stage={tutorial} Modal={Modal} onStart={() => { setTutorial('creating'); setEditor(firstPlan()); }} onClose={finishTutorial} onDone={() => { finishTutorial(); setPage('plans'); }} />}
     {notesPlan && data.plans.some(p => p.id === notesPlan) && <Notebook key={notesPlan} plan={data.plans.find(p => p.id === notesPlan)} date={date} initialNote={initialNote} saveError={saveError} onClose={() => setNotesPlan(null)} onChange={change => update(s => ({ ...s, plans: s.plans.map(p => p.id === notesPlan ? typeof change === 'function' ? change(p) : change : p) }))} notify={setToast} Modal={Modal} Sketch={Sketch} />}
-    {settings && <Modal title="Seu espaço, suas preferências" subtitle="Tudo funciona localmente, sem conta e sem servidor." onClose={() => setSettings(false)}><div className="settings-content"><DensitySettings value={density} onChange={value => update(s => ({ ...s, settings: { ...s.settings, density: value } }))} /><hr /><UpdateSettings updates={appUpdates} /><hr /><div className="setting-row"><div><strong>Tema</strong><p>Use o padrão do dispositivo ou escolha seu tema.</p></div><select aria-label="Tema do aplicativo" value={themePreference} onChange={e => update(s => ({ ...s, settings: { ...s.settings, theme: e.target.value } }))}><option value="system">Seguir dispositivo</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div><hr /><div className="setting-row"><div><strong>Som ao concluir um bloco</strong><p>Um toque curto para avisar que o tempo acabou.</p></div><button className={`toggle ${data.settings.sound ? 'on' : ''}`} role="switch" aria-checked={data.settings.sound} aria-label="Som de conclusão" onClick={() => { unlockAudio(); update(s => ({ ...s, settings: { ...s.settings, sound: !s.settings.sound } })); }}><i /></button></div><button className="secondary" onClick={ring}><Volume2 size={16} /> Testar som</button><hr /><button className="secondary" onClick={() => { setSettings(false); setTutorial('tips'); }}>Como usar o Compasso</button><hr /><h3>Uma cópia do seu progresso</h3><p className="muted">O backup inclui planos, histórico, anotações e imagens. Guarde uma cópia em outro lugar para ter segurança.</p><div className="button-row"><button className="primary" onClick={backup}><Download size={16} /> Exportar backup</button>{window.desktop ? <button className="secondary" onClick={() => importBackup()}><Upload size={16} /> Importar backup</button> : <label className="secondary file-label"><Upload size={16} /> Importar backup<input type="file" accept=".json" onChange={e => e.target.files[0] && importBackup(e.target.files[0])} /></label>}</div><div className="info-box"><CircleHelp size={18} /><p>Ao fechar o aplicativo, a sessão é pausada. Ao reabrir, clique em play para continuar. Cada bloco seguinte sempre começa manualmente.</p></div></div></Modal>}
+    {settings && <Preferences settings={data.settings} onChange={fields => { unlockAudio(); update(s => ({ ...s, settings: { ...s.settings, ...fields } })); }} onClose={() => setSettings(false)} onTestSound={ring} onBackup={backup} onImport={importBackup} onTutorial={() => { setSettings(false); setTutorial('tips'); }} updates={appUpdates} Modal={Modal} />}
     {confirm && <Modal title={confirm.title} onClose={() => setConfirm(null)} small><p className="confirm-text">{confirm.text}</p><div className="modal-actions"><button className="secondary" onClick={() => setConfirm(null)}>Cancelar</button><button className="primary" onClick={() => { confirm.action(); setConfirm(null); }}>Confirmar</button></div></Modal>}
     {appUpdates.open && <UpdateDialog updates={appUpdates} onInstall={installUpdate} Modal={Modal} />}
     {toast && <div className="toast" role="status"><Check size={18} /><span>{toast}</span><IconButton title="Fechar aviso" onClick={() => setToast('')}><X size={16} /></IconButton></div>}
@@ -247,9 +253,6 @@ export default function App() {
 }
 
 function Stat({ icon: Icon, label, value, detail, color }) { return <article className="stat-card"><div><span className="stat-label">{label}</span><span className={`stat-icon ${color}`}><Icon size={18} /></span></div><strong>{value}</strong>{detail && <p>{detail}</p>}</article>; }
-function DensitySettings({ value, onChange }) {
-  return <section><h3>Espaçamento</h3><div className="density-options" role="group" aria-label="Espaçamento da interface">{[['minimal', 'Mínimo', 'Mais conteúdo'], ['compact', 'Compacto', 'Padrão'], ['comfortable', 'Confortável', 'Mais espaço']].map(([key, label, hint]) => <button key={key} className={value === key ? 'selected' : ''} aria-pressed={value === key} onClick={() => onChange(key)}><strong>{label}</strong><small>{hint}</small></button>)}</div></section>;
-}
 function Empty({ icon: Icon, title, text }) { return <div className="empty"><Icon size={29} /><h3>{title}</h3><p>{text}</p></div>; }
 function StudyCard({ plan, data, date, status, togglePlay, toggleDone, onEdit, onEditBlock, onNotes, onDuplicate }) {
   const [menu, setMenu] = useState(false);

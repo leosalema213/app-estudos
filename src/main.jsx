@@ -6,4 +6,6 @@ import './theme.css';
 import './density.css';
 import './plans.css';
 import './notebook.css';
+import './preferences.css';
+import './palettes.css';
 createRoot(document.getElementById('root')).render(<App />);

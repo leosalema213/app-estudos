@@ -88,6 +88,27 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   await page.getByRole('button', { name: 'Iniciar Aula de teste editada', exact: true }).waitFor();
   const compactHeight = await page.locator('.study-block').last().evaluate(el => el.getBoundingClientRect().height);
   await page.getByRole('button', { name: 'Preferências', exact: true }).click();
+  const settingsDialog = page.getByRole('dialog', { name: 'Preferências', exact: true });
+  if (await page.getByRole('button', { name: 'Fechar aviso', exact: true }).count()) await page.getByRole('button', { name: 'Fechar aviso', exact: true }).click();
+  assert.equal(await settingsDialog.getByRole('tab').count(),4);
+  await settingsDialog.getByRole('tab',{name:'Geral',exact:true}).click();
+  await settingsDialog.getByRole('switch',{name:'Som de conclusão',exact:true}).waitFor();
+  await settingsDialog.getByRole('tab',{name:'Backup',exact:true}).click();
+  await settingsDialog.getByRole('button',{name:'Exportar backup',exact:true}).waitFor();
+  await settingsDialog.getByRole('tab',{name:'Atualizações',exact:true}).click();
+  await settingsDialog.getByRole('button',{name:'Verificar atualização',exact:true}).waitFor();
+  await settingsDialog.getByRole('tab',{name:'Aparência',exact:true}).click();
+  await settingsDialog.getByRole('button',{name:'Personalizado',exact:true}).click();
+  for(const [label,key] of [['Rosa','pink'],['Azul','blue'],['Verde','green'],['Roxo','purple']]) {
+    await settingsDialog.getByRole('button',{name:label,exact:true}).click();
+    await page.waitForFunction(key=>document.documentElement.dataset.palette===key,key);
+    await page.screenshot({path:path.join(output,'15-tema-'+key+'.png'),animations:'disabled'});
+  }
+  await settingsDialog.getByRole('button',{name:'Escuro',exact:true}).click();
+  await page.waitForFunction(()=>!document.documentElement.hasAttribute('data-palette'));
+  await settingsDialog.getByRole('button',{name:'Fechar',exact:true}).click();
+
+  await page.getByRole('button', { name: 'Preferências', exact: true }).click();
   await page.getByRole('button', { name: /^Confortável/ }).click();
   await page.waitForFunction(() => document.documentElement.dataset.density === 'comfortable');
   await page.getByRole('button', { name: 'Fechar', exact: true }).click();
@@ -125,6 +146,13 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   assert.equal(compactBounds.width, 340); assert.equal(compactBounds.height, 112); assert.equal(compactBounds.top, true);
   assert.equal(await page.getByText('COMPASSO', { exact: true }).count(), 0);
   assert.equal(await page.getByText('DESENVOLVIMENTO', { exact: true }).count(), 0);
+  const savedCompactBounds = await app.evaluate(({ BrowserWindow, screen }) => {
+    const window = BrowserWindow.getAllWindows()[0];const area=screen.getPrimaryDisplay().workArea;
+    window.setBounds({x:area.x+25,y:area.y+area.height-145,width:360,height:120});return window.getBounds();
+  });
+  await page.getByRole('button',{name:'Voltar ao aplicativo',exact:true}).click();
+  await page.getByRole('button',{name:'Modo compacto',exact:true}).click();
+  assert.deepEqual(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].getBounds()),savedCompactBounds);
   await page.screenshot({ path: path.join(output, '02-modo-compacto.png') });
   await page.getByRole('button', { name: 'Continuar', exact: true }).click();
   await page.clock.fastForward(50000);
@@ -136,6 +164,11 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   assert.equal(await page.getByRole('checkbox', { name: 'Concluir Aula de teste editada', exact: true }).getAttribute('aria-checked'), 'true');
   assert.equal(await page.getByRole('checkbox', { name: 'Concluir Pausa para respirar', exact: true }).last().getAttribute('aria-checked'), 'false');
   assert.equal(await page.getByRole('button', { name: 'Pausar aula', exact: true }).count(), 0);
+  assert.match(await page.locator('.stat-card').nth(1).locator('strong').innerText(),/1\s*\/\s*2/);
+  assert.equal(await page.locator('.stat-card').nth(2).locator('strong').innerText(),'50%');
+  await page.getByRole('checkbox',{name:'Concluir Pausa para respirar',exact:true}).click();
+  assert.equal(await page.locator('.stat-card').nth(2).locator('strong').innerText(),'100%');
+  await page.getByRole('checkbox',{name:'Concluir Pausa para respirar',exact:true}).click();
   const normal = await app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; return { ...w.getBounds(), top: w.isAlwaysOnTop() }; });
   assert.equal(normal.top, false); assert(normal.width >= 840);
   await page.getByRole('button', { name: 'Planos de estudo', exact: true }).click();
@@ -153,6 +186,28 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   await page.getByRole('button', { name: 'Guardar no caderno' }).click();
   await page.locator('.note-images img').waitFor();
   const notebook = page.getByRole('dialog', { name: /^Anotações/ });
+  await page.evaluate(async()=>{
+    const canvas=document.createElement('canvas');canvas.width=96;canvas.height=48;
+    const ctx=canvas.getContext('2d');ctx.fillStyle='#d4b5eb';ctx.fillRect(0,0,96,48);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    const clipboard=new DataTransfer();clipboard.items.add(new File([blob],'print.png',{type:'image/png'}));
+    document.querySelector('.notebook-text').dispatchEvent(new ClipboardEvent('paste',{clipboardData:clipboard,bubbles:true,cancelable:true}));
+  });
+  await page.waitForFunction(()=>document.querySelectorAll('.notebook-assets img').length===2);
+  const imageGeometry=await page.evaluate(()=>{
+    const text=document.querySelector('.notebook-text').getBoundingClientRect();
+    const figures=[...document.querySelectorAll('.notebook-assets>div')];
+    const first=figures[0].querySelector('img').getBoundingClientRect();
+    const image=figures[1].querySelector('img').getBoundingClientRect();
+    const frame=figures[1].getBoundingClientRect();const x=figures[1].querySelector('button').getBoundingClientRect();
+    return {gap:first.top-text.bottom,textHeight:text.height,imageWidth:image.width,frameWidth:frame.width,xInside:x.right<=image.right&&x.left>=image.left};
+  });
+  assert(imageGeometry.gap>=10&&imageGeometry.gap<=22,JSON.stringify(imageGeometry));
+  assert(imageGeometry.textHeight<60,JSON.stringify(imageGeometry));
+  assert(Math.abs(imageGeometry.imageWidth-imageGeometry.frameWidth)<2,JSON.stringify(imageGeometry));
+  assert(imageGeometry.xInside,JSON.stringify(imageGeometry));
+  await notebook.getByRole('button',{name:'Remover imagem 2',exact:true}).click();
+
   const notebookBounds = await notebook.boundingBox(); assert(notebookBounds.width > 1000); assert(notebookBounds.height > 700);
   const longText = Array.from({ length: 65 }, (_, i) => 'Parágrafo ' + (i + 1) + ': uma anotação extensa precisa de espaço e rolagem confortável.').join('\n\n');
   await notebook.getByRole('textbox', { name: 'Texto da anotação' }).fill(longText);
@@ -164,6 +219,12 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   await notebook.getByRole('textbox', { name: 'Texto da anotação' }).fill('Uma anotação persistida no disco.');
   await notebook.getByRole('button', { name: 'Nova anotação', exact: true }).click();
   await notebook.getByRole('textbox', { name: 'Título da anotação' }).fill('Nota temporária');
+  await notebook.getByRole('button',{name:'Fixar anotação Minha descoberta',exact:true}).click();
+  assert.equal(await notebook.locator('.notebook-list-row').first().locator('strong').innerText(),'Minha descoberta');
+  await notebook.getByRole('button',{name:'Desafixar anotação Minha descoberta',exact:true}).click();
+  assert.equal(await notebook.locator('.notebook-list-row').first().locator('strong').innerText(),'Nota temporária');
+  await notebook.getByRole('button',{name:'Fixar anotação Minha descoberta',exact:true}).click();
+
   await notebook.getByRole('button', { name: 'Excluir anotação Minha descoberta', exact: true }).click();
   const confirmation = page.getByRole('dialog', { name: 'Excluir anotação?', exact: true });
   await confirmation.waitFor();
@@ -180,6 +241,10 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   assert.equal(await notebook.locator('.note-images img').count(), 1);
   await notebook.getByRole('button', { name: 'Detalhes da anotação', exact: true }).click();
   await notebook.getByLabel('Vincular anotação à aula', { exact: true }).selectOption({ label: 'Aula de teste editada' });
+  const selectStyle=await notebook.getByLabel('Vincular anotação à aula',{exact:true}).evaluate(el=>({scheme:getComputedStyle(el).colorScheme,background:getComputedStyle(el).backgroundColor}));
+  assert.equal(selectStyle.scheme,'dark');
+  assert.notEqual(selectStyle.background,'rgb(255, 255, 255)');
+
   await notebook.getByRole('button', { name: 'Detalhes da anotação', exact: true }).click();
   await notebook.getByRole('textbox', { name: 'Buscar anotações' }).fill('inexistente');
   assert.equal(await notebook.locator('.notebook-list-row').count(), 0);
@@ -236,6 +301,7 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   assert.equal(saved.plans.find(p => p.name === 'Plano de teste').notes[0].text, 'Uma anotação persistida no disco.');
   assert.equal(saved.plans.find(p => p.name === 'Plano de teste').notes[0].images.length, 1);
   assert.equal(saved.settings.theme, 'light');
+  assert.equal(saved.plans.find(p=>p.name==='Plano de teste').notes[0].pinned,true);
   assert.equal(saved.settings.density, 'minimal');
   assert.equal(saved.settings.plansView, 'list');
   assert.equal(saved.onboardingCompleted, true);
@@ -254,6 +320,24 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   await restored.getByRole('button', { name: 'Planos de estudo', exact: true }).click();
   await restored.locator('.plans-list').waitFor();
   assert.equal(await restored.getByRole('button', { name: 'Exibir em lista', exact: true }).getAttribute('aria-pressed'), 'true');
+  const restoredNotebookCard=restored.locator('.overview-card').filter({has:restored.getByRole('heading',{name:'Plano de teste',exact:true})});
+  await restoredNotebookCard.getByRole('button',{name:/^Anotações/}).click();
+  await restoredNotebookCard.getByRole('button',{name:/^Minha descoberta/}).click();
+  await restored.getByRole('button',{name:'Desafixar anotação Minha descoberta',exact:true}).waitFor();
+  await restored.getByRole('button',{name:'Fechar',exact:true}).click();
+  await restored.getByRole('button',{name:'Modo compacto',exact:true}).click();
+  assert.deepEqual(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].getBounds()),savedCompactBounds);
+  await restored.getByRole('button',{name:'Voltar ao aplicativo',exact:true}).click();
+  await restored.getByRole('button',{name:'Preferências',exact:true}).click();
+  await restored.getByRole('button',{name:'Personalizado',exact:true}).click();
+  await restored.getByRole('button',{name:'Azul',exact:true}).click();
+  await restored.getByRole('button',{name:'Fechar',exact:true}).click();
+  for(let i=0;i<60;i++) { const value=JSON.parse(fs.readFileSync(file,'utf8'));if(value.settings.theme==='custom'&&value.settings.palette==='blue')break;await new Promise(r=>setTimeout(r,50)); }
+  await app.close();app=null;
+  app=await electron.launch(launchOptions);
+  const themed=await app.firstWindow();
+  await themed.waitForFunction(()=>document.documentElement.dataset.palette==='blue'&&document.documentElement.dataset.theme==='dark');
+  assert.equal(await themed.locator('html').getAttribute('data-palette'),'blue');
   console.log('PASS: create, timer, pause, Windows suspend, completion, manual next block, compact window, duplication, notebook, drawing, metrics, responsive layout and restart persistence.');
   console.log(`Screenshots: ${output}`);
 })().catch(err => { console.error(err); process.exitCode = 1; }).finally(async () => { if (app) await app.close(); });

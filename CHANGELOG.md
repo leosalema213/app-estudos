@@ -1,5 +1,16 @@
 # Histórico de versões
 
+## 0.4.2
+
+- Preferências organizadas em Aparência, Geral, Backup e Atualizações.
+- Seleção visual de tema e correção das cores dos selects e opções no modo escuro.
+- Temas personalizados prontos em rosa, azul, verde e roxo, com cores de texto e botões verificadas para leitura.
+- Opção de fixar e desafixar notas, mantendo as fixadas no topo do caderno e das prévias.
+- Imagens coladas próximas do texto, sem o espaço mínimo excessivo do editor.
+- Botão de remover posicionado dentro da borda de cada imagem, inclusive nas menores.
+- Janela compacta memoriza posição e tamanho, inclusive após reabrir o app, com recuperação quando um monitor é desconectado.
+- Resumo de Meu dia unificado em blocos: aulas e descansos entram na quantidade concluída e na meta. O tempo de foco continua contando apenas estudo.
+
 ## 0.4.1
 
 - Caderno de anotações ampliado, com busca, lista recolhível e editor preparado para textos longos.

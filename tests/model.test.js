@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dayKey, editBlock, focusMs, getRecord, pause, play, preferences, resetTimer, seed as emptySeed, firstPlan, setDone, tick, validateData } from '../src/model.js';
+import { dailySummary, dayKey, editBlock, focusMs, getRecord, pause, play, preferences, orderedNotes, themePresets, resetTimer, seed as emptySeed, firstPlan, newBlock, setDone, tick, validateData } from '../src/model.js';
 function seed() { const state = emptySeed(); state.plans = [firstPlan(), firstPlan(), firstPlan()]; return state; }
 const baseTime = new Date(2026, 9, 27, 12).getTime();
 function fixture() { const state = seed(); const plan = state.plans[0]; const block = plan.blocks[0]; return { state, plan, block, date: dayKey(new Date(baseTime)) }; }
@@ -90,7 +90,7 @@ test('clock moving backwards cannot credit negative time', () => {
   assert.equal(focusMs(s, date, date), 0);
 });
 test('density preferences migrate without losing theme or sound', () => {
-  assert.deepEqual(preferences({ theme: 'light', sound: false }), { theme: 'light', sound: false, density: 'compact', plansView: 'cards' });
+  assert.deepEqual(preferences({ theme: 'light', sound: false }), { theme: 'light', sound: false, density: 'compact', plansView: 'cards', palette: 'pink' });
   assert.equal(preferences({ density: 'minimal' }).density, 'minimal');
   assert.equal(preferences({ density: 'comfortable' }).density, 'comfortable');
   assert.equal(preferences({ density: 'invalid' }).density, 'compact');
@@ -138,4 +138,48 @@ test('manual themes and list preferences survive normalization and backup import
   assert.equal(restored.settings.theme, 'dark');
   assert.equal(restored.settings.plansView, 'list');
   assert.equal(restored.plans.length, 3);
+});
+
+test('custom theme selection survives backups and invalid palettes fall back safely', () => {
+  const state=seed(); state.settings={theme:'custom',palette:'green'};
+  assert.equal(validateData(state).settings.palette,'green');
+  assert.equal(validateData(state).settings.theme,'custom');
+  assert.equal(preferences({theme:'custom',palette:'invalid'}).palette,'pink');
+});
+test('pinned notes sort first without mutating notes or reordering their peers', () => {
+  const notes=[{id:'new'},{id:'pinned',pinned:true},{id:'old'},{id:'also-pinned',pinned:true}];
+  assert.deepEqual(orderedNotes(notes).map(n=>n.id),['pinned','also-pinned','new','old']);
+  assert.equal(notes[0].id,'new');
+});
+test('pinned notes survive backups and malformed pin flags are rejected', () => {
+  const state=seed(); state.plans[0].notes=[{id:'note',date:'2026-10-27',text:'Texto',images:[],pinned:true}];
+  assert.equal(validateData(state).plans[0].notes[0].pinned,true);
+  state.plans[0].notes[0].pinned='yes';
+  assert.throws(()=>validateData(state));
+});
+test('preset text, secondary text and primary button labels meet AA contrast', () => {
+  function luminance(hex) {
+    const c=hex.slice(1).match(/../g).map(n=>parseInt(n,16)/255).map(n=>n<=0.04045?n/12.92:((n+0.055)/1.055)**2.4);
+    return c[0]*0.2126+c[1]*0.7152+c[2]*0.0722;
+  }
+  function ratio(a,b) { const x=luminance(a),y=luminance(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05); }
+  for(const p of themePresets) {
+    assert(ratio(p.text,p.surface)>=4.5,p.name+' text');
+    assert(ratio(p.muted,p.surface)>=4.5,p.name+' secondary text');
+    assert(ratio('#172019',p.accent)>=4.5,p.name+' button');
+  }
+});
+
+test('daily summary counts all fourteen blocks from the reported schedule', () => {
+  let state=emptySeed();
+  const make=(name,blocks)=>({...firstPlan(),name,blocks:blocks.map(([type,minutes])=>({...newBlock(type),minutes}))});
+  state.plans=[make('Linux',[['lesson',25],['break',5],['lesson',25],['break',10],['lesson',10]]),make('Design',[['lesson',30],['break',5],['lesson',35],['break',10]]),make('Inglês',[['lesson',10],['lesson',30],['break',5],['lesson',30],['break',10]])];
+  for(const block of state.plans[0].blocks)state=setDone(state,'2026-10-27',state.plans[0].id,block.id,true);
+  for(const block of state.plans[1].blocks.slice(0,2))state=setDone(state,'2026-10-27',state.plans[1].id,block.id,true);
+  let summary=dailySummary(state,'2026-10-27');
+  assert.equal(summary.total,14);assert.equal(summary.completed,7);assert.equal(summary.percent,50);assert.equal(summary.studyMinutes,195);
+  state=setDone(state,'2026-10-27',state.plans[1].id,state.plans[1].blocks[2].id,true);
+  summary=dailySummary(state,'2026-10-27');assert.equal(summary.completed,8);assert.equal(summary.percent,57);
+  assert.equal(dailySummary(state,'2026-10-28').completed,0);
+  assert.equal(dailySummary(state,'2026-11-01').total,0);assert.equal(dailySummary(state,'2026-11-01').percent,0);
 });

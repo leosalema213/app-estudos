@@ -3,8 +3,15 @@ export const dayKey = (date = new Date()) => `${date.getFullYear()}-${String(dat
 export const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 export const colors = ['violet', 'blue', 'orange', 'green', 'pink'];
 export const densities = ['minimal', 'compact', 'comfortable'];
+export const themePresets = [
+  { id: 'pink', name: 'Rosa', background: '#1d131a', surface: '#271b23', accent: '#f2a7c8', text: '#ffeaf4', muted: '#c8a9bb' },
+  { id: 'blue', name: 'Azul', background: '#121a27', surface: '#1b2738', accent: '#9ec5ff', text: '#edf4ff', muted: '#a8bad2' },
+  { id: 'green', name: 'Verde', background: '#111e19', surface: '#1b2b24', accent: '#a0d8bb', text: '#edf9f2', muted: '#a6bfb0' },
+  { id: 'purple', name: 'Roxo', background: '#191524', surface: '#261f35', accent: '#c9b5ff', text: '#f4edff', muted: '#baadce' },
+];
+export function orderedNotes(notes) { return [...notes].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)); }
 export function preferences(settings = {}) {
-  return { sound: settings.sound !== false, theme: ['light', 'dark'].includes(settings.theme) ? settings.theme : 'system', density: densities.includes(settings.density) ? settings.density : 'compact', plansView: settings.plansView === 'list' ? 'list' : 'cards' };
+  return { sound: settings.sound !== false, theme: ['light', 'dark', 'custom'].includes(settings.theme) ? settings.theme : 'system', palette: themePresets.some(p => p.id === settings.palette) ? settings.palette : 'pink', density: densities.includes(settings.density) ? settings.density : 'compact', plansView: settings.plansView === 'list' ? 'list' : 'cards' };
 }
 export const recordKey = (date, planId, blockId) => `${date}|${planId}|${blockId}`;
 export function newBlock(type = 'lesson') { return { id: uid(), type, name: type === 'break' ? 'Pausa para respirar' : 'Nova aula', minutes: type === 'break' ? 5 : 25 }; }
@@ -17,6 +24,14 @@ export function firstPlan() {
   return { ...plan, name: 'Meu primeiro plano', blocks: plan.blocks.map((block, i) => ({ ...block, name: block.type === 'lesson' ? `Aula ${i === 0 ? 1 : 2}` : 'Descanso' })) };
 }
 export function getRecord(state, date, planId, blockId) { return state.records[recordKey(date, planId, blockId)] || { elapsedMs: 0, done: false }; }
+export function dailySummary(state, date) {
+  const weekday = new Date(`${date}T12:00:00`).getDay();
+  const plans = state.plans.filter(plan => plan.days.includes(weekday));
+  const blocks = plans.flatMap(plan => plan.blocks.map(block => ({ plan, block })));
+  const completed = blocks.filter(({ plan, block }) => getRecord(state, date, plan.id, block.id).done).length;
+  const studyMinutes = blocks.reduce((total, { block }) => total + (block.type === 'lesson' ? block.minutes : 0), 0);
+  return { plans, total: blocks.length, completed, studyMinutes, percent: blocks.length ? Math.round(completed / blocks.length * 100) : 0 };
+}
 export function setDone(state, date, planId, blockId, done) {
   const key = recordKey(date, planId, blockId);
   const plan = state.plans.find(p => p.id === planId);
@@ -84,7 +99,7 @@ export function validateData(data) {
       if (!b.id || ids.has(b.id) || !['lesson', 'break'].includes(b.type) || typeof b.name !== 'string' || !Number.isFinite(b.minutes) || b.minutes < 1 || b.minutes > 360) throw new Error('Bloco inválido no backup.');
       ids.add(b.id);
     }
-    for (const n of p.notes) if (!n.id || typeof n.text !== 'string' || typeof n.date !== 'string' || !Array.isArray(n.images) || n.images.some(i => typeof i !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(i))) throw new Error('Anotação inválida no backup.');
+    for (const n of p.notes) if (!n.id || typeof n.text !== 'string' || typeof n.date !== 'string' || (n.pinned !== undefined && typeof n.pinned !== 'boolean') || !Array.isArray(n.images) || n.images.some(i => typeof i !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(i))) throw new Error('Anotação inválida no backup.');
   }
   for (const [key, rec] of Object.entries(data.records)) if (!/^\d{4}-\d{2}-\d{2}\|/.test(key) || !rec || !Number.isFinite(rec.elapsedMs) || rec.elapsedMs < 0 || typeof rec.done !== 'boolean') throw new Error('Histórico inválido no backup.');
   return { ...data, active: null, settings: preferences(data.settings) };

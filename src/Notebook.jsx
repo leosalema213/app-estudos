@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowUpRight, BookOpen, Check, ImagePlus, NotebookText, PanelLeftClose, PanelLeftOpen, PenLine, Plus, Search, SlidersHorizontal, Trash2, X } from 'lucide-react';
-import { uid } from './model.js';
+import { ArrowUpRight, BookOpen, Check, ImagePlus, NotebookText, PanelLeftClose, PanelLeftOpen, PenLine, Pin, Plus, Search, SlidersHorizontal, Trash2, X } from 'lucide-react';
+import { orderedNotes, uid } from './model.js';
 
 function Tool({ label, children, ...props }) {
   return <button className="icon-button" title={label} aria-label={label} type="button" {...props}>{children}</button>;
@@ -12,13 +12,13 @@ function dateLabel(value) {
 }
 export function NotesPreview({ plan, onOpen }) {
   return <section className="plan-notes-preview" aria-label={`Últimas anotações de ${plan.name}`}>
-    {plan.notes.slice(0, 3).map(note => <button className="preview-note" key={note.id} onClick={() => onOpen(note.id)}><NotebookText size={14} /><span><strong>{note.title || 'Sem título'}</strong><small>{note.text.trim().slice(0, 110) || (note.images.length ? 'Anotação com imagem' : 'Sem texto')}</small></span><ArrowUpRight size={13} /></button>)}
+    {orderedNotes(plan.notes).slice(0, 3).map(note => <button className="preview-note" key={note.id} onClick={() => onOpen(note.id)}>{note.pinned ? <Pin size={14} /> : <NotebookText size={14} />}<span><strong>{note.title || 'Sem título'}</strong><small>{note.text.trim().slice(0, 110) || (note.images.length ? 'Anotação com imagem' : 'Sem texto')}</small></span><ArrowUpRight size={13} /></button>)}
     <button className="preview-open" onClick={() => onOpen()}>Abrir caderno <ArrowUpRight size={12} /></button>
   </section>;
 }
 
 export default function Notebook({ plan, date, initialNote, saveError, onClose, onChange, notify, Modal, Sketch }) {
-  const [selected, setSelected] = useState(plan.notes.find(n => n.id === initialNote)?.id || plan.notes[0]?.id || null);
+  const [selected, setSelected] = useState(plan.notes.find(n => n.id === initialNote)?.id || orderedNotes(plan.notes)[0]?.id || null);
   const [query, setQuery] = useState('');
   const [sidebar, setSidebar] = useState(true);
   const [details, setDetails] = useState(false);
@@ -29,7 +29,7 @@ export default function Notebook({ plan, date, initialNote, saveError, onClose, 
   const pageRef = useRef();
   const note = plan.notes.find(n => n.id === selected);
   const target = plan.notes.find(n => n.id === deleting);
-  const filtered = plan.notes.filter(n => `${n.title || ''} ${n.text}`.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')));
+  const filtered = orderedNotes(plan.notes).filter(n => `${n.title || ''} ${n.text}`.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')));
   const block = plan.blocks.find(b => b.id === note?.blockId);
 
   // Apply changes against the latest plan: reading attachments must not overwrite later typing.
@@ -38,20 +38,20 @@ export default function Notebook({ plan, date, initialNote, saveError, onClose, 
   }
   function edit(changes) { if (note) editById(note.id, changes); }
   function add() {
-    const next = { id: uid(), date, blockId: '', title: '', text: '', images: [] };
+    const next = { id: uid(), date, blockId: '', title: '', text: '', images: [], pinned: false };
     onChange(current => ({ ...current, notes: [next, ...current.notes] }));
     setSelected(next.id); setQuery(''); setDetails(false);
   }
   function remove() {
     const id = deleting;
     onChange(current => ({ ...current, notes: current.notes.filter(n => n.id !== id) }));
-    if (selected === id) setSelected(plan.notes.find(n => n.id !== id)?.id || null);
+    if (selected === id) setSelected(orderedNotes(plan.notes).find(n => n.id !== id)?.id || null);
     setDeleting(null);
   }
   useLayoutEffect(() => {
     const text = textRef.current;
     if (!text) return;
-    const resize = () => { text.style.height = '0px'; text.style.height = `${Math.max(note.images.length ? 140 : 320, text.scrollHeight)}px`; };
+    const resize = () => { text.style.height = '0px'; text.style.height = `${Math.max(note.images.length ? 0 : 320, text.scrollHeight)}px`; };
     resize();
     const observer = new ResizeObserver(resize);
     if (pageRef.current) observer.observe(pageRef.current);
@@ -81,7 +81,7 @@ export default function Notebook({ plan, date, initialNote, saveError, onClose, 
           <label className="notebook-search"><Search size={14} /><input aria-label="Buscar anotações" placeholder="Buscar notas" value={query} onChange={e => setQuery(e.target.value)} /></label>
           <div className="notebook-list-scroll">{filtered.map(n => <div className={`notebook-list-row ${selected === n.id ? 'selected' : ''}`} key={n.id}>
             <button className="notebook-select" aria-current={selected === n.id ? 'true' : undefined} onClick={() => setSelected(n.id)}><strong>{n.title || 'Sem título'}</strong><p>{n.text.trim().slice(0, 100) || (n.images.length ? 'Anotação com imagem' : 'Sem texto')}</p><time dateTime={n.date}>{dateLabel(n.date)}</time></button>
-            <Tool label={`Excluir anotação ${n.title || 'Sem título'}`} onClick={() => setDeleting(n.id)}><X size={13} /></Tool>
+            <div className="notebook-row-actions"><Tool label={`${n.pinned ? 'Desafixar' : 'Fixar'} anotação ${n.title || 'Sem título'}`} aria-pressed={!!n.pinned} onClick={() => editById(n.id, current => ({ pinned: !current.pinned }))}><Pin size={13} fill={n.pinned ? 'currentColor' : 'none'} /></Tool><Tool label={`Excluir anotação ${n.title || 'Sem título'}`} onClick={() => setDeleting(n.id)}><X size={13} /></Tool></div>
           </div>)}{!filtered.length && <p className="notebook-list-empty">{query ? 'Nenhuma nota encontrada.' : 'Nenhuma anotação.'}</p>}</div>
           <small className="notebook-note-count">{plan.notes.length} {plan.notes.length === 1 ? 'anotação' : 'anotações'}</small>
         </aside>}

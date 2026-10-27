@@ -1,0 +1,41 @@
+/* These attributes are set only for the four opt-in custom presets. */
+:root[data-palette] {
+  color:var(--custom-text);background:var(--custom-background);
+  --purple:var(--custom-accent);--purple-dark:var(--custom-text);--muted:var(--custom-muted);
+  --palette-line:color-mix(in srgb,var(--custom-accent) 14%,transparent);
+  --palette-tint:color-mix(in srgb,var(--custom-accent) 10%,transparent);
+}
+:root[data-palette][data-glass="native"] { background:transparent; }
+[data-palette] .app-shell { background:var(--custom-background); }
+[data-palette] :is(.sidebar,.topbar,.bottom-player) { background:color-mix(in srgb,var(--custom-surface) 75%,var(--custom-background));border-color:var(--palette-line); }
+[data-palette] :is(.stat-card,.study-card,.overview-card,.chart-card,.history-card,.modal,.modal-heading,.notebook-document,.sketch-panel) { background:var(--custom-surface);border-color:var(--palette-line); }
+[data-palette] :is(h1,h2,h3,.brand,.card-heading h3,.overview-card h2,.stat-card>strong,.player-info strong,.player-time,.block-name strong,.notebook-title,.modal-heading h2,.editor-section h3,.setting-row strong,.preference-section h3,.note-delete-body strong,.tutorial-body strong) { color:var(--custom-text); }
+[data-palette] :is(.page-heading p,.section-heading p,.stat-card p,.sidebar nav button,.sidebar-plans>button,.settings-button,.local-badge,.block-name small,.block-duration,.card-heading p,.notes-link,.date-switch,.tabs button,.card-footer,.overview-meta,.overview-actions>button:first-child,.overview-card>p,.muted,.metrics-help,.history-card td,.player-info small,.compact-button,.confirm-text,.preference-section>p,.preference-section .setting-row p,.notebook-text,.notebook-select p,.notebook-select time,.notebook-page-meta,.notebook-save,.tutorial-body p,.preview-note small) { color:var(--custom-muted); }
+[data-palette] .brand-mark,[data-palette] .stat-icon { background:var(--palette-tint);border-color:var(--palette-line);color:var(--custom-accent); }
+[data-palette] .brand .app-version { color:var(--custom-muted); }
+[data-palette] :is(.primary,.round-play) { background:var(--custom-accent);color:#172019; }
+[data-palette] :is(.primary:hover,.round-play:hover) { background:var(--custom-text);color:#172019; }
+[data-palette] .sidebar nav button.nav-active { background:var(--palette-tint);color:var(--custom-text); }
+[data-palette] :is(.icon-button:hover,.secondary:hover,.notebook-tool:hover) { background:var(--palette-tint);color:var(--custom-text); }
+[data-palette] :is(.tabs button.selected,.density-options button.selected,.view-switch [aria-pressed="true"],.theme-modes button.selected) { background:var(--palette-tint);color:var(--custom-text);border-color:var(--custom-accent); }
+[data-palette] :is(.preferences-tabs,.preferences-footer,.preference-section+.preference-section,.modal-actions,.study-block,.card-footer,.overview-actions,.plan-notes-preview,.notebook-tools,.notebook-list,.notebook-note-count,.notebook-details) { border-color:var(--palette-line); }
+[data-palette] .preferences-tabs [aria-selected="true"] { color:var(--custom-accent);border-bottom-color:var(--custom-accent); }
+[data-palette] :is(.workspace-label,.stat-label,.block-number,.chart-y,.chart-column>span,.history-card th,.preferences-tabs [aria-selected="false"]) { color:var(--custom-muted); }
+[data-palette] :is(.secondary,.theme-modes button,.density-options button,.date-switch,.compact-button,.block-play,.checkbox) { border-color:var(--palette-line); }
+[data-palette] :is(input,textarea,select,select option) { color-scheme:dark;color:var(--custom-text); }
+[data-palette] :is(select,select option) { background-color:var(--custom-surface); }
+[data-palette] input::placeholder,[data-palette] textarea::placeholder { color:var(--custom-muted);opacity:1; }
+[data-palette] :is(.notebook-list,.notebook-details,.empty) { background:var(--custom-background); }
+[data-palette] .notebook-search { background:var(--custom-surface);border-color:var(--palette-line); }
+[data-palette] .notebook-search:focus-within { border-color:var(--custom-accent); }
+[data-palette] .notebook-list-row.selected { background:var(--palette-tint);border-color:var(--palette-line); }
+[data-palette] :is(.notebook-select strong,.preview-note strong) { color:var(--custom-text); }
+[data-palette] .notebook-row-actions [aria-pressed="true"] { color:var(--custom-accent); }
+[data-palette] :is(.mini-progress i,.timer-track i,.bottom-progress,.chart-column.today .bar) { background:var(--custom-accent); }
+[data-palette] .bar { background:color-mix(in srgb,var(--custom-accent) 55%,var(--custom-surface)); }
+[data-palette] :is(.block-play.playing,.checkbox.checked) { background:var(--custom-accent);border-color:var(--custom-accent);color:#172019; }
+[data-palette] .study-card { --accent:var(--custom-accent);--tint:var(--palette-tint); }
+[data-palette] .compact-window { background:var(--custom-background);border-color:var(--palette-line); }
+[data-palette] :is(.compact-title h2,.compact-controls>strong) { color:var(--custom-text); }
+[data-palette] .toggle.on { background:var(--custom-accent); }
+[data-palette] :is(button,input,textarea,select):focus-visible { outline-color:var(--custom-accent); }

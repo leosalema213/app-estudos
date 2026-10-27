@@ -1,5 +1,18 @@
 # Histórico de versões
 
+## 0.4.4
+
+- Área Cadernos independente dos planos de estudo, com vários cadernos e páginas.
+- Capas opcionais por imagem, cores e ícones; edição e exclusão com confirmação.
+- Seletor de cor personalizada junto às cores pastéis, 24 ícones e opção Sem ícone, inclusive em capas com imagem.
+- Índice de páginas atualizado pelos títulos e índice clicável dos títulos dentro de cada página.
+- Editor com negrito, itálico, tamanho de fonte, títulos, listas, desfazer/refazer e atalhos Markdown para títulos (`#`, `##`, `###`).
+- Imagens, prints e rabiscos intercalados com o texto, reutilizando o editor das anotações.
+- Dados anteriores preservados; cadernos, capas e formatação incluídos nos backups locais.
+- Botão de maximizar com o quadrado padrão do Windows.
+- Botão do modo compacto reduzido a um ícone discreto com identificação ao passar o mouse.
+- Modo compacto fixo em 340 × 112 px, sem redimensionamento, preservando a última posição e restaurando o tamanho normal ao expandir.
+
 ## 0.4.3
 
 - Anotações em documento contínuo: texto, prints, imagens e rabiscos intercalados na posição do cursor.

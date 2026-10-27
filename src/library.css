@@ -1,0 +1,108 @@
+.journal-area { --journal-panel:#fff;--journal-side:#f8f8fa;--journal-line:#e9e9ee;--journal-text:#41414b;--journal-muted:#8c8c98;color:var(--journal-text); }
+[data-theme="dark"] .journal-area { --journal-panel:#191919;--journal-side:#141414;--journal-line:#ffffff10;--journal-text:#ddd;--journal-muted:#939393; }
+[data-palette] .journal-area { --journal-panel:var(--custom-surface);--journal-side:var(--custom-background);--journal-line:var(--palette-line);--journal-text:var(--custom-text);--journal-muted:var(--custom-muted); }
+.journal-heading { display:flex;align-items:center;gap:10px;margin-bottom:18px;min-height:36px; }
+.journal-heading h1 { min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-size:21px;letter-spacing:-.5px;color:var(--journal-text); }
+.journal-heading>.primary { margin-left:auto;padding:9px 12px;font-size:11px; }
+.journal-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;padding-bottom:25px; }
+.journal-card { position:relative;background:var(--journal-panel);border:1px solid var(--journal-line);border-radius:10px;overflow:hidden;transition:transform .15s,border-color .15s; }
+.journal-card:hover { transform:translateY(-2px);border-color:var(--journal-muted); }
+.journal-open { display:block;width:100%;padding:0;text-align:left; }
+.journal-open>div:not(.journal-cover) { padding:15px 46px 16px 16px; }
+.journal-open h2 { font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--journal-text); }
+.journal-open small { display:block;margin-top:6px;color:var(--journal-muted);font-size:10px; }
+.journal-card>.icon-button { position:absolute;right:10px;bottom:16px; }
+.journal-cover { height:116px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--cover-bg);color:var(--cover-ink); }
+.journal-cover::before { content:'';position:absolute;left:11px;top:0;bottom:0;width:1px;background:currentColor;opacity:.2;box-shadow:3px 0 0 #ffffff20; }
+.journal-cover>img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+.journal-cover>span { position:relative;display:grid;place-items:center;z-index:1; }
+.journal-cover:has(img)>span { padding:8px;border-radius:8px;background:#16161680;color:#fff; }
+.cover-violet { --cover-bg:#ddd4eb;--cover-ink:#69557e;background-color:var(--cover-bg); }
+.cover-blue { --cover-bg:#c9dce8;--cover-ink:#4c6a80;background-color:var(--cover-bg); }
+.cover-orange { --cover-bg:#e7d9c0;--cover-ink:#7b6846;background-color:var(--cover-bg); }
+.cover-green { --cover-bg:#cedfd3;--cover-ink:#4b715a;background-color:var(--cover-bg); }
+.cover-pink { --cover-bg:#e8ced7;--cover-ink:#86576a;background-color:var(--cover-bg); }
+.journal-cover.small-cover { width:33px;height:33px;border-radius:6px;flex-shrink:0; }
+.small-cover::before { left:4px; }
+.small-cover:has(img)>span { padding:2px;border-radius:3px; }
+.journal-empty { min-height:290px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--journal-muted);text-align:center;padding:30px; }
+.journal-empty h2 { font-size:17px;font-weight:500;color:var(--journal-text); }
+.journal-empty p { font-size:12px; }
+.journal-layout { display:grid;grid-template-columns:213px minmax(0,1fr);height:calc(100vh - 173px);min-height:370px;border:1px solid var(--journal-line);border-radius:9px;overflow:hidden;background:var(--journal-panel);margin-bottom:18px; }
+body:has(.bottom-player) .journal-layout { height:calc(100vh - 247px); }
+.journal-index { min-width:0;background:var(--journal-side);border-right:1px solid var(--journal-line);overflow:auto;scrollbar-width:thin;overscroll-behavior:contain; }
+.journal-index-title { display:flex;justify-content:space-between;font-size:9px;letter-spacing:1px;padding:17px 15px 0;color:var(--journal-muted); }
+.journal-index .notebook-search { background:var(--journal-panel);border-color:var(--journal-line);margin:12px 10px; }
+.journal-pages { padding:0 7px; }
+.journal-page-row { display:flex;align-items:center;border-radius:6px;margin-bottom:3px; }
+.journal-page-row.selected { background:color-mix(in srgb,var(--journal-muted) 12%,transparent); }
+.journal-page-row>button:first-child { min-width:0;flex:1;display:flex;align-items:center;gap:8px;padding:10px 8px;font-size:11px;text-align:left;color:var(--journal-muted); }
+.journal-page-row.selected>button:first-child { color:var(--journal-text); }
+.journal-page-row>button:first-child span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.journal-page-row>.icon-button { width:24px;height:24px;flex-shrink:0;opacity:0; }
+.journal-page-row:hover>.icon-button,.journal-page-row:focus-within>.icon-button,.journal-page-row.selected>.icon-button { opacity:1; }
+.journal-no-results { font-size:10px;padding:12px 8px;color:var(--journal-muted); }
+.journal-outline { margin:18px 10px 15px;border-top:1px solid var(--journal-line);padding-top:15px; }
+.journal-outline>span { display:block;font-size:8px;letter-spacing:1px;color:var(--journal-muted);margin:0 5px 8px; }
+.journal-outline button { display:block;width:100%;text-align:left;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:10px;color:var(--journal-muted);padding:7px 8px; }
+.journal-outline button:hover { color:var(--journal-text); }
+.journal-document { display:flex;flex-direction:column;min-width:0;min-height:0; }
+.journal-page-tools { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 14px;border-bottom:1px solid var(--journal-line);flex-shrink:0; }
+.journal-page-tools>span { display:flex;align-items:center;gap:5px;font-size:9px;color:var(--journal-muted); }
+.journal-page-tools .has-error { color:#cf8c8c; }
+.journal-page-tools>div { display:flex;gap:5px; }
+.journal-sheet { overflow:auto;flex:1;min-height:0;overscroll-behavior:contain;scrollbar-width:thin; }
+.journal-paper { max-width:870px;margin:auto;padding:25px 34px 70px; }
+.journal-paper>time { color:var(--journal-muted);font-size:10px; }
+.journal-paper .notebook-title { color:var(--journal-text);padding:12px 0 18px;font-size:25px; }
+.journal-paper .notebook-text { color:var(--journal-text); }
+.format-toolbar { display:flex;align-items:center;gap:2px;flex-wrap:wrap;position:sticky;top:0;z-index:2;background:var(--journal-panel);padding:7px 0;margin:0 0 14px;border-bottom:1px solid var(--journal-line); }
+.format-toolbar select { width:auto;padding:5px 7px;font-size:10px;border-color:var(--journal-line);background:var(--journal-panel);color:var(--journal-text); }
+.format-toolbar .icon-button { width:27px;height:27px; }
+.format-toolbar [aria-pressed="true"] { background:color-mix(in srgb,var(--journal-muted) 18%,transparent);color:var(--journal-text); }
+.format-separator { width:1px;height:17px;background:var(--journal-line);margin:0 6px; }
+.notebook-text :is(h1,h2,h3) { margin:18px 0 10px;line-height:1.4;color:inherit;font-weight:650;letter-spacing:-.3px;scroll-margin-top:65px; }
+.notebook-text h1 { font-size:27px; }.notebook-text h2 { font-size:22px; }.notebook-text h3 { font-size:18px; }
+.notebook-text :is(ul,ol) { padding-left:24px;margin:7px 0 12px; }
+.notebook-text li p { margin-bottom:3px; }
+.journal-book-form { padding:18px 24px 0; }
+.journal-book-form>.journal-cover { height:95px;border-radius:8px;margin-bottom:18px; }
+.journal-book-form>label { display:flex;flex-direction:column;gap:7px;font-size:11px;color:#999; }
+.journal-book-form fieldset { padding:0;border:0;margin:15px 0; }
+.journal-book-form legend { font-size:10px;color:#999;margin-bottom:9px; }
+.journal-choices { display:flex;gap:8px; }
+.cover-icon-options { display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;max-height:112px;overflow:auto;padding:4px;scrollbar-width:thin; }
+.cover-icon-options .icon-button { width:100%;height:30px; }
+.cover-icon-options [aria-pressed="true"] { outline:1px solid currentColor;outline-offset:-1px;background:#88888815; }
+.cover-icon-options .no-cover-icon { grid-column:span 3;gap:6px;font-size:10px; }
+.custom-cover-color { display:flex;align-items:center;gap:5px;position:relative;font-size:10px;color:#999;cursor:pointer;padding:4px 7px;border:1px solid #88888830;border-radius:5px; }
+.custom-cover-color.selected { color:inherit;border-color:currentColor; }
+.custom-cover-color input { position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;padding:0; }
+.custom-cover-color:focus-within { outline:2px solid #9986e9;outline-offset:2px; }
+.journal-choices [aria-pressed="true"] { outline:2px solid currentColor;outline-offset:2px; }
+.journal-color { width:25px;height:25px;border-radius:50%;border:1px solid #00000010; }
+.journal-cover-actions { display:flex;align-items:center;gap:10px; }
+.journal-cover-actions .secondary { cursor:pointer;font-size:10px;padding:8px 10px; }
+.journal-book-form .modal-actions { margin:20px 0 0!important; }
+.journal-book-form .modal-actions>.icon-button { margin-right:auto;color:#b86e6e; }
+.bottom-player .compact-button { width:30px;height:30px;min-width:30px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:5px;border:0;background:transparent;border-radius:6px; }
+.bottom-player .compact-button:hover { background:#88888815; }
+.bottom-player .compact-button svg { width:15px;height:15px; }
+@media(max-width:1000px) {
+  .journal-layout { grid-template-columns:175px minmax(0,1fr); }
+  .journal-paper { padding:20px 22px 50px; }
+  .format-separator { margin:0 3px; }
+}
+@media(max-width:680px) {
+  .journal-layout { grid-template-columns:135px minmax(0,1fr); }
+  .journal-paper { padding:16px 14px 40px; }
+  .journal-heading h1 { font-size:17px; }
+  .journal-heading { gap:5px; }
+  .journal-page-row>button:first-child { font-size:10px;gap:5px;padding-left:4px; }
+  .journal-page-tools { padding:6px 9px; }
+  .journal-page-tools>span { font-size:0; }
+  .format-toolbar { gap:1px; }
+  .format-toolbar .icon-button { width:24px; }
+  .format-toolbar select { font-size:9px;padding:4px; }
+  .journal-grid { grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px; }
+}

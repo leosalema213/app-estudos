@@ -144,12 +144,14 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   await page.locator('.compact-window').waitFor();
   const compactBounds = await app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; return { ...w.getBounds(), top: w.isAlwaysOnTop() }; });
   assert.equal(compactBounds.width, 340); assert.equal(compactBounds.height, 112); assert.equal(compactBounds.top, true);
+  assert.deepEqual(await app.evaluate(({ BrowserWindow }) => { const window = BrowserWindow.getAllWindows()[0]; return { resizable: window.isResizable(), maximizable: window.isMaximizable(), min: window.getMinimumSize(), max: window.getMaximumSize() }; }), { resizable: false, maximizable: false, min: [340, 112], max: [340, 112] });
   assert.equal(await page.getByText('COMPASSO', { exact: true }).count(), 0);
   assert.equal(await page.getByText('DESENVOLVIMENTO', { exact: true }).count(), 0);
   const savedCompactBounds = await app.evaluate(({ BrowserWindow, screen }) => {
     const window = BrowserWindow.getAllWindows()[0];const area=screen.getPrimaryDisplay().workArea;
-    window.setBounds({x:area.x+25,y:area.y+area.height-145,width:360,height:120});return window.getBounds();
+    window.setPosition(area.x+25,area.y+area.height-145);return window.getBounds();
   });
+  assert.equal(savedCompactBounds.width, 340); assert.equal(savedCompactBounds.height, 112);
   await page.getByRole('button',{name:'Voltar ao aplicativo',exact:true}).click();
   await page.getByRole('button',{name:'Modo compacto',exact:true}).click();
   assert.deepEqual(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].getBounds()),savedCompactBounds);
@@ -171,6 +173,16 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   await page.getByRole('checkbox',{name:'Concluir Pausa para respirar',exact:true}).click();
   const normal = await app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; return { ...w.getBounds(), top: w.isAlwaysOnTop() }; });
   assert.equal(normal.top, false); assert(normal.width >= 840);
+  assert.deepEqual(await app.evaluate(({ BrowserWindow }) => { const window = BrowserWindow.getAllWindows()[0]; return { resizable: window.isResizable(), maximizable: window.isMaximizable(), max: window.getMaximumSize() }; }), { resizable: true, maximizable: true, max: [0, 0] });
+  await page.getByRole('button', { name: 'Maximizar janela', exact: true }).click();
+  await page.waitForTimeout(150);
+  assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized()), true);
+  await page.getByRole('button', { name: 'Modo compacto', exact: true }).click();
+  assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getBounds().width), 340);
+  await page.getByRole('button', { name: 'Voltar ao aplicativo', exact: true }).click();
+  await page.waitForTimeout(150);
+  assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized()), true);
+  await page.getByRole('button', { name: 'Maximizar janela', exact: true }).click();
   await page.getByRole('button', { name: 'Planos de estudo', exact: true }).click();
   await page.getByRole('button', { name: 'Exibir em lista', exact: true }).click();
   await page.getByRole('button', { name: 'Duplicar Plano de teste', exact: true }).click();

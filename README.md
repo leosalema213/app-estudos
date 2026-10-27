@@ -1,6 +1,6 @@
 # Compasso
 
-Aplicativo de estudos para Windows com planos por dia da semana, cronômetro de aulas e descansos, caderno com imagens e histórico de estudo. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
+Aplicativo para Windows com planos de estudo, cronômetro de aulas e descansos, histórico e cadernos pessoais com páginas, imagens e desenhos. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
 
 **[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Compasso-Instalar.exe)**
 
@@ -15,6 +15,10 @@ O link de download permanece o mesmo em todas as versões publicadas. A versão 
 ![Caderno de anotações ampliado](docs/caderno.png)
 
 ![Preferências em abas e temas personalizados](docs/preferencias.png)
+
+![Cadernos pessoais com capas e ícones](docs/cadernos.png)
+
+![Página com formatação e índice de títulos](docs/pagina-caderno.png)
 
 ## Abrir
 
@@ -57,8 +61,8 @@ npm run dist
 - O resumo de Meu dia e a meta diária contam todos os blocos programados, incluindo aulas e descansos. As horas de foco continuam excluindo os descansos.
 - Editar o nome e a duração de cada aula ou descanso pelo lápis na própria linha, mantendo o tempo já estudado.
 - Escolher três densidades nas preferências: **Mínimo**, **Compacto** (padrão) e **Confortável**. A escolha fica salva.
-- Usar uma janela compacta de **340 × 112 px**, arrastável pelo título, redimensionável e sempre sobre as outras janelas. Expandir ou fechar esse modo retorna ao app e mantém o cronômetro.
-- O modo compacto lembra sua última posição e tamanho, inclusive após reiniciar. Se o monitor usado não estiver mais disponível, a janela retorna para uma área visível.
+- Usar uma janela compacta de **340 × 112 px**, de tamanho fixo, arrastável pelo título e sempre sobre as outras janelas. O acesso fica em um ícone discreto no player. Expandir ou fechar esse modo retorna ao app e mantém o cronômetro.
+- O modo compacto lembra sua última posição, inclusive após reiniciar. Se o monitor usado não estiver mais disponível, a janela retorna para uma área visível. Tamanhos personalizados de versões anteriores voltam ao padrão.
 - Novos perfis seguem o tema do dispositivo. Alterações manuais pelo sol/lua ou pelas preferências ficam salvas, independentemente do Windows. Nas preferências, **Seguir dispositivo** restaura o modo automático. O escuro usa preto e cinzas neutros, com vidro nativo Acrylic no Windows 11 22H2 ou superior e fundo sólido nos sistemas sem suporte.
 - Consultar horas reais de estudo, aulas concluídas e médias semanais e mensais. Descansos e pausas não contam como foco. Marcar uma aula manualmente não acrescenta horas.
 - Usar um caderno por plano, com páginas datadas, vínculo opcional com a aula, texto, imagens, prints colados e rabiscos. Imagens PNG/JPG/WebP até 4 MB cada.
@@ -68,6 +72,14 @@ npm run dist
 - Filtrar notas por uma data específica pelo calendário ao lado de Buscar notas, combinando com a busca por texto. A rolagem permanece dentro das modais enquanto estiverem abertas.
 - Usar preferências separadas em Aparência, Geral, Backup e Atualizações. Em Aparência, escolha Dispositivo, Claro, Escuro ou Personalizado; o último oferece temas prontos em rosa, azul, verde e roxo. Tema, cor e espaçamento ficam salvos.
 - Exportar e restaurar backup JSON, incluindo histórico e imagens.
+
+## Cadernos pessoais
+
+Abra **Cadernos** na sidebar para criar espaços independentes dos planos, como Diário, Casa ou Pensamentos. Escolha nome, cor pastel ou personalizada, e um dos 24 ícones. Tanto a imagem de capa quanto o ícone são opcionais: use **Sem ícone** para deixar somente a imagem ou a cor. Cada caderno pode ter várias páginas, com busca pelo título ou conteúdo.
+
+O título da página aparece no índice da esquerda. Se ele estiver vazio, o primeiro título do texto identifica a página automaticamente. Dentro da página, títulos de nível 1, 2 e 3 formam outro índice clicável. Digite `# `, `## ` ou `### ` no início de uma linha para criar um título, ou use o seletor de estilo da barra.
+
+A barra oferece negrito, itálico, tamanho de fonte, títulos, listas e desfazer/refazer. Imagens podem ser coladas, escolhidas por arquivo ou arrastadas para o texto; rabiscos usam a mesma posição do cursor. Páginas, capas e formatação ficam salvas localmente e entram no backup. Excluir uma página ou um caderno exige confirmação.
 
 ## Persistência e comportamento do relógio
 
@@ -86,11 +98,14 @@ npm test
 npm run build
 npm run test:ui
 npm run test:notebook
+npm run test:library
 ```
 
 Os testes de modelo verificam conclusão automática, pausa, troca de aulas, descansos, distribuição diária, marcação manual e backups. O teste de interface abre uma instância isolada do Electron com dados temporários e verifica os fluxos principais. As capturas ficam em `test-output/`.
 
 O teste do caderno verifica notas antigas, texto intercalado com prints e rabiscos, posição do cursor, desfazer/refazer, colagem durante troca de notas, backup e persistência após reiniciar. O editor é carregado somente ao abrir uma nota e armazena cada imagem uma única vez no documento.
+
+O teste dos cadernos pessoais verifica criação e edição de cadernos, capas, páginas, formatação, títulos com Markdown, índices, busca, desenhos, exclusão com confirmação, layout em janela menor e persistência após reiniciar.
 
 Os testes também verificam edição individual, preferências de densidade, aviso de atualização, download e instalação somente após confirmação, além da rejeição de downloads corrompidos. Os testes de atualização simulam a execução do instalador; não instalam nada no computador.
 
@@ -101,7 +116,7 @@ Depois de `npm run dist`, execute `npm run test:installer` para validar o modo s
 Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lote está encerrado e que ele autoriza a publicação, conforme `AGENTS.md`. Por padrão, incremente apenas PATCH; use MINOR ou MAJOR somente se o usuário pedir explicitamente.
 
 1. Atualize a versão em `package.json` e `package-lock.json` com `npm version patch --no-git-tag-version`.
-2. Execute `npm test`, `npm run build`, `npm run test:ui` e `npm run test:notebook`.
+2. Execute `npm test`, `npm run build`, `npm run test:ui`, `npm run test:notebook` e `npm run test:library`.
 3. Gere os arquivos com `npm run dist` e `npm run checksums`.
 4. Faça commit e envie para `origin/main`.
 5. Execute `npm run release`.

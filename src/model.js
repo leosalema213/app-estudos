@@ -1,4 +1,5 @@
-import { validNoteDocument } from './note-document.js';
+import { isNoteImage, validNoteDocument } from './note-document.js';
+import { isNotebookColor, notebookIcons } from './book-appearance.js';
 
 export const uid = () => crypto.randomUUID();
 export const dayKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -18,8 +19,11 @@ export function preferences(settings = {}) {
 export const recordKey = (date, planId, blockId) => `${date}|${planId}|${blockId}`;
 export function newBlock(type = 'lesson') { return { id: uid(), type, name: type === 'break' ? 'Pausa para respirar' : 'Nova aula', minutes: type === 'break' ? 5 : 25 }; }
 export function newPlan() { return { id: uid(), name: '', description: '', color: 'violet', days: [1, 2, 3, 4, 5], blocks: [newBlock(), newBlock('break'), newBlock()], notes: [] }; }
+export { notebookIcons } from './book-appearance.js';
+export function newPage() { return { id: uid(), title: '', date: dayKey(), text: '', images: [] }; }
+export function newNotebook() { return { id: uid(), name: '', icon: 'book', color: 'violet', cover: null, pages: [newPage()] }; }
 export function seed() {
-  return { version: 1, plans: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
+  return { version: 1, plans: [], notebooks: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
 }
 export function firstPlan() {
   const plan = newPlan();
@@ -103,6 +107,15 @@ export function validateData(data) {
     }
     for (const n of p.notes) if (!n.id || typeof n.text !== 'string' || typeof n.date !== 'string' || (n.pinned !== undefined && typeof n.pinned !== 'boolean') || !Array.isArray(n.images) || n.images.some(i => typeof i !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(i)) || (n.document !== undefined && !validNoteDocument(n.document))) throw new Error('Anotação inválida no backup.');
   }
+  if (data.notebooks !== undefined && !Array.isArray(data.notebooks)) throw new Error('Cadernos inválidos no backup.');
+  for (const book of data.notebooks || []) {
+    if (!book?.id || ids.has(book.id) || typeof book.name !== 'string' || !book.name.trim() || !isNotebookColor(book.color) || !notebookIcons.includes(book.icon) || (book.cover !== null && !isNoteImage(book.cover)) || !Array.isArray(book.pages)) throw new Error('Caderno inválido no backup.');
+    ids.add(book.id);
+    for (const page of book.pages) {
+      if (!page?.id || ids.has(page.id) || typeof page.title !== 'string' || typeof page.date !== 'string' || typeof page.text !== 'string' || !Array.isArray(page.images) || page.images.some(image => !isNoteImage(image)) || (page.document !== undefined && !validNoteDocument(page.document))) throw new Error('Página inválida no backup.');
+      ids.add(page.id);
+    }
+  }
   for (const [key, rec] of Object.entries(data.records)) if (!/^\d{4}-\d{2}-\d{2}\|/.test(key) || !rec || !Number.isFinite(rec.elapsedMs) || rec.elapsedMs < 0 || typeof rec.done !== 'boolean') throw new Error('Histórico inválido no backup.');
-  return { ...data, active: null, settings: preferences(data.settings) };
+  return { ...data, notebooks: data.notebooks || [], active: null, settings: preferences(data.settings) };
 }

@@ -1,4 +1,4 @@
-import { forwardRef, useLayoutEffect, useRef } from 'react';
+import { forwardRef, useLayoutEffect, useRef, useState } from 'react';
 import { Editor, Node } from '@tiptap/core';
 import Document from '@tiptap/extension-document';
 import Paragraph from '@tiptap/extension-paragraph';
@@ -7,6 +7,7 @@ import HardBreak from '@tiptap/extension-hard-break';
 import { Dropcursor, Gapcursor, TrailingNode, UndoRedo } from '@tiptap/extensions';
 import { Selection, TextSelection } from '@tiptap/pm/state';
 import { documentText, isNoteImage, noteDocument } from './note-document.js';
+import { FormatToolbar, richExtensions } from './RichText.jsx';
 
 const Image = Node.create({
   name: 'image', group: 'block', atom: true, draggable: true,
@@ -31,14 +32,16 @@ const Image = Node.create({
 });
 
 // One editor per note: its history and selection survive React autosave renders.
-export default forwardRef(function NoteEditor({ note, onChange, notify }, apiRef) {
+export default forwardRef(function NoteEditor({ note, onChange, notify, rich = false }, apiRef) {
   const host = useRef();
+  const instance = useRef();
+  const [format, setFormat] = useState({});
   useLayoutEffect(() => {
     const bookmarks = new Set();
     let pending = 0; let detached = false;
     const editor = new Editor({
       element: host.current,
-      extensions: [Document, Paragraph, Text, HardBreak, UndoRedo, Dropcursor, Gapcursor, TrailingNode, Image],
+      extensions: [Document, Paragraph, Text, HardBreak, UndoRedo, Dropcursor, Gapcursor, TrailingNode, Image, ...(rich ? richExtensions : [])],
       content: noteDocument(note),
       onCreate: ({ editor }) => { editor.view.dom.dataset.empty = String(editor.isEmpty); },
       editorProps: {
@@ -56,7 +59,10 @@ export default forwardRef(function NoteEditor({ note, onChange, notify }, apiRef
           api.images([...event.dataTransfer.files]); return true;
         },
       },
-      onTransaction: ({ transaction }) => { for (const token of bookmarks) token.selection = token.selection.map(transaction.mapping); },
+      onTransaction: ({ transaction, editor }) => {
+        for (const token of bookmarks) token.selection = token.selection.map(transaction.mapping);
+        if (rich && !detached) setFormat({ bold: editor.isActive('bold'), italic: editor.isActive('italic'), heading: editor.isActive('heading') ? editor.getAttributes('heading').level : '', size: editor.getAttributes('fontSize').size || '14', bulletList: editor.isActive('bulletList'), orderedList: editor.isActive('orderedList'), undo: editor.can().undo(), redo: editor.can().redo() });
+      },
       onUpdate: ({ editor }) => {
         editor.view.dom.dataset.empty = String(editor.isEmpty);
         const document = editor.getJSON(); onChange({ document, text: documentText(document), images: [] });
@@ -87,6 +93,14 @@ export default forwardRef(function NoteEditor({ note, onChange, notify }, apiRef
       }
     };
     const api = {
+      goToHeading(index) {
+        let current = 0; let target;
+        editor.state.doc.descendants((node, pos) => { if (node.type.name === 'heading' && current++ === index) target = pos; });
+        if (target !== undefined) {
+          editor.commands.setTextSelection(target + 1); editor.view.focus();
+          editor.view.dom.querySelectorAll('h1,h2,h3')[index]?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        }
+      },
       capture,
       cancel: token => bookmarks.delete(token),
       insert: (src, token) => insert([src], token),
@@ -104,13 +118,15 @@ export default forwardRef(function NoteEditor({ note, onChange, notify }, apiRef
         } finally { pending--; if (detached && !pending) editor.destroy(); }
       },
     };
-    apiRef.current = api;
+    instance.current = editor; apiRef.current = api;
+    if (rich) setFormat({});
     return () => {
       if (apiRef.current === api) apiRef.current = null;
+      instance.current = null;
       detached = true;
       // Finish an in-flight paste against the original note even after switching notes.
       if (!pending) editor.destroy();
     };
-  }, [note.id]);
-  return <div className="note-document-editor" ref={host} />;
+  }, [note.id, rich]);
+  return <>{rich && <FormatToolbar editor={instance.current} state={format} />}<div className="note-document-editor" ref={host} /></>;
 });

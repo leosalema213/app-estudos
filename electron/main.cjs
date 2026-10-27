@@ -90,7 +90,10 @@ else {
         wasMaximized = win.isMaximized();
         normalBounds = win.getNormalBounds();
         if (wasMaximized) win.unmaximize();
-        win.setMinimumSize(280, 100);
+        win.setMinimumSize(340, 112);
+        win.setMaximumSize(340, 112);
+        win.setResizable(false);
+        win.setMaximizable(false);
         const primary = screen.getPrimaryDisplay();
         const areas = [primary, ...screen.getAllDisplays().filter(display => display.id !== primary.id)].map(display => display.workArea);
         win.setBounds(fitCompactBounds(compactBounds || { ...normalBounds, width: 340, height: 112 }, areas));
@@ -100,6 +103,9 @@ else {
         compactBounds = win.getBounds(); saveWindowState();
         compact = false;
         win.setAlwaysOnTop(false);
+        win.setResizable(true);
+        win.setMaximizable(true);
+        win.setMaximumSize(0, 0);
         win.setMinimumSize(840, 620);
         if (normalBounds) win.setBounds(normalBounds);
         if (wasMaximized) win.maximize();

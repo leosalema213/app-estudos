@@ -1,0 +1,12 @@
+import { Archive, BookOpen, Brain, CalendarDays, Camera, CircleOff, Code, Coffee, Flower2, Gamepad2, Globe, GraduationCap, Heart, House, Leaf, Lightbulb, Moon, Mountain, Music, NotebookPen, Palette, Plane, Star, Sun, Wallet } from 'lucide-react';
+import { notebookIcons } from './book-appearance.js';
+
+export const coverIcons = { book: BookOpen, diary: NotebookPen, home: House, thoughts: Heart, ideas: Lightbulb, coffee: Coffee, star: Star, moon: Moon, sun: Sun, music: Music, code: Code, globe: Globe, camera: Camera, flower: Flower2, leaf: Leaf, mountain: Mountain, palette: Palette, plane: Plane, brain: Brain, game: Gamepad2, study: GraduationCap, wallet: Wallet, calendar: CalendarDays, archive: Archive };
+const names = { book: 'Caderno', diary: 'Diário', home: 'Casa', thoughts: 'Pensamentos', ideas: 'Ideias', coffee: 'Cotidiano', star: 'Estrela', moon: 'Lua', sun: 'Sol', music: 'Música', code: 'Código', globe: 'Mundo', camera: 'Câmera', flower: 'Flor', leaf: 'Folha', mountain: 'Montanha', palette: 'Arte', plane: 'Viagem', brain: 'Mente', game: 'Jogos', study: 'Estudos', wallet: 'Finanças', calendar: 'Calendário', archive: 'Arquivo', none: 'Sem ícone' };
+const presets = [['violet', 'Roxo'], ['blue', 'Azul'], ['orange', 'Areia'], ['green', 'Verde'], ['pink', 'Rosa']];
+export default function CoverPicker({ icon, color, onChange }) {
+  return <>
+    <fieldset><legend>Ícone</legend><div className="cover-icon-options" role="group" aria-label="Ícones do caderno">{notebookIcons.map(key => { const Icon = coverIcons[key] || CircleOff; return <button type="button" key={key} className={`icon-button ${key === 'none' ? 'no-cover-icon' : ''}`} title={names[key]} aria-label={names[key]} aria-pressed={icon === key} onClick={() => onChange({ icon: key })}><Icon size={18} strokeWidth={1.6} />{key === 'none' && <span>Sem ícone</span>}</button>; })}</div></fieldset>
+    <fieldset><legend>Cor</legend><div className="journal-choices">{presets.map(([key, label]) => <button type="button" key={key} className={`journal-color cover-${key}`} aria-label={`Cor ${label}`} aria-pressed={color === key} onClick={() => onChange({ color: key })} />)}<label className={`custom-cover-color ${color.startsWith('#') ? 'selected' : ''}`} title="Escolher cor personalizada"><Palette size={15} /><span>Personalizada</span><input type="color" aria-label="Cor personalizada do caderno" value={color.startsWith('#') ? color : '#ddd4eb'} onChange={event => onChange({ color: event.target.value })} /></label></div></fieldset>
+  </>;
+}

@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.5.0
+
+- Corrige o conflito entre a prévia local e a Release 0.4.10, publicando um número superior para que as instalações existentes encontrem a atualização.
+- Nova sequência de versões: após PATCH 9, avança MINOR e reinicia PATCH em zero. A 0.4.10 é preservada como histórico legado.
+- Prévias passam a usar identificadores distintos, como 0.5.1-preview.1 e 0.5.1-preview.2; a versão final mantém 0.5.1 e é reconhecida como mais nova que essas prévias.
+- Comandos para preparar preview/final e bloqueio de previews no publicador de produção. Planos, livros, progresso e demais dados locais permanecem no mesmo perfil.
+
 ## 0.4.10
 
 - Biblioteca Livros independente dos cadernos, com importação de PDF, EPUB refluível, MOBI, AZW e AZW3 sem DRM, até 200 MiB por arquivo, e cópias offline deduplicadas no perfil.

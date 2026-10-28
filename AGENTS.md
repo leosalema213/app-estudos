@@ -7,7 +7,7 @@ Prefira alterações incrementais e localizadas. Preserve a estrutura dos arquiv
 ## Testes e validação com o usuário
 
 - Por preferência explícita do usuário, a execução dos testes fica, por padrão, no terminal dele. Não rode automaticamente suítes completas, integrações/E2E ou verificações amplas de cores e aparência.
-- Quando houver testes a fazer, avise e forneça um único comando copiável para PowerShell, focado no que mudou, explicando brevemente o que ele verifica. O usuário executa e envia o resumo do resultado ou o erro; não peça logs completos de execuções bem-sucedidas.
+- Quando houver testes a fazer, avise e forneça um único comando copiável para PowerShell, focado no que mudou, explicando brevemente o que ele verifica. Use caminhos absolutos para funcionar mesmo quando o terminal estiver em `C:\WINDOWS\system32`, sem exigir que o usuário troque de pasta. O usuário executa e envia o resumo do resultado ou o erro; não peça logs completos de execuções bem-sucedidas.
 - O usuário pode rodar os testes em paralelo ao trabalho independente do agente. Não fique consultando ou aguardando repetidamente a execução; retome a análise quando o retorno chegar. Não trate ausência de retorno como aprovação nem declare testes pendentes como aprovados.
 - O agente pode executar somente verificações essenciais e focadas que dependam de sua inspeção direta, por exemplo reproduzir um erro específico ou conferir uma imagem. Avise antes e explique a necessidade. Se depender de imagem, captura ou configuração adicional, combine o procedimento com o usuário primeiro.
 - Reaproveite resultados válidos já obtidos. Não repita testes nem amplie a suíte sem mudança relevante, falha ou dúvida concreta que justifique. Uma alteração apenas documental destas regras não exige nova execução.
@@ -23,10 +23,13 @@ Prefira alterações incrementais e localizadas. Preserve a estrutura dos arquiv
 ## Versões
 
 - Use três números: `MAJOR.MINOR.PATCH`.
-- Por padrão, cada lote de ajustes ou correções incrementa apenas PATCH: `0.4.0` → `0.4.1` → `0.4.2`.
-- Só incremente MINOR ou MAJOR se o usuário pedir explicitamente.
+- PATCH vai de 0 a 9. Incremente PATCH normalmente; depois de 9, incremente MINOR e volte PATCH para zero: `0.4.8` → `0.4.9` → `0.5.0`; `0.5.9` → `0.6.0`. Essa virada foi autorizada explicitamente pelo usuário e não exige novo pedido de MINOR.
+- MAJOR só muda por pedido explícito. Escreva `0.5.0`, nunca apenas `0.5` nos arquivos e Releases.
 - Atualize `package.json`, `package-lock.json` e `CHANGELOG.md` de forma consistente.
-- Use a última versão publicada como base; por exemplo, após `0.4.0`, o lote seguinte é `0.4.1`.
+- Use a última versão publicada como base. A `0.4.10` é uma versão legada já distribuída: mantenha seu histórico e publique `0.5.0` para superá-la, sem renomear tags antigas.
+- Todo instalador de teste entregue ao usuário deve ter versão distinta da final: por exemplo, `0.5.1-preview.1`, `0.5.1-preview.2` e depois `0.5.1`. Nunca entregue um preview identificado apenas com o número estável, nem reutilize o identificador de um preview já entregue.
+- Use `npm run version:preview` para iniciar/avançar previews e `npm run version:final` para promover o preview à versão estável de destino. Os comandos atualizam as duas versões do pacote e o cabeçalho do changelog; não fazem commit nem publicação. Não use `npm version patch` para contornar a virada após 9.
+- Previews não entram no canal de atualização de produção. O atualizador deve oferecer a final para um preview com a mesma base, e o publicador deve recusar versões com sufixo preview. Não disponibilize o instalador final para teste antes da publicação; entregue um preview identificado ou aguarde a Release.
 
 ## Dados existentes
 

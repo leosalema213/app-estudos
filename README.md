@@ -2,7 +2,7 @@
 
 Aplicativo para Windows com planos de estudo, cronômetro de aulas e descansos, histórico e cadernos pessoais com páginas, imagens e desenhos. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
 
-A versão 0.4.10 inclui biblioteca offline com leitores PDF, EPUB refluível e Kindle sem DRM, retomada da leitura, vínculos com planos e backup dos livros. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração e os testes](docs/SUPABASE.md).
+A versão 0.5.0 mantém a biblioteca offline da 0.4.10 e corrige a identificação de previews e versões finais para o atualizador. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração e os testes](docs/SUPABASE.md).
 
 **[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Organon-Instalar.exe)**
 
@@ -164,15 +164,17 @@ Depois de `npm run dist`, execute `npm run test:installer` para validar o modo s
 
 ## Publicar uma versão
 
-Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lote está encerrado e que ele autoriza a publicação, conforme `AGENTS.md`. Por padrão, incremente apenas PATCH; use MINOR ou MAJOR somente se o usuário pedir explicitamente.
+Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lote está encerrado e que ele autoriza a publicação, conforme `AGENTS.md`. PATCH vai de 0 a 9; após 9, avance MINOR e volte PATCH a zero (`0.5.9` → `0.6.0`). MAJOR só muda por pedido explícito. A Release 0.4.10 permanece no histórico; a correção seguinte é 0.5.0.
 
-1. Atualize a versão em `package.json` e `package-lock.json` com `npm version patch --no-git-tag-version`.
+1. Prepare os testes locais com `npm run version:preview`: após 0.5.0, gera 0.5.1-preview.1 e, nas próximas chamadas, 0.5.1-preview.2 etc. Cada instalador entregue deve ter um identificador exclusivo. Quando o lote estiver pronto, `npm run version:final` prepara 0.5.1. Esses comandos atualizam os dois arquivos do pacote e o cabeçalho do changelog, preservando as notas existentes, e não fazem commit nem publicação. Não entregue o instalador estável antes da publicação.
 2. Confira os resultados dos testes pertinentes ao lote. Conforme `AGENTS.md`, envie ao usuário um comando focado para execução no terminal dele quando houver validação pendente; reaproveite resultados válidos e não repita automaticamente suítes completas.
 3. Gere os arquivos com `npm run dist` e `npm run checksums`.
 4. Faça commit e envie para `origin/main`.
 5. Execute `npm run release`.
 
 O script usa a autenticação existente do Git, ou `GH_TOKEN`/`GITHUB_TOKEN` no ambiente. Credenciais não são gravadas em arquivos. Ele cria uma Release em rascunho, envia `Organon-Instalar.exe`, uma cópia idêntica `Compasso-Instalar.exe` para clientes anteriores e os respectivos checksums e só então publica como a versão mais recente. O README continua apontando para o mesmo endereço de download. Executáveis, dependências, dados de teste, atalhos e arquivos `.env` ficam fora do Git.
+
+`npm run release` recusa previews e versões novas com PATCH maior que 9. Previews são instaladores locais identificados, sem publicação no canal de produção. A final é superior ao preview da mesma base (`0.5.1` > `0.5.1-preview.2`); o atualizador também continua entendendo versões legadas como 0.4.10. Não é feito downgrade de um preview de uma base futura para uma final anterior.
 
 ## Atualizações no aplicativo
 

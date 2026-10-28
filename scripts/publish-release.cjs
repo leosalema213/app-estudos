@@ -7,6 +7,7 @@ const crypto = require('node:crypto');
 const { Readable } = require('node:stream');
 const { version } = require('../package.json');
 const { INSTALLER_NAMES } = require('../electron/branding.cjs');
+const { isProductionVersion } = require('../electron/versions.cjs');
 const REPO = 'leosalema213/app-estudos';
 const root = path.resolve(__dirname, '..');
 function git(...args) { return cp.execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim(); }
@@ -20,6 +21,7 @@ function token() {
   return value;
 }
 (async () => {
+  if (!isProductionVersion(version)) throw new Error('Publicação de produção exige MAJOR.MINOR.PATCH, PATCH de 0 a 9 e sem sufixo preview.');
   if (git('status', '--porcelain')) throw new Error('Faça commit de todas as alterações antes de publicar.');
   const commit = git('rev-parse', 'HEAD');
   if (git('rev-parse', 'origin/main') !== commit) throw new Error('Envie o commit atual para origin/main antes de publicar.');

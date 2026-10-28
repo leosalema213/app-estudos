@@ -5,14 +5,15 @@ const { Readable, Transform } = require('node:stream');
 const { pipeline } = require('node:stream/promises');
 const REPOSITORY = 'leosalema213/app-estudos';
 const { INSTALLER_NAMES } = require('./branding.cjs');
+const { parseVersion: parseInstalledVersion } = require('./versions.cjs');
 const INSTALLER = INSTALLER_NAMES[0];
 const API = `https://api.github.com/repos/${REPOSITORY}/releases/latest`;
 const parseVersion = value => /^v?(\d+)\.(\d+)\.(\d+)$/.exec(value || '')?.slice(1).map(Number);
 function isNewer(remote, current) {
-  const a = parseVersion(remote); const b = parseVersion(current);
+  const a = parseVersion(remote); const installed = parseInstalledVersion(current); const b = installed?.parts;
   if (!a || !b) return false;
   for (let i = 0; i < 3; i++) { if (a[i] !== b[i]) return a[i] > b[i]; }
-  return false;
+  return installed.preview !== null;
 }
 function assetUrl(asset, tag) {
   const expected = `https://github.com/${REPOSITORY}/releases/download/${encodeURIComponent(tag)}/${asset.name}`;

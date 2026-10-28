@@ -28,6 +28,28 @@ test('version comparison is numeric and rejects invalid or prerelease values', (
   assert.equal(isNewer('v0.4.0-beta', '0.3.0'), false);
   assert.equal(isNewer('../0.4.0', '0.3.0'), false);
 });
+
+test('0.5.0 updates legacy 0.4.10 and stable releases replace previews of the same version', async () => {
+  assert.equal(isNewer('v0.5.0', '0.4.10'), true);
+  assert.equal(isNewer('v0.5.0', '0.5.0-preview.1'), true);
+  assert.equal(isNewer('v0.5.0', '0.5.0-preview.12'), true);
+  assert.equal(isNewer('v0.5.0', '0.5.0'), false);
+  assert.equal(isNewer('v0.5.0', '0.5.1-preview.1'), false);
+  assert.equal(isNewer('v0.5.1-preview.2', '0.5.0'), false);
+  assert.equal(isNewer('v0.5.0', '0.5.0-preview.0'), false);
+  for (const current of ['0.4.10', '0.5.0-preview.1']) {
+    const f = fixture({ metadata: release('0.5.0') }); f.updater.version = current;
+    assert.equal((await f.updater.check()).status, 'available');
+    assert.equal(f.updater.candidate.version, '0.5.0');
+    assert.equal(f.installs, 0); assert.equal(f.calls.length, 1);
+  }
+});
+
+test('production updater ignores preview tags even if release metadata is mislabeled', async () => {
+  const f = fixture({ metadata: release('0.5.1-preview.1') });
+  assert.equal((await f.updater.check()).status, 'current');
+  assert.equal(f.calls.length, 1); assert.equal(f.installs, 0);
+});
 test('startup check only announces availability: it never downloads or installs', async () => {
   const f = fixture();
   assert.equal((await f.updater.check()).status, 'available');

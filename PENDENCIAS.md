@@ -25,3 +25,8 @@ Não comitar nem publicar este lote até o usuário encerrar os pedidos e confir
 - [x] Adotar Organon e a segunda proposta de logo, com ômega invertido, preservando dados e atualizações anteriores.
 - [x] Adicionar +2, +3 e +5 minutos à aula atual pelo modo compacto, preservando a janela e as métricas.
 - [x] Usuário autorizou encerrar e publicar a 0.4.6.
+
+## Lote 0.4.7
+
+- [x] Aplicar o símbolo do Organon à janela e à barra de tarefas do Windows.
+- [x] Usuário autorizou encerrar e publicar a 0.4.7.

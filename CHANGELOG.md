@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.4.7
+
+- Ícone da janela carregado explicitamente com o símbolo do Organon.
+- Barra de tarefas do Windows recebe o ícone por um arquivo físico fora do app.asar, mantendo a identidade e os dados existentes.
+
 ## 0.4.6
 
 - Modo compacto mantém 340×112 e oferece +2, +3 ou +5 minutos pelo botão + junto ao play; opções ocupam temporariamente o título, com teclado, Escape e fechamento ao clicar fora.

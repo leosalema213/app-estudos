@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification, dialog, powerMonitor, nativeTheme, net, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, dialog, powerMonitor, nativeTheme, nativeImage, net, screen } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
@@ -65,9 +65,13 @@ else {
     try { startup.sync(readData()?.settings); } catch { /* The renderer reports data errors without replacing the file. */ }
     win = new BrowserWindow({ width: 1260, height: 850, minWidth: 840, minHeight: 620, frame: false,
       backgroundColor: supportsGlass ? '#00000000' : nativeTheme.shouldUseDarkColors ? '#101010' : '#f6f7f9', backgroundMaterial: supportsGlass ? 'acrylic' : 'none',
-      icon: path.join(__dirname, '../assets/icon.ico'), title: 'Organon',
+      icon: nativeImage.createFromPath(path.join(__dirname, '../assets/icon.png')), title: 'Organon',
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
     win.setMenu(null);
+    if (process.platform === 'win32') {
+      // Explorer needs a real filesystem path, rather than an icon inside app.asar.
+      win.setAppDetails({ appId: 'br.com.compasso.estudos', appIconPath: app.isPackaged ? path.join(process.resourcesPath, 'icon.ico') : path.join(__dirname, '../assets/icon.ico'), appIconIndex: 0 });
+    }
     const reminderNotifications = new ReminderNotifications({ Notification, available: !isolated, open: () => openRemindersWindow(win) });
     ipcMain.handle('startup:status', e => { if (trusted(e)) return startup.status(); });
     ipcMain.handle('startup:set', (e, enabled) => { if (trusted(e)) return startup.set(enabled); });

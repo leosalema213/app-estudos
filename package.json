@@ -1,6 +1,6 @@
 {
   "name": "compasso-estudos",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "private": true,
   "description": "Seu ritmo de estudo, um bloco de cada vez.",
   "author": "Organon",
@@ -62,9 +62,11 @@
       "dist/**/*",
       "electron/**/*",
       "assets/icon.ico",
+      "assets/icon.png",
       "package.json",
       "!node_modules/**/*"
     ],
+    "extraResources": [{ "from": "assets/icon.ico", "to": "icon.ico" }],
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"

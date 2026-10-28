@@ -158,4 +158,6 @@ Ao abrir, o Organon consulta a última Release pública de `leosalema213/app-est
 
 O pacote completo ainda é baixado a cada versão; não há download diferencial. O modo silencioso remove as etapas repetidas do assistente, mas não elimina o tempo necessário para baixar e substituir os arquivos. A versão instalada aparece abaixo da logo e nas preferências.
 
+Depois de abrir e salvar os dados com sucesso, o app limpa os instaladores da versão atual e das anteriores no cache do atualizador. Downloads de versões futuras e arquivos baixados pelo navegador são preservados. Se o instalador ainda estiver em uso, a limpeza tenta novamente após 30 segundos e na próxima abertura.
+
 O instalador é baixado exclusivamente das Releases deste repositório. O tamanho e SHA-256 são conferidos antes de oferecer a instalação e novamente antes de executar o arquivo. Sem conexão, o app continua funcionando e permite tentar novamente nas preferências. Versões antigas (0.1 e 0.2) precisam ser atualizadas manualmente uma vez para receber esse recurso.

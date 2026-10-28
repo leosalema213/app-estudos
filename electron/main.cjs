@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification, dialog, powerMonitor, nativeTheme, nativeImage, net, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, dialog, powerMonitor, nativeTheme, nativeImage, net, screen, shell } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
@@ -6,7 +6,7 @@ const { AppUpdates } = require('./updates.cjs');
 const { fitCompactBounds } = require('./compact-bounds.cjs');
 const { WindowsStartup } = require('./startup.cjs');
 const { ReminderNotifications, openRemindersWindow } = require('./reminder-notifications.cjs');
-const { legacyUserData } = require('./branding.cjs');
+const { APP_ID, DEVELOPMENT_APP_ID, legacyUserData, repairDevelopmentShortcut } = require('./branding.cjs');
 if (!process.argv.some(value => value.startsWith('--user-data-dir'))) {
   const profile = legacyUserData(app.getPath('appData'));
   fs.mkdirSync(profile, { recursive: true });
@@ -57,9 +57,11 @@ else {
   app.whenReady().then(() => {
     try { compactBounds = JSON.parse(fs.readFileSync(windowStatePath(), 'utf8')).compactBounds; } catch {}
     nativeTheme.themeSource = 'system';
-    app.setAppUserModelId('br.com.compasso.estudos');
+    const appId = app.isPackaged ? APP_ID : DEVELOPMENT_APP_ID;
+    app.setAppUserModelId(appId);
     // Isolated profiles and development runs must never register test executables.
     const isolated = process.argv.some(value => value.startsWith('--user-data-dir'));
+    if (process.platform === 'win32' && !isolated) repairDevelopmentShortcut(shell, app.getPath('appData'));
     const installed = ['Uninstall Organon.exe', 'Uninstall Compasso.exe'].some(name => fs.existsSync(path.join(path.dirname(process.execPath), name)));
     startup = new WindowsStartup({ app, path: process.execPath, available: process.platform === 'win32' && app.isPackaged && installed && !isolated && !process.env.PORTABLE_EXECUTABLE_FILE });
     try { startup.sync(readData()?.settings); } catch { /* The renderer reports data errors without replacing the file. */ }
@@ -70,7 +72,8 @@ else {
     win.setMenu(null);
     if (process.platform === 'win32') {
       // Explorer needs a real filesystem path, rather than an icon inside app.asar.
-      win.setAppDetails({ appId: 'br.com.compasso.estudos', appIconPath: app.isPackaged ? path.join(process.resourcesPath, 'icon.ico') : path.join(__dirname, '../assets/icon.ico'), appIconIndex: 0 });
+      win.setAppDetails({ appId, appIconPath: app.isPackaged ? path.join(process.resourcesPath, 'icon.ico') : path.join(__dirname, '../assets/icon.ico'), appIconIndex: 0,
+        relaunchDisplayName: 'Organon', relaunchCommand: app.isPackaged ? `"${process.execPath}"` : `"${process.execPath}" "${app.getAppPath()}"` });
     }
     const reminderNotifications = new ReminderNotifications({ Notification, available: !isolated, open: () => openRemindersWindow(win) });
     ipcMain.handle('startup:status', e => { if (trusted(e)) return startup.status(); });
@@ -89,6 +92,15 @@ else {
       onQuit: () => setTimeout(() => app.quit(), 100),
     });
     ipcMain.handle('updates:status', e => { if (trusted(e)) return updater.state; });
+    let startupCleanup;
+    ipcMain.handle('updates:opened', e => {
+      if (!trusted(e) || (!isolated && (!app.isPackaged || !installed))) return;
+      if (!startupCleanup) {
+        startupCleanup = updater.cleanupInstalled();
+        const retry = setTimeout(() => updater.cleanupInstalled(), 30000); retry.unref();
+      }
+      return startupCleanup;
+    });
     ipcMain.handle('updates:check', e => { if (trusted(e)) return updater.check(); });
     ipcMain.handle('updates:download', e => { if (trusted(e)) return updater.download(); });
     ipcMain.handle('updates:install', e => { if (trusted(e)) return updater.install(); });

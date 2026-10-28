@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.4.8
+
+- Após abrir e salvar os dados com sucesso, remove instaladores do atualizador da versão instalada e das anteriores, incluindo o acúmulo legado.
+- Preserva downloads de versões futuras, arquivos desconhecidos, dados pessoais e Downloads do navegador; tenta novamente após 30 segundos caso o instalador ainda esteja em uso.
+- Versões de desenvolvimento usam uma identificação própria no Windows, evitando conflito com o Organon instalado.
+- Corrige o identificador do atalho legado Electron quando pertence ao aplicativo e informa explicitamente o nome Organon ao menu da barra de tarefas.
+
 ## 0.4.7
 
 - Ícone da janela carregado explicitamente com o símbolo do Organon.

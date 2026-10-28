@@ -88,7 +88,11 @@ export default function App() {
   useEffect(() => {
     if (!data || reminderStartupChecked.current || !window.desktop?.reminders) return;
     reminderStartupChecked.current = true;
-    persist(dataRef.current).then(saved => { if (saved) window.desktop.reminders.startup().catch(() => {}); });
+    persist(dataRef.current).then(saved => {
+      if (!saved) return;
+      window.desktop.updates?.opened?.().catch(() => {});
+      window.desktop.reminders.startup().catch(() => {});
+    });
   }, [!!data]);
   const update = (fn) => {
     const next = typeof fn === 'function' ? fn(dataRef.current) : fn;

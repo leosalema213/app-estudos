@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('desktop', {
     return () => ipcRenderer.removeListener('reminders:open', handler);
   },
   updates: {
+    opened: () => ipcRenderer.invoke('updates:opened'),
     status: () => ipcRenderer.invoke('updates:status'),
     check: () => ipcRenderer.invoke('updates:check'),
     download: () => ipcRenderer.invoke('updates:download'),

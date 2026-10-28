@@ -30,3 +30,9 @@ Não comitar nem publicar este lote até o usuário encerrar os pedidos e confir
 
 - [x] Aplicar o símbolo do Organon à janela e à barra de tarefas do Windows.
 - [x] Usuário autorizou encerrar e publicar a 0.4.7.
+
+## Lote 0.4.8
+
+- [x] Limpar instaladores de atualizações concluídas e o cache antigo, preservando downloads futuros e dados pessoais.
+- [x] Separar a identidade do Electron de desenvolvimento e corrigir o atalho legado conflitante.
+- [x] Usuário autorizou encerrar e publicar a 0.4.8.

@@ -32,6 +32,24 @@ class AppUpdates {
     this.state = { status: 'idle', currentVersion: version };
   }
   set(fields) { this.state = { ...this.state, message: undefined, ...fields }; this.emit(this.state); return this.state; }
+  async cleanupInstalled() {
+    // Only owned files in installed-version folders; future/pending updates stay intact.
+    if (!parseVersion(this.version) || ['downloading', 'ready', 'installing'].includes(this.state.status)) return;
+    try {
+      if ((await fs.promises.lstat(this.cacheDir)).isSymbolicLink()) return;
+      const root = path.resolve(this.cacheDir);
+      for (const entry of await fs.promises.readdir(root, { withFileTypes: true })) {
+        if (!entry.isDirectory() || entry.isSymbolicLink() || !/^\d+\.\d+\.\d+$/.test(entry.name) || isNewer(entry.name, this.version)) continue;
+        const folder = path.resolve(root, entry.name);
+        if (path.dirname(folder) !== root) continue;
+        for (const file of await fs.promises.readdir(folder, { withFileTypes: true })) {
+          if (!file.isFile() || !INSTALLER_NAMES.some(name => file.name === name || file.name === name + '.partial' || file.name === name + '.sha256')) continue;
+          try { await fs.promises.unlink(path.join(folder, file.name)); } catch { /* Locked installers are retried after startup. */ }
+        }
+        try { await fs.promises.rmdir(folder); } catch { /* Keep folders with unknown files. */ }
+      }
+    } catch { /* Cache maintenance must never prevent the app from opening. */ }
+  }
   async check() {
     if (['downloading', 'ready', 'installing'].includes(this.state.status)) return this.state;
     if (this.checking) return this.checking;

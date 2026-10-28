@@ -115,6 +115,15 @@
 .compact-controls>div { gap:6px;margin-left:auto; }
 .compact-controls .round-play { width:32px;height:32px; }
 .compact-controls .icon-button { width:26px;height:26px; }
+.compact-extra { display:contents; }
+.compact-extra-options { position:absolute;top:3px;left:10px;height:26px;display:flex;align-items:center;gap:4px;padding:0 3px;background:#fbfaff;border-radius:5px; }
+.compact-extra-options button { min-width:48px;height:26px;font-size:11px;color:#393939;border-radius:4px;background:#00000009; }
+.compact-extra-options button:hover { background:#00000018; }
+.compact-extra-options button:focus-visible,.compact-extra>.icon-button:focus-visible { outline:2px solid currentColor;outline-offset:-2px; }
+.compact-window:has(.compact-extra-options) .compact-title h2 { visibility:hidden; }
+[data-theme="dark"] .compact-extra-options { background:#202020; }
+[data-theme="dark"] .compact-extra-options button { color:#eee;background:#ffffff0d; }
+[data-theme="dark"] .compact-extra-options button:hover { background:#ffffff20; }
 .compact-content .timer-track { height:2px;margin-top:8px;background:#0000000c; }
 .compact-content .timer-track i { background:#999; }
 .timer-status { font-size:9px;color:#929292;align-self:center;white-space:nowrap; }

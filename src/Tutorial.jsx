@@ -2,7 +2,7 @@ import { BookOpen, CheckCheck, PenLine, Play, Plus } from 'lucide-react';
 
 export default function Tutorial({ stage, Modal, onStart, onClose, onDone }) {
   const welcome = stage === 'welcome';
-  return <Modal title={welcome ? 'Seu primeiro plano de estudo' : 'Seu plano está pronto'} subtitle={welcome ? 'Uma configuração rápida para começar.' : 'O essencial para usar o Compasso.'} onClose={onClose} small><div className="tutorial-body"><ol>{welcome ? <>
+  return <Modal title={welcome ? 'Seu primeiro plano de estudo' : 'Seu plano está pronto'} subtitle={welcome ? 'Uma configuração rápida para começar.' : 'O essencial para usar o Organon.'} onClose={onClose} small><div className="tutorial-body"><ol>{welcome ? <>
     <li><BookOpen size={18} /><div><strong>Escolha o que estudar</strong><p>Dê um nome ao plano e escolha os dias da semana.</p></div></li>
     <li><Plus size={18} /><div><strong>Organize seu tempo</strong><p>Comece com Aula 1, descanso e Aula 2. Renomeie e ajuste os minutos como quiser.</p></div></li>
     <li><Play size={18} /><div><strong>Salve para começar</strong><p>Seu plano fica salvo neste computador.</p></div></li>

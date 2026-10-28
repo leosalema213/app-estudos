@@ -1,0 +1,13 @@
+.organon-wordmark { display:block;width:146px;max-width:100%;height:32px;background:currentColor;mask-size:contain;mask-repeat:no-repeat;mask-position:left center; }
+.organon-brand { color:#292824; }
+.organon-brand>div { min-width:0; }
+.brand.organon-brand .organon-wordmark { color:inherit;margin-top:0; }
+.organon-brand .app-version { margin-top:3px; }
+[data-theme="dark"] .organon-brand { color:#f5edd9; }
+[data-palette] .organon-brand { color:var(--custom-text); }
+@media(max-width:1000px) { .organon-wordmark { width:125px;height:28px; } }
+@media(max-width:640px) {
+  .brand.organon-brand>div { display:block; }
+  .organon-wordmark { width:28px;height:28px;mask-image:url('../assets/branding/organon-symbol.svg') !important; }
+  .organon-brand .app-version { display:none; }
+}

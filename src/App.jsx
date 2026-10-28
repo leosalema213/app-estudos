@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpRight, BookOpen, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, CircleHelp, Clock3, Coffee, Copy, Download, Expand, Flame, GripVertical, LayoutDashboard, ListFilter, Minus, MoreHorizontal, Moon, Sun, Pause, Pencil, Play, Plus, RotateCcw, Settings, Sparkles, Target, Trash2, TrendingUp, Upload, Volume2, VolumeX, X, ImagePlus, PenLine, PanelTopClose, LayoutGrid, List, NotebookText, StickyNote } from 'lucide-react';
-import { clock, completedPlanSummary, dailySummary, dayKey, days, duration, editBlock, firstPlan, focusMs, getRecord, newBlock, newPlan, pause, play, preferences, recordKey, resetTimer, seed, setManualDone, setPlanCompleted, themePresets, tick, uid, validateData } from './model.js';
+import { clock, completedPlanSummary, dailySummary, dayKey, days, duration, editBlock, extendLesson, firstPlan, focusMs, getRecord, newBlock, newPlan, pause, play, preferences, recordKey, resetTimer, seed, setManualDone, setPlanCompleted, themePresets, tick, uid, validateData } from './model.js';
 import Tutorial from './Tutorial.jsx';
 import Notebook, { NotesPreview } from './Notebook.jsx';
 import Library from './Library.jsx';
@@ -9,6 +9,7 @@ import { customCoverStyle, planIconKey } from './book-appearance.js';
 import RemindersPage, { DailyNotes, ReminderEditor } from './Reminders.jsx';
 import { markReminder, newReminder } from './reminders.js';
 import { version as appVersion } from '../package.json';
+import organonWordmark from '../assets/branding/organon-wordmark.svg';
 import Preferences from './Preferences.jsx';
 import { UpdateDialog, useAppUpdates } from './Updates.jsx';
 
@@ -27,6 +28,23 @@ function ring() {
   }
 }
 const IconButton = ({ title, children, ...props }) => <button className="icon-button" title={title} aria-label={title} {...props}>{children}</button>;
+function CompactExtraTime({ disabled, onAdd }) {
+  const [open, setOpen] = useState(false);
+  const container = useRef(null);
+  const trigger = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    container.current.querySelector('[data-minutes]')?.focus();
+    const outside = event => { if (!container.current?.contains(event.target)) setOpen(false); };
+    document.addEventListener('pointerdown', outside);
+    return () => document.removeEventListener('pointerdown', outside);
+  }, [open]);
+  const close = () => { setOpen(false); trigger.current?.focus(); };
+  return <span className="compact-extra" ref={container} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }} onKeyDown={event => { if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); close(); } }}>
+    <button ref={trigger} className="icon-button" aria-label="Adicionar minutos à aula" title={disabled ? 'Acréscimos disponíveis somente para aulas' : 'Adicionar minutos à aula'} disabled={disabled} aria-expanded={open} aria-controls={open ? 'compact-extra-options' : undefined} onClick={() => setOpen(value => !value)}><Plus size={15} /></button>
+    {open && <div id="compact-extra-options" className="compact-extra-options no-drag" role="group" aria-label="Tempo extra nesta aula">{[2, 3, 5].map(minutes => <button key={minutes} data-minutes={minutes} aria-label={`Adicionar ${minutes} minutos`} onClick={() => { onAdd(minutes); close(); }}>+{minutes} min</button>)}</div>}
+  </span>;
+}
 function PlanIcon({ plan, size = 21 }) {
   const Icon = coverIcons[planIconKey(plan)]; const custom = customCoverStyle(plan.color);
   return <span className={`plan-icon ${plan.color.startsWith('#') ? 'custom' : plan.color}`} style={custom ? { background: plan.color, color: custom['--cover-ink'] } : undefined}>{Icon && <Icon size={size} />}</span>;
@@ -47,6 +65,8 @@ export default function App() {
   const [compact, setCompact] = useState(false);
   const [editor, setEditor] = useState(null);
   const [reminderEditor, setReminderEditor] = useState(null);
+  const [notesFilter, setNotesFilter] = useState('all');
+  const reminderStartupChecked = useRef(false);
   const [tutorial, setTutorial] = useState(null);
   const [systemDark, setSystemDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [blockEditor, setBlockEditor] = useState(null);
@@ -62,6 +82,14 @@ export default function App() {
   const initialized = useRef(false);
   const checkpoint = useRef({ at: 0, data: null });
   const appUpdates = useAppUpdates(!!data);
+  useEffect(() => window.desktop?.onOpenReminders?.(async () => {
+    await changeCompact(false); setDate(dayKey()); setNotesFilter('today'); setPage('notes');
+  }), []);
+  useEffect(() => {
+    if (!data || reminderStartupChecked.current || !window.desktop?.reminders) return;
+    reminderStartupChecked.current = true;
+    persist(dataRef.current).then(saved => { if (saved) window.desktop.reminders.startup().catch(() => {}); });
+  }, [!!data]);
   const update = (fn) => {
     const next = typeof fn === 'function' ? fn(dataRef.current) : fn;
     dataRef.current = next; setData(next);
@@ -96,7 +124,8 @@ export default function App() {
     const previous = checkpoint.current.data;
     const timerOnly = data.active?.running && previous?.active?.running
       && previous.plans === data.plans && previous.settings === data.settings && previous.notebooks === data.notebooks && previous.reminders === data.reminders
-      && previous.active.planId === data.active.planId && previous.active.blockId === data.active.blockId;
+      && previous.active.planId === data.active.planId && previous.active.blockId === data.active.blockId
+      && previous.active.totalMs === data.active.totalMs;
     if (timerOnly && Date.now() - checkpoint.current.at < 5000) return;
     checkpoint.current = { at: Date.now(), data };
     persist(data);
@@ -210,7 +239,7 @@ export default function App() {
     try {
       await persist(dataRef.current);
       if (window.desktop) { if (await window.desktop.exportData()) setToast('Backup exportado.'); }
-      else { const url = URL.createObjectURL(new Blob([JSON.stringify(dataRef.current)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = 'compasso-backup.json'; a.click(); URL.revokeObjectURL(url); }
+      else { const url = URL.createObjectURL(new Blob([JSON.stringify(dataRef.current)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = 'organon-backup.json'; a.click(); URL.revokeObjectURL(url); }
     } catch (err) { setToast(`Erro ao exportar: ${err.message}`); }
   }
   async function importBackup(file) {
@@ -240,12 +269,12 @@ export default function App() {
   const shownPlans = todayPlans.filter(p => filter === 'all' || statusOf(p) === filter);
   if (compact) return <div className="compact-window">
     <div className="compact-title drag"><h2 title={active?.blockName}>{active?.blockName || 'Escolha uma aula'}</h2><div className="no-drag">{['available', 'ready'].includes(appUpdates.state.status) && <IconButton title="Atualização disponível" onClick={() => { changeCompact(false); appUpdates.show(); }}><Download size={13} /></IconButton>}<IconButton title="Voltar ao aplicativo" onClick={() => changeCompact(false)}><Expand size={13} /></IconButton><IconButton title="Fechar modo compacto e voltar" onClick={() => changeCompact(false)}><X size={14} /></IconButton></div></div>
-    <div className="compact-content"><div className="compact-controls"><strong>{clock(active?.remainingMs || 0)}</strong><span className={`timer-status ${active?.running ? 'running' : ''}`}>{active?.remainingMs === 0 ? 'Concluído' : active?.running ? 'Em foco' : 'Pausado'}</span><div><IconButton title="Reiniciar cronômetro" disabled={!active} onClick={() => update(s => resetTimer(s))}><RotateCcw size={15} /></IconButton><button className="round-play" aria-label={active?.running ? 'Pausar' : 'Continuar'} disabled={!activeBlock} onClick={() => { unlockAudio(); update(s => active.running ? pause(s) : play(s, activePlan, activeBlock, active.date)); }}>{active?.running ? <Pause size={18} /> : <Play size={18} />}</button></div></div><div className="timer-track"><i style={{ width: `${active ? 100 * (1 - active.remainingMs / active.totalMs) : 0}%` }} /></div></div>
+    <div className="compact-content"><div className="compact-controls"><strong>{clock(active?.remainingMs || 0)}</strong><span className={`timer-status ${active?.running ? 'running' : ''}`}>{active?.remainingMs === 0 ? 'Concluído' : active?.running ? 'Em foco' : 'Pausado'}</span><div><IconButton title="Reiniciar cronômetro" disabled={!active} onClick={() => update(s => resetTimer(s))}><RotateCcw size={15} /></IconButton><button className="round-play" aria-label={active?.running ? 'Pausar' : 'Continuar'} disabled={!activeBlock} onClick={() => { unlockAudio(); update(s => active.running ? pause(s) : play(s, activePlan, activeBlock, active.date)); }}>{active?.running ? <Pause size={18} /> : <Play size={18} />}</button><CompactExtraTime disabled={!activeBlock || active?.type !== 'lesson'} onAdd={minutes => update(s => extendLesson(s, minutes))} /></div></div><div className="timer-track"><i style={{ width: `${active ? 100 * (1 - active.remainingMs / active.totalMs) : 0}%` }} /></div></div>
     {saveError && <span className="compact-error">Falha ao salvar — volte ao app e exporte um backup.</span>}
   </div>;
   return <div className="app-shell">
     <aside className="sidebar">
-      <div className="brand drag"><span className="brand-mark"><BookOpen size={21} /></span><div>compasso<small className="app-version">v{appVersion}</small></div></div>
+      <div className="brand drag organon-brand"><div><span className="organon-wordmark" role="img" aria-label="organon" style={{ maskImage: `url(${organonWordmark})` }} /><small className="app-version">v{appVersion}</small></div></div>
       <div className="workspace-label">MEU ESPAÇO</div>
       <nav>{[['today', LayoutDashboard, 'Meu dia'], ['plans', BookOpen, 'Planos de estudo'], ['metrics', TrendingUp, 'Meu progresso'], ['books', NotebookText, 'Cadernos'], ['notes', StickyNote, 'Notas']].map(([key, Icon, label]) => <button key={key} className={page === key ? 'nav-active' : ''} onClick={() => setPage(key)}><Icon size={19} />{label}{key === 'today' && <span className="nav-count">{todayPlans.length}</span>}</button>)}</nav>
       <div className="sidebar-plans"><div className="workspace-label">MEUS PLANOS <IconButton title="Criar plano" onClick={() => setEditor(newPlan())}><Plus size={15} /></IconButton></div>{data.plans.filter(plan => !plan.completedAt).map(plan => <button key={plan.id} onClick={() => openNotebook(plan.id)}><span className={`color-dot ${plan.color}`} style={dotStyle(plan.color)} /> <span>{plan.name}</span><ChevronRight size={13} /></button>)}{!data.plans.length && <small>Seu próximo objetivo começa aqui.</small>}</div>
@@ -266,7 +295,7 @@ export default function App() {
         </>}
         {page === 'plans' && <><div className="section-heading"><h2>Seus planos <span>{catalogPlans.length}</span></h2><div className="view-switch" role="group" aria-label="Visualização dos planos"><IconButton title="Exibir em cards" aria-pressed={plansView === 'cards'} onClick={() => update(s => ({ ...s, settings: { ...s.settings, plansView: 'cards' } }))}><LayoutGrid size={16} /></IconButton><IconButton title="Exibir em lista" aria-pressed={plansView === 'list'} onClick={() => update(s => ({ ...s, settings: { ...s.settings, plansView: 'list' } }))}><List size={17} /></IconButton></div></div><div className="plan-status-filters"><div className="tabs" role="group" aria-label="Status dos planos">{[['active', 'Em andamento'], ['completed', 'Finalizados'], ['all', 'Todos']].map(([key, label]) => <button key={key} className={planFilter === key ? 'selected' : ''} aria-pressed={planFilter === key} onClick={() => setPlanFilter(key)}>{label}<span>{data.plans.filter(plan => key === 'all' || (key === 'completed' ? !!plan.completedAt : !plan.completedAt)).length}</span></button>)}</div></div>{!catalogPlans.length && <p className="plans-filter-empty">{planFilter === 'completed' ? 'Nenhum plano finalizado ainda.' : 'Nenhum plano em andamento.'}</p>}<div className={`plans-grid ${plansView === 'list' ? 'plans-list' : ''}`}>{catalogPlans.map(plan => <article className="overview-card" key={plan.id}><div className="overview-top"><PlanIcon plan={plan} /><IconButton title={`Editar ${plan.name}`} onClick={() => setEditor(structuredClone(plan))}><Pencil size={17} /></IconButton></div><h2>{plan.name}{plan.completedAt && <span className="plan-finished-label"><Check size={11} />Finalizado</span>}</h2><p>{plan.description || 'Um novo objetivo para conquistar.'}</p><div className="weekdays">{weekdayOrder.map(d => <span key={d} className={plan.days.includes(d) ? `on ${plan.color}` : ''} style={plan.days.includes(d) && plan.color.startsWith('#') ? { background: plan.color, color: customCoverStyle(plan.color)['--cover-ink'] } : undefined}>{days[d][0]}</span>)}</div><div className="overview-meta"><span><BookOpen size={14} />{plan.blocks.filter(b => b.type === 'lesson').length} aulas</span><span><Clock3 size={14} />{plan.blocks.reduce((s, b) => s + b.minutes, 0)} min com pausas</span></div><div className="overview-actions"><button aria-expanded={!!expandedNotes[plan.id]} onClick={() => plan.notes.length ? setExpandedNotes(s => ({ ...s, [plan.id]: !s[plan.id] })) : openNotebook(plan.id)}><NotebookText size={15} /> Anotações{plan.notes.length > 0 && <><span className="notes-count">{plan.notes.length}</span><ChevronRight size={12} className={expandedNotes[plan.id] ? 'notes-chevron expanded' : 'notes-chevron'} /></>}</button><IconButton title={`${plan.completedAt ? 'Reabrir' : 'Concluir'} plano ${plan.name}`} onClick={() => finishPlan(plan)}>{plan.completedAt ? <RotateCcw size={16} /> : <CheckCheck size={16} />}</IconButton><IconButton title={`Duplicar ${plan.name}`} onClick={() => duplicate(plan)}><Copy size={16} /></IconButton><IconButton title={`Excluir ${plan.name}`} onClick={() => setConfirm({ title: 'Excluir este plano?', text: `O plano “${plan.name}” e suas anotações serão removidos. As horas registradas serão mantidas no histórico.`, action: () => update(s => ({ ...pause(s), active: s.active?.planId === plan.id ? null : pause(s).active, plans: s.plans.filter(p => p.id !== plan.id) })) })}><Trash2 size={16} /></IconButton></div>{expandedNotes[plan.id] && plan.notes.length > 0 && <NotesPreview plan={plan} onOpen={noteId => openNotebook(plan.id, noteId)} />}</article>)}<button className="add-plan-card" onClick={() => setEditor(newPlan())}><span><Plus size={25} /></span><strong>Um novo objetivo</strong><small>Crie seu próximo plano de estudo</small></button></div></>}
         {page === 'metrics' && <Metrics data={data} onViewCompleted={() => { setPlanFilter('completed'); setPage('plans'); }} />}
-        {page === 'notes' && <RemindersPage notes={data.reminders || []} date={date} onEdit={setReminderEditor} onCreate={() => setReminderEditor(newReminder(date))} onSeen={toggleReminder} onDelete={id => update(s => ({ ...s, reminders: s.reminders.filter(note => note.id !== id) }))} Modal={Modal} />}
+        {page === 'notes' && <RemindersPage filter={notesFilter} onFilter={setNotesFilter} notes={data.reminders || []} date={date} onEdit={setReminderEditor} onCreate={() => setReminderEditor(newReminder(date))} onSeen={toggleReminder} onDelete={id => update(s => ({ ...s, reminders: s.reminders.filter(note => note.id !== id) }))} Modal={Modal} />}
         {page === 'books' && <Library notebooks={data.notebooks || []} onChange={change => update(s => ({ ...s, notebooks: typeof change === 'function' ? change(s.notebooks || []) : change }))} notify={setToast} saveError={saveError} Modal={Modal} Sketch={Sketch} />}
 
       </div></div>

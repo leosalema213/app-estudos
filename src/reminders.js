@@ -3,12 +3,12 @@ export function calendarDate(value) {
   const date = new Date(`${value}T12:00:00Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
-export function newReminder(date) { return { id: crypto.randomUUID(), title: '', description: '', schedule: 'date', date, seenDates: [] }; }
+export function newReminder(date) { return { id: crypto.randomUUID(), title: '', description: '', schedule: 'date', date, seenDates: [], notifyOnStartup: false }; }
 export function validReminders(notes) {
   if (!Array.isArray(notes)) return false;
   const ids = new Set();
   return notes.every(note => {
-    if (!note || typeof note.id !== 'string' || !note.id || ids.has(note.id) || typeof note.title !== 'string' || !note.title.trim() || note.title.length > 120 || typeof note.description !== 'string' || note.description.length > 4000 || !['daily', 'date'].includes(note.schedule) || (note.schedule === 'date' && !calendarDate(note.date)) || !Array.isArray(note.seenDates) || note.seenDates.some(date => !calendarDate(date))) return false;
+    if (!note || typeof note.id !== 'string' || !note.id || ids.has(note.id) || typeof note.title !== 'string' || !note.title.trim() || note.title.length > 120 || typeof note.description !== 'string' || note.description.length > 4000 || (note.notifyOnStartup !== undefined && typeof note.notifyOnStartup !== 'boolean') || !['daily', 'date'].includes(note.schedule) || (note.schedule === 'date' && !calendarDate(note.date)) || !Array.isArray(note.seenDates) || note.seenDates.some(date => !calendarDate(date))) return false;
     ids.add(note.id); return true;
   });
 }

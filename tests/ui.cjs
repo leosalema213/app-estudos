@@ -301,7 +301,7 @@ const launchOptions = process.env.COMPASSO_EXECUTABLE
   await page.getByRole('button', { name: 'Atualizar e reiniciar', exact: true }).click();
   await page.waitForFunction(() => !!document.querySelector('.update-body progress'));
   assert.equal(await app.evaluate(() => globalThis.compassoUpdateTest.installs), 1);
-  await page.getByRole('dialog', { name: 'Atualizando o Compasso', exact: true }).getByRole('button', { name: 'Fechar', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Atualizando o Organon', exact: true }).getByRole('button', { name: 'Fechar', exact: true }).click();
   await page.getByRole('button', { name: 'Preferências', exact: true }).click();
   await page.getByRole('button', { name: /^Mínimo/ }).click();
   await page.waitForFunction(() => document.documentElement.dataset.density === 'minimal');

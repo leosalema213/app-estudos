@@ -1,10 +1,13 @@
 {
   "name": "compasso-estudos",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "private": true,
   "description": "Seu ritmo de estudo, um bloco de cada vez.",
-  "author": "Compasso",
-  "repository": { "type": "git", "url": "https://github.com/leosalema213/app-estudos.git" },
+  "author": "Organon",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leosalema213/app-estudos.git"
+  },
   "homepage": "https://github.com/leosalema213/app-estudos",
   "type": "module",
   "main": "electron/main.cjs",
@@ -19,6 +22,7 @@
     "test:library": "node tests/library.cjs",
     "test:reminders": "node tests/reminders.cjs",
     "test:plans": "node tests/plans.cjs",
+    "test:windows-startup": "node tests/windows-startup.cjs",
     "test:installer": "node tests/installer-mode.cjs",
     "dist": "npm run build && electron-builder --win nsis --x64",
     "dist:portable": "npm run build && electron-builder --win portable --x64",
@@ -27,9 +31,6 @@
     "checksums": "node scripts/checksums.cjs"
   },
   "devDependencies": {
-    "lucide-react": "^1.62.0",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1",
     "@tiptap/core": "^3.32.0",
     "@tiptap/extension-bold": "^3.32.0",
     "@tiptap/extension-document": "^3.32.0",
@@ -44,12 +45,16 @@
     "@vitejs/plugin-react": "^6.1.2",
     "electron": "^45.0.0",
     "electron-builder": "^26.18.0",
+    "imagetracerjs": "^1.2.6",
+    "lucide-react": "^1.62.0",
     "playwright": "^1.64.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "vite": "^8.3.5"
   },
   "build": {
     "appId": "br.com.compasso.estudos",
-    "productName": "Compasso",
+    "productName": "Organon",
     "directories": {
       "output": "release/${version}"
     },
@@ -65,16 +70,20 @@
       "icon": "assets/icon.ico"
     },
     "nsis": {
-      "artifactName": "Compasso-Instalar.exe",
+      "artifactName": "Organon-Instalar.exe",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "include": "build/installer.nsh",
-      "installerLanguages": ["pt_BR"],
+      "installerLanguages": [
+        "pt_BR"
+      ],
       "perMachine": false,
       "createDesktopShortcut": true,
       "runAfterFinish": true,
       "deleteAppDataOnUninstall": false
     },
-    "portable": { "artifactName": "Compasso-${version}-Portatil.exe" }
+    "portable": {
+      "artifactName": "Organon-${version}-Portatil.exe"
+    }
   }
 }

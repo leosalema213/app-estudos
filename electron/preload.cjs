@@ -10,6 +10,16 @@ contextBridge.exposeInMainWorld('desktop', {
   notify: (body) => ipcRenderer.send('timer:notify', body),
   exportData: () => ipcRenderer.invoke('data:export'),
   importData: () => ipcRenderer.invoke('data:import'),
+  startup: {
+    status: () => ipcRenderer.invoke('startup:status'),
+    set: enabled => ipcRenderer.invoke('startup:set', enabled),
+  },
+  reminders: { startup: () => ipcRenderer.invoke('reminders:startup') },
+  onOpenReminders: callback => {
+    const handler = () => callback();
+    ipcRenderer.on('reminders:open', handler);
+    return () => ipcRenderer.removeListener('reminders:open', handler);
+  },
   updates: {
     status: () => ipcRenderer.invoke('updates:status'),
     check: () => ipcRenderer.invoke('updates:check'),

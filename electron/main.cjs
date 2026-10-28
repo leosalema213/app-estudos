@@ -4,6 +4,14 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { AppUpdates } = require('./updates.cjs');
 const { fitCompactBounds } = require('./compact-bounds.cjs');
+const { WindowsStartup } = require('./startup.cjs');
+const { ReminderNotifications, openRemindersWindow } = require('./reminder-notifications.cjs');
+const { legacyUserData } = require('./branding.cjs');
+if (!process.argv.some(value => value.startsWith('--user-data-dir'))) {
+  const profile = legacyUserData(app.getPath('appData'));
+  fs.mkdirSync(profile, { recursive: true });
+  app.setPath('userData', profile);
+}
 let win;
 let normalBounds;
 let wasMaximized = false;
@@ -11,6 +19,7 @@ let compact = false;
 let compactBounds;
 let changingMode = false;
 let windowSaveTimer;
+let startup;
 const supportsGlass = process.platform === 'win32' && Number(require('node:os').release().split('.')[2]) >= 22621;
 const dataPath = () => path.join(app.getPath('userData'), 'compasso.json');
 const windowStatePath = () => path.join(app.getPath('userData'), 'window-state.json');
@@ -39,6 +48,7 @@ function writeData(data) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file + '.tmp', JSON.stringify(data), 'utf8');
   fs.renameSync(file + '.tmp', file);
+  startup?.sync(data.settings);
 }
 function trusted(event) { return win && event.sender === win.webContents; }
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -48,11 +58,20 @@ else {
     try { compactBounds = JSON.parse(fs.readFileSync(windowStatePath(), 'utf8')).compactBounds; } catch {}
     nativeTheme.themeSource = 'system';
     app.setAppUserModelId('br.com.compasso.estudos');
+    // Isolated profiles and development runs must never register test executables.
+    const isolated = process.argv.some(value => value.startsWith('--user-data-dir'));
+    const installed = ['Uninstall Organon.exe', 'Uninstall Compasso.exe'].some(name => fs.existsSync(path.join(path.dirname(process.execPath), name)));
+    startup = new WindowsStartup({ app, path: process.execPath, available: process.platform === 'win32' && app.isPackaged && installed && !isolated && !process.env.PORTABLE_EXECUTABLE_FILE });
+    try { startup.sync(readData()?.settings); } catch { /* The renderer reports data errors without replacing the file. */ }
     win = new BrowserWindow({ width: 1260, height: 850, minWidth: 840, minHeight: 620, frame: false,
       backgroundColor: supportsGlass ? '#00000000' : nativeTheme.shouldUseDarkColors ? '#101010' : '#f6f7f9', backgroundMaterial: supportsGlass ? 'acrylic' : 'none',
-      icon: path.join(__dirname, '../assets/icon.ico'), title: 'Compasso',
+      icon: path.join(__dirname, '../assets/icon.ico'), title: 'Organon',
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
     win.setMenu(null);
+    const reminderNotifications = new ReminderNotifications({ Notification, available: !isolated, open: () => openRemindersWindow(win) });
+    ipcMain.handle('startup:status', e => { if (trusted(e)) return startup.status(); });
+    ipcMain.handle('startup:set', (e, enabled) => { if (trusted(e)) return startup.set(enabled); });
+    ipcMain.handle('reminders:startup', e => { if (trusted(e)) return reminderNotifications.startup(readData()?.reminders || []); });
     win.on('move', rememberCompact);
     win.on('resize', rememberCompact);
     win.on('close', () => { rememberCompact(); clearTimeout(windowSaveTimer); saveWindowState(); });
@@ -115,10 +134,10 @@ else {
     ipcMain.on('window:minimize', e => { if (trusted(e)) win.minimize(); });
     ipcMain.on('window:maximize', e => { if (trusted(e) && !compact) win.isMaximized() ? win.unmaximize() : win.maximize(); });
     ipcMain.on('window:close', e => { if (trusted(e)) win.close(); });
-    ipcMain.on('timer:notify', (e, body) => { if (trusted(e) && Notification.isSupported()) new Notification({ title: 'Compasso · Bloco concluído', body: String(body).slice(0, 300), silent: true }).show(); });
+    ipcMain.on('timer:notify', (e, body) => { if (trusted(e) && Notification.isSupported()) new Notification({ title: 'Organon · Bloco concluído', body: String(body).slice(0, 300), silent: true }).show(); });
     ipcMain.handle('data:export', async e => {
       if (!trusted(e)) return;
-      const { canceled, filePath } = await dialog.showSaveDialog(win, { defaultPath: 'compasso-backup.json', filters: [{ name: 'Backup JSON', extensions: ['json'] }] });
+      const { canceled, filePath } = await dialog.showSaveDialog(win, { defaultPath: 'organon-backup.json', filters: [{ name: 'Backup JSON', extensions: ['json'] }] });
       if (!canceled && filePath) { fs.copyFileSync(dataPath(), filePath); return true; }
       return false;
     });

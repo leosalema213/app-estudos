@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { AppUpdates, isNewer } = require('../electron/updates.cjs');
+const { legacyUserData } = require('../electron/branding.cjs');
 const payload = Buffer.from('fake installer bytes for a network-isolated test');
 const digest = crypto.createHash('sha256').update(payload).digest('hex');
 function release(version = '0.4.0') {
@@ -32,6 +33,23 @@ test('startup check only announces availability: it never downloads or installs'
   assert.equal((await f.updater.check()).status, 'available');
   assert.equal(f.calls.length, 1);
   assert.equal(f.installs, 0); assert.equal(f.quits, 0);
+});
+
+test('Organon keeps the existing profile and defaults to the original directory', () => {
+  const base = path.join(os.tmpdir(), 'branding-fixture');
+  assert.equal(legacyUserData(base, () => false), path.join(base, 'compasso-estudos'));
+  assert.equal(legacyUserData(base, file => file === path.join(base, 'Compasso', 'compasso.json')), path.join(base, 'Compasso'));
+  assert.equal(legacyUserData(base, () => true), path.join(base, 'compasso-estudos'));
+});
+
+test('Organon installer takes priority and old Compasso releases remain compatible', async () => {
+  const metadata = release();
+  metadata.assets.push({ ...metadata.assets[0], name: 'Organon-Instalar.exe', browser_download_url: metadata.assets[0].browser_download_url.replace('Compasso-', 'Organon-') });
+  const f = fixture({ metadata });
+  assert.equal((await f.updater.check()).status, 'available');
+  assert.ok(f.updater.candidate.url.endsWith('/Organon-Instalar.exe'));
+  assert.equal((await f.updater.download()).status, 'ready');
+  assert.ok(f.updater.installer.endsWith('Organon-Instalar.exe'));
 });
 test('current versions and older releases do not prompt an update', async () => {
   for (const version of ['0.2.0', '0.3.0']) assert.equal((await fixture({ metadata: release(version) }).updater.check()).status, 'current');

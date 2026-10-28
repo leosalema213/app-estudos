@@ -15,7 +15,7 @@ export const themePresets = [
 ];
 export function orderedNotes(notes) { return [...notes].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)); }
 export function preferences(settings = {}) {
-  return { sound: settings.sound !== false, creditManualTime: settings.creditManualTime === true, theme: ['light', 'dark', 'custom'].includes(settings.theme) ? settings.theme : 'system', palette: themePresets.some(p => p.id === settings.palette) ? settings.palette : 'pink', density: densities.includes(settings.density) ? settings.density : 'compact', plansView: settings.plansView === 'list' ? 'list' : 'cards' };
+  return { sound: settings.sound !== false, startWithWindows: settings.startWithWindows !== false, creditManualTime: settings.creditManualTime === true, theme: ['light', 'dark', 'custom'].includes(settings.theme) ? settings.theme : 'system', palette: themePresets.some(p => p.id === settings.palette) ? settings.palette : 'pink', density: densities.includes(settings.density) ? settings.density : 'compact', plansView: settings.plansView === 'list' ? 'list' : 'cards' };
 }
 export const recordKey = (date, planId, blockId) => `${date}|${planId}|${blockId}`;
 export function newBlock(type = 'lesson') { return { id: uid(), type, name: type === 'break' ? 'Pausa para respirar' : 'Nova aula', minutes: type === 'break' ? 5 : 25 }; }
@@ -93,6 +93,17 @@ export function play(state, plan, block, date = dayKey(), now = Date.now()) {
   return { ...settled, active: { planId: plan.id, blockId: block.id, date, type: block.type, planName: plan.name, blockName: block.name, totalMs: block.minutes * 60000, remainingMs: block.minutes * 60000, startedAt: now, running: true } };
 }
 export function pause(state, now = Date.now()) { const next = tick(state, now).state; return { ...next, active: next.active ? { ...next.active, running: false } : null }; }
+// Extend only this active session/date; scheduled block durations stay unchanged.
+export function extendLesson(state, minutes, now = Date.now()) {
+  const active = state.active;
+  const plan = state.plans.find(value => value.id === active?.planId);
+  const block = plan?.blocks.find(value => value.id === active?.blockId);
+  if (![2, 3, 5].includes(minutes) || active?.type !== 'lesson' || block?.type !== 'lesson' || plan.completedAt) return state;
+  const next = tick(state, now).state;
+  const extraMs = minutes * 60000;
+  const reopened = setDone(next, active.date, active.planId, active.blockId, false);
+  return { ...reopened, active: { ...next.active, totalMs: next.active.totalMs + extraMs, remainingMs: next.active.remainingMs + extraMs } };
+}
 export function setPlanCompleted(state, planId, completed, now = Date.now()) {
   const plan = state.plans.find(value => value.id === planId);
   if (!plan || !!plan.completedAt === completed) return state;
@@ -123,7 +134,7 @@ export function clock(ms) { const sec = Math.ceil(Math.max(0, ms) / 1000); retur
 export function duration(ms) { const m = Math.floor(ms / 60000); return m >= 60 ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}min` : `${m} min`; }
 export function focusMs(state, from, to) { return Object.entries(state.records).reduce((sum, [key, rec]) => { const date = key.split('|')[0]; return sum + (date >= from && date <= to && rec.type !== 'break' ? rec.elapsedMs || 0 : 0); }, 0); }
 export function validateData(data) {
-  if (data?.version !== 1 || !Array.isArray(data.plans) || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw new Error('O arquivo não é um backup válido do Compasso.');
+  if (data?.version !== 1 || !Array.isArray(data.plans) || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw new Error('O arquivo não é um backup válido do Organon.');
   const ids = new Set();
   for (const p of data.plans) {
     if (!p.id || ids.has(p.id) || typeof p.name !== 'string' || !isNotebookColor(p.color) || (p.icon !== undefined && !notebookIcons.includes(p.icon)) || (p.completedAt !== undefined && p.completedAt !== null && !calendarDate(p.completedAt)) || !Array.isArray(p.days) || p.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || !Array.isArray(p.blocks) || !Array.isArray(p.notes)) throw new Error('Plano inválido no backup.');

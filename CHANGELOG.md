@@ -1,5 +1,19 @@
 # Histórico de versões
 
+## 0.4.6
+
+- Modo compacto mantém 340×112 e oferece +2, +3 ou +5 minutos pelo botão + junto ao play; opções ocupam temporariamente o título, com teclado, Escape e fechamento ao clicar fora.
+- Tempo extra vale só para a sessão/data ativa e persiste com o cronômetro, sem alterar a duração das próximas aulas ou creditar minutos antecipadamente. Aulas concluídas reabrem pausadas; descansos não permitem acréscimos.
+- Aplicativo renomeado para Organon, com logo próprio e ícone de ômega invertido no Windows.
+- Perfil local e identificadores de atualização preservados para manter os dados das instalações Compasso.
+- Instalador Organon com cópia de compatibilidade para atualização pelos clientes anteriores.
+- Preferência Iniciar com o Windows em Geral, ativada por padrão e com a escolha salva.
+- Registro da inicialização usa o executável atual e é removido na desinstalação; atualizações preservam a configuração.
+- Opção Lembrar-me em cada nota, desativada por padrão e preservada nos backups.
+- Ao abrir, uma única notificação do Windows agrupa as notas de hoje que têm Lembrar-me ativo e ainda não foram vistas.
+- Clicar na notificação restaura o aplicativo, sai do modo compacto se necessário e abre Notas no filtro Hoje.
+- Perfis temporários de teste não alteram a inicialização real nem exibem notificações reais do sistema.
+
 ## 0.4.5
 
 - Planos com escolha independente de ícone e cor, incluindo cor personalizada; ícones anteriores preservados até editar.

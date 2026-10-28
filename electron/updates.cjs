@@ -4,7 +4,8 @@ const crypto = require('node:crypto');
 const { Readable, Transform } = require('node:stream');
 const { pipeline } = require('node:stream/promises');
 const REPOSITORY = 'leosalema213/app-estudos';
-const INSTALLER = 'Compasso-Instalar.exe';
+const { INSTALLER_NAMES } = require('./branding.cjs');
+const INSTALLER = INSTALLER_NAMES[0];
 const API = `https://api.github.com/repos/${REPOSITORY}/releases/latest`;
 const parseVersion = value => /^v?(\d+)\.(\d+)\.(\d+)$/.exec(value || '')?.slice(1).map(Number);
 function isNewer(remote, current) {
@@ -40,17 +41,17 @@ class AppUpdates {
   async checkRelease() {
     this.set({ status: 'checking' });
     try {
-      const response = await this.fetch(API, { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'Compasso' }, signal: AbortSignal.timeout(15000) });
+      const response = await this.fetch(API, { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'Organon' }, signal: AbortSignal.timeout(15000) });
       if (response.status === 404) return this.set({ status: 'current', message: 'Nenhuma atualização publicada ainda.' });
       if (!response.ok) throw new Error('Não foi possível consultar as versões. Verifique sua conexão e tente novamente.');
       const release = await response.json();
       if (release.draft || release.prerelease || !isNewer(release.tag_name, this.version)) return this.set({ status: 'current' });
-      const asset = release.assets?.find(a => a.name === INSTALLER);
+      const asset = INSTALLER_NAMES.map(name => release.assets?.find(a => a.name === name)).find(Boolean);
       if (!asset || !Number.isFinite(asset.size) || asset.size < 1 || asset.size > 1024 ** 3) throw new Error('O instalador desta versão ainda não está disponível.');
       const url = assetUrl(asset, release.tag_name);
       let sha256 = /^sha256:([a-f0-9]{64})$/i.exec(asset.digest || '')?.[1]?.toLowerCase();
       if (!sha256) {
-        const checksum = release.assets.find(a => a.name === `${INSTALLER}.sha256`);
+        const checksum = release.assets.find(a => a.name === `${asset.name}.sha256`);
         if (!checksum) throw new Error('Esta versão ainda não tem arquivo de verificação.');
         const check = await this.fetch(assetUrl(checksum, release.tag_name), { signal: AbortSignal.timeout(15000) });
         if (!check.ok) throw new Error('Não foi possível obter a verificação do instalador.');

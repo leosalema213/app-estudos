@@ -1,14 +1,14 @@
-# Compasso
+# Organon
 
 Aplicativo para Windows com planos de estudo, cronômetro de aulas e descansos, histórico e cadernos pessoais com páginas, imagens e desenhos. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
 
-**[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Compasso-Instalar.exe)**
+**[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Organon-Instalar.exe)**
 
 [Versões e novidades](https://github.com/leosalema213/app-estudos/releases) · [Código-fonte](https://github.com/leosalema213/app-estudos)
 
 O link de download permanece o mesmo em todas as versões publicadas. A versão em trabalho está no `package.json`; o instalador da última Release é a versão distribuída.
 
-![Compasso no modo compacto de espaçamento, com tema escuro](docs/interface.png)
+![Organon no modo compacto de espaçamento, com tema escuro](docs/interface.png)
 
 ![Planos de estudo na visualização em lista](docs/planos-lista.png)
 
@@ -26,13 +26,17 @@ O link de download permanece o mesmo em todas as versões publicadas. A versão 
 
 ![Planos concluídos no progresso](docs/planos-concluidos.png)
 
+![Opção de lembrar uma nota ao abrir](docs/lembrar-nota.png)
+
+O Organon era chamado Compasso. Os dados locais, identificadores internos e um instalador com o nome anterior são mantidos para compatibilidade com atualizações existentes.
+
 ## Abrir
 
-Baixe e execute o instalador acima para adicionar o Compasso ao menu Iniciar e à área de trabalho. O aplicativo verifica novas versões ao abrir e pergunta antes de baixar ou instalar uma atualização. Também é possível verificar manualmente nas preferências. Seus planos, histórico e anotações são mantidos na atualização.
+Baixe e execute o instalador acima para adicionar o Organon ao menu Iniciar e à área de trabalho. O aplicativo verifica novas versões ao abrir e pergunta antes de baixar ou instalar uma atualização. Também é possível verificar manualmente nas preferências. Seus planos, histórico e anotações são mantidos na atualização.
 
-Na instalação inicial, o instalador apresenta o aplicativo, permite escolher a pasta e pede confirmação antes de instalar. Ao concluir, mostra **Instalado com sucesso**, com a opção **Abrir o Compasso agora** desmarcada para você escolher. As atualizações iniciadas pelo app são silenciosas: preservam a pasta existente e reabrem o Compasso ao terminar, sem repetir o assistente.
+Na instalação inicial, o instalador apresenta o aplicativo, permite escolher a pasta e pede confirmação antes de instalar. Ao concluir, mostra **Instalado com sucesso**, com a opção **Abrir o Organon agora** desmarcada para você escolher. As atualizações iniciadas pelo app são silenciosas: preservam a pasta existente e reabrem o Organon ao terminar, sem repetir o assistente.
 
-Para testar uma compilação local, abra `Abrir Compasso.lnk` ou `release/<versão>/win-unpacked/Compasso.exe`. Mantenha a pasta `win-unpacked` completa. O instalador gerado fica em `release/<versão>/Compasso-Instalar.exe`. Nenhuma dessas versões precisa de Node ou de um servidor para usar.
+Para testar uma compilação local, abra `Abrir Organon.lnk` ou `release/<versão>/win-unpacked/Organon.exe`. Mantenha a pasta `win-unpacked` completa. O instalador gerado fica em `release/<versão>/Organon-Instalar.exe`. Nenhuma dessas versões precisa de Node ou de um servidor para usar.
 
 O instalador extrai o aplicativo apenas uma vez. O formato portátil opcional extrai o Electron numa pasta temporária a cada abertura e inicia mais lentamente. O motor do Electron representa a maior parte do tamanho em disco; o frontend é distribuído apenas no bundle, sem cópias extras de bibliotecas.
 
@@ -95,6 +99,10 @@ A barra oferece negrito, itálico, tamanho de fonte, títulos, listas e desfazer
 
 Em **Notas**, crie lembretes com título, descrição e uma data ou a opção **Todos os dias**. As notas pendentes aparecem abaixo dos indicadores de Meu dia, respeitando a data selecionada. Marcar como vista oculta a nota; quando todas forem vistas, a seção desaparece. Notas diárias voltam no dia seguinte. Na área Notas é possível editar, excluir ou desfazer a confirmação.
 
+Cada nota tem **Lembrar-me**, desativado por padrão. Ao ativar, ela participa da notificação do Windows na abertura do aplicativo quando estiver prevista para hoje e ainda não tiver sido vista. Várias notas são agrupadas em um aviso com a quantidade. Clicar abre **Notas → Hoje**, restaurando a janela mesmo se estiver minimizada ou em modo compacto. A notificação não marca a nota como vista. Notas futuras, já vistas ou sem Lembrar-me ficam fora do aviso. A exibição segue as permissões de notificação e o modo Não incomodar do Windows.
+
+Em **Preferências → Geral**, **Iniciar com o Windows** vem ativado e abre a janela normal ao entrar na conta. A escolha fica salva e pode ser desativada. O registro usa o executável em execução, é atualizado ao mudar de instalação e removido ao desinstalar. Prévias sem instalação, execuções de desenvolvimento e perfis temporários de teste guardam a preferência sem alterar a inicialização real do Windows. A inicialização automática é efetivada ao executar a versão instalada pelo instalador. Se a inicialização foi desativada pelo Gerenciador de Tarefas, a sincronização automática respeita essa escolha; para reativar pelo app, desligue e ligue a opção novamente.
+
 Em **Preferências → Geral**, **Tempo ao concluir manualmente** vem desativado. Ao ativar, dar check completa o tempo cadastrado sem duplicar o que o cronômetro já registrou. Por exemplo, uma aula de 25 minutos com 3 cronometrados recebe 22 minutos manuais. Desfazer o check retira esses 22 minutos e mantém os 3 reais. Descansos continuam fora do tempo de foco. A preferência vale para todos os planos e fica salva.
 
 ## Persistência e comportamento do relógio
@@ -117,6 +125,7 @@ npm run test:notebook
 npm run test:library
 npm run test:reminders
 npm run test:plans
+npm run test:windows-startup
 ```
 
 Os testes de modelo verificam conclusão automática, pausa, troca de aulas, descansos, distribuição diária, marcação manual e backups. O teste de interface abre uma instância isolada do Electron com dados temporários e verifica os fluxos principais. As capturas ficam em `test-output/`.
@@ -124,6 +133,8 @@ Os testes de modelo verificam conclusão automática, pausa, troca de aulas, des
 O teste do caderno verifica notas antigas, texto intercalado com prints e rabiscos, posição do cursor, desfazer/refazer, colagem durante troca de notas, backup e persistência após reiniciar. O editor é carregado somente ao abrir uma nota e armazena cada imagem uma única vez no documento.
 
 O teste dos cadernos pessoais verifica criação e edição de cadernos, capas, páginas, formatação, títulos com Markdown, índices, busca, desenhos, exclusão com confirmação, layout em janela menor e persistência após reiniciar.
+
+Os testes de inicialização verificam os parâmetros enviados ao Windows, ativação/desativação, falhas e preferências persistidas. O teste de interface usa os controladores de produção com adaptadores de sistema simulados para verificar a notificação agrupada e seu clique, sem registrar o executável de teste nem disparar avisos reais. Reiniciar ou entrar novamente no Windows não faz parte desses testes automatizados. O script de medição de abertura `tests/startup.cjs` continua separado.
 
 Os testes também verificam edição individual, preferências de densidade, aviso de atualização, download e instalação somente após confirmação, além da rejeição de downloads corrompidos. Os testes de atualização simulam a execução do instalador; não instalam nada no computador.
 
@@ -134,16 +145,16 @@ Depois de `npm run dist`, execute `npm run test:installer` para validar o modo s
 Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lote está encerrado e que ele autoriza a publicação, conforme `AGENTS.md`. Por padrão, incremente apenas PATCH; use MINOR ou MAJOR somente se o usuário pedir explicitamente.
 
 1. Atualize a versão em `package.json` e `package-lock.json` com `npm version patch --no-git-tag-version`.
-2. Execute `npm test`, `npm run build`, `npm run test:ui`, `npm run test:notebook`, `npm run test:library`, `npm run test:reminders` e `npm run test:plans`.
+2. Execute `npm test`, `npm run build`, `npm run test:ui`, `npm run test:notebook`, `npm run test:library`, `npm run test:reminders`, `npm run test:plans` e `npm run test:windows-startup`.
 3. Gere os arquivos com `npm run dist` e `npm run checksums`.
 4. Faça commit e envie para `origin/main`.
 5. Execute `npm run release`.
 
-O script usa a autenticação existente do Git, ou `GH_TOKEN`/`GITHUB_TOKEN` no ambiente. Credenciais não são gravadas em arquivos. Ele cria uma Release em rascunho, envia `Compasso-Instalar.exe` e o checksum e só então publica como a versão mais recente. O README continua apontando para o mesmo endereço de download. Executáveis, dependências, dados de teste, atalhos e arquivos `.env` ficam fora do Git.
+O script usa a autenticação existente do Git, ou `GH_TOKEN`/`GITHUB_TOKEN` no ambiente. Credenciais não são gravadas em arquivos. Ele cria uma Release em rascunho, envia `Organon-Instalar.exe`, uma cópia idêntica `Compasso-Instalar.exe` para clientes anteriores e os respectivos checksums e só então publica como a versão mais recente. O README continua apontando para o mesmo endereço de download. Executáveis, dependências, dados de teste, atalhos e arquivos `.env` ficam fora do Git.
 
 ## Atualizações no aplicativo
 
-Ao abrir, o Compasso consulta a última Release pública de `leosalema213/app-estudos` sem bloquear a interface. Uma versão mais nova abre o aviso com as opções **Depois** e **Baixar atualização**. O download só começa após essa escolha e mostra uma barra de progresso. Quando termina, **Atualizar e reiniciar** pausa o cronômetro, salva os dados e aplica a atualização em segundo plano. O app fecha brevemente e reabre ao concluir. O instalador reconhece também os parâmetros enviados pelas versões 0.3 e 0.4, tornando esta atualização silenciosa para elas.
+Ao abrir, o Organon consulta a última Release pública de `leosalema213/app-estudos` sem bloquear a interface. Uma versão mais nova abre o aviso com as opções **Depois** e **Baixar atualização**. O download só começa após essa escolha e mostra uma barra de progresso. Quando termina, **Atualizar e reiniciar** pausa o cronômetro, salva os dados e aplica a atualização em segundo plano. O app fecha brevemente e reabre ao concluir. O instalador reconhece também os parâmetros enviados pelas versões 0.3 e 0.4, tornando esta atualização silenciosa para elas.
 
 O pacote completo ainda é baixado a cada versão; não há download diferencial. O modo silencioso remove as etapas repetidas do assistente, mas não elimina o tempo necessário para baixar e substituir os arquivos. A versão instalada aparece abaixo da logo e nas preferências.
 

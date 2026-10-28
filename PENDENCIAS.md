@@ -20,6 +20,8 @@ Não comitar nem publicar este lote até o usuário encerrar os pedidos e confir
 
 ## Próximo lote
 
-- [ ] Preferência de iniciar com o Windows, ativada por padrão.
-- [ ] Opção Lembrar-me nas notas, desativada por padrão, e notificação ao abrir com notas pendentes.
-- [ ] Confirmar o encerramento antes de comitar ou publicar a próxima versão.
+- [x] Preferência de iniciar com o Windows, ativada por padrão.
+- [x] Opção Lembrar-me nas notas, desativada por padrão, e notificação ao abrir com notas pendentes.
+- [x] Adotar Organon e a segunda proposta de logo, com ômega invertido, preservando dados e atualizações anteriores.
+- [x] Adicionar +2, +3 e +5 minutos à aula atual pelo modo compacto, preservando a janela e as métricas.
+- [x] Usuário autorizou encerrar e publicar a 0.4.6.

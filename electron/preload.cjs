@@ -10,6 +10,12 @@ contextBridge.exposeInMainWorld('desktop', {
   notify: (body) => ipcRenderer.send('timer:notify', body),
   exportData: (data) => ipcRenderer.invoke('data:export', data),
   importData: () => ipcRenderer.invoke('data:import'),
+  books: {
+    import: () => ipcRenderer.invoke('books:import'),
+    read: (hash, format) => ipcRenderer.invoke('books:read', hash, format),
+    restore: token => ipcRenderer.invoke('books:restore', token),
+    cancelRestore: token => ipcRenderer.invoke('books:cancel-restore', token),
+  },
   imagesPending: count => ipcRenderer.send('images:pending', count),
   cloud: {
     status: () => ipcRenderer.invoke('cloud:status'),

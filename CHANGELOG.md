@@ -1,5 +1,16 @@
 # Histórico de versões
 
+## 0.4.10
+
+- Biblioteca Livros independente dos cadernos, com importação de PDF, EPUB refluível, MOBI, AZW e AZW3 sem DRM, até 200 MiB por arquivo, e cópias offline deduplicadas no perfil.
+- Leitor integrado com retomada automática por página, uma ou duas páginas por tela, zoom, contraste e texto selecionável quando presente no PDF. O ponto mais avançado fica separado da posição atual e da conclusão explícita.
+- Biblioteca sem os textos explicativos adicionais. Seletor de páginas com opções 1/2, botões de zoom, Ctrl + scroll e maximizar/restaurar no próprio leitor.
+- EPUB e Kindle guardam localização CFI independente da fonte/paginação, com fonte ajustável, contraste, uma/duas colunas e backup dos arquivos originais. EPUB de layout fixo, KFX e conteúdo protegido não são suportados.
+- Vários livros por plano e vários planos por livro, com acesso pelo plano. Livros independentes não viram tarefas do Meu dia.
+- Check de livro lido e listagem por semana/mês em Meu progresso, sem inventar horas de foco.
+- Backup JSON portátil inclui os arquivos e verifica integridade antes de restaurar. Os binários ficam fora do JSON de trabalho e dos checkpoints do cronômetro.
+- Transporte remoto recusa snapshots com livros enquanto o envio de binários não estiver implementado e validado. A nuvem permanece desativada.
+
 ## 0.4.9
 
 - Tipos personalizados de atividade, com nome e ícone, criados diretamente no editor do plano. Atalhos ocupam até duas linhas; a lista completa aparece quando há tipos excedentes.

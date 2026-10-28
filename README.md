@@ -2,7 +2,7 @@
 
 Aplicativo para Windows com planos de estudo, cronômetro de aulas e descansos, histórico e cadernos pessoais com páginas, imagens e desenhos. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
 
-A versão 0.4.9 inclui tipos personalizados de atividade e o código de conta opcional/sincronização com Supabase. A conexão permanece desativada nesta compilação enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração e os testes](docs/SUPABASE.md).
+A versão 0.4.10 inclui biblioteca offline com leitores PDF, EPUB refluível e Kindle sem DRM, retomada da leitura, vínculos com planos e backup dos livros. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração e os testes](docs/SUPABASE.md).
 
 **[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Organon-Instalar.exe)**
 
@@ -92,6 +92,22 @@ npm run dist
 
 A [auditoria de backup e o roteiro de reinstalação segura](docs/AUDITORIA-BACKUP.md) registram a cobertura, os testes e as correções da 0.4.9 em relação à 0.4.8. A [avaliação do Google Drive](docs/GOOGLE-DRIVE.md) compara pasta sincronizada e conexão direta; a integração com Drive ainda não foi implementada.
 
+## Livros
+
+A seção **Livros** importa PDF, EPUB refluível, MOBI, AZW e AZW3 sem DRM, até **200 MiB por arquivo**, inclusive sem plano. O Organon guarda uma cópia offline no perfil: mover o original não interrompe a leitura. Importar o mesmo conteúdo novamente mantém uma única entrada, com sua posição e seus vínculos.
+
+O leitor abre dentro do aplicativo e retoma a última posição após fechar e reiniciar. Há uma ou duas páginas por tela, contraste papel/noturno/sépia, atalhos de navegação e maximizar/restaurar. Em PDF, use zoom, os botões −/+ ou **Ctrl + scroll**; o scroll sem Ctrl continua rolando normalmente. PDF tem layout fixo: ampliar a página não altera a fonte nem redistribui o texto. Não há OCR, reflow ou formulários de PDF nesta entrega. Em EPUB/Kindle, o controle **Fonte** e Ctrl + scroll ajustam a fonte, preservando um localizador CFI do início do trecho; o campo de posição usa porcentagem em vez de um número de página dependente da fonte.
+
+**Ponto mais avançado** é a maior página exibida dividida pelo total; voltar uma página não reduz esse indicador. Ele não comprova leitura de todas as páginas. **Concluir** registra separadamente o livro como lido, na data do check; **Meu progresso** mostra os livros lidos no período semanal/mensal e o total. Abrir a última página não conclui o livro automaticamente e não cria horas de foco.
+
+Em **Planos** no card do livro, escolha quantos planos quiser. Cada plano pode ter vários livros e oferece o botão **Livros**. Livros independentes permanecem na biblioteca sem obrigações no Meu dia. Excluir um plano não exclui livros. Excluir um livro pede confirmação e remove a entrada e sua participação no progresso; o original é preservado.
+
+O backup JSON inclui PDFs, posição, preferências e vínculos. Restaure pelo aplicativo desktop; a visualização web não armazena binários de livros. Backups grandes usam memória durante a importação e podem demorar. Mantenha espaço para o JSON portátil (base64 acrescenta aproximadamente um terço ao tamanho dos PDFs) e para as cópias restauradas. Arquivos internos sem referência são retidos por segurança e não entram em novos backups.
+
+PDF usa [PDF.js](https://github.com/mozilla/pdf.js), empacotado com worker, fontes e CMaps. EPUB/Kindle usam parsers e paginação do [Foliate.js](https://github.com/johnfactotum/foliate-js), fixado em uma revisão e empacotado offline. O conteúdo dos livros passa por remoção de scripts/handlers, política de recursos sem acesso externo e iframe sem permissão de scripts. EPUB de layout fixo, KFX e arquivos com senha/DRM não são suportados; não há conversor integrado.
+
+O contrato de armazenamento, backup e transporte futuro está em [Dados e migrações](docs/DADOS-E-MIGRACOES.md). A nuvem continua desativada; snapshots com livros são recusados pelo transporte atual para impedir uma cópia online incompleta.
+
 ## Cadernos pessoais
 
 Abra **Cadernos** na sidebar para criar espaços independentes dos planos, como Diário, Casa ou Pensamentos. Escolha nome, cor pastel ou personalizada e um ícone da biblioteca com busca, compartilhada com os planos. Tanto a imagem de capa quanto o ícone são opcionais: use **Sem ícone** para deixar somente a imagem ou a cor. Cada caderno pode ter várias páginas, com busca pelo título ou conteúdo.
@@ -151,7 +167,7 @@ Depois de `npm run dist`, execute `npm run test:installer` para validar o modo s
 Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lote está encerrado e que ele autoriza a publicação, conforme `AGENTS.md`. Por padrão, incremente apenas PATCH; use MINOR ou MAJOR somente se o usuário pedir explicitamente.
 
 1. Atualize a versão em `package.json` e `package-lock.json` com `npm version patch --no-git-tag-version`.
-2. Execute `npm test`, `npm run build`, `npm run test:ui`, `npm run test:notebook`, `npm run test:library`, `npm run test:reminders`, `npm run test:plans` e `npm run test:windows-startup`.
+2. Confira os resultados dos testes pertinentes ao lote. Conforme `AGENTS.md`, envie ao usuário um comando focado para execução no terminal dele quando houver validação pendente; reaproveite resultados válidos e não repita automaticamente suítes completas.
 3. Gere os arquivos com `npm run dist` e `npm run checksums`.
 4. Faça commit e envie para `origin/main`.
 5. Execute `npm run release`.

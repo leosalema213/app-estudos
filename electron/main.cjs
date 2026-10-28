@@ -6,6 +6,7 @@ const { AppUpdates } = require('./updates.cjs');
 const { fitCompactBounds } = require('./compact-bounds.cjs');
 const { WindowsStartup } = require('./startup.cjs');
 const { CloudSync } = require('./cloud.cjs');
+const { BookFiles } = require('./books.cjs');
 const { ReminderNotifications, openRemindersWindow } = require('./reminder-notifications.cjs');
 const { APP_ID, DEVELOPMENT_APP_ID, legacyUserData, repairDevelopmentShortcut } = require('./branding.cjs');
 if (!process.argv.some(value => value.startsWith('--user-data-dir'))) {
@@ -24,6 +25,7 @@ let startup;
 let cloud;
 let closing = false;
 let imagesPending = 0;
+let readingBooks = false;
 const supportsGlass = process.platform === 'win32' && Number(require('node:os').release().split('.')[2]) >= 22621;
 const dataPath = () => path.join(app.getPath('userData'), 'compasso.json');
 const windowStatePath = () => path.join(app.getPath('userData'), 'window-state.json');
@@ -60,6 +62,8 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (win) { win.restore(); win.show(); win.focus(); } });
   app.whenReady().then(() => {
+    const books = new BookFiles(app.getPath('userData'));
+    let pendingBookRestore;
     try { compactBounds = JSON.parse(fs.readFileSync(windowStatePath(), 'utf8')).compactBounds; } catch {}
     nativeTheme.themeSource = 'system';
     const appId = app.isPackaged ? APP_ID : DEVELOPMENT_APP_ID;
@@ -91,7 +95,7 @@ else {
     const dailySync = setInterval(() => { if (cloud.session && cloud.meta.pending && !cloud.busy && Date.now() - new Date(cloud.meta.lastSync || 0).getTime() >= 86400000) cloud.sync().catch(() => {}); }, 60000);
     dailySync.unref();
     win.on('close', event => {
-      if ((!cloud.session && !imagesPending) || closing) return;
+      if ((!cloud.session && !imagesPending && !readingBooks) || closing) return;
       event.preventDefault(); closing = true;
       win.webContents.send('cloud:prepare-close');
       const fallback = setTimeout(() => { if (!win.isDestroyed()) win.destroy(); }, 60000); fallback.unref();
@@ -141,6 +145,23 @@ else {
     win.webContents.on('will-navigate', (event) => event.preventDefault());
     ipcMain.handle('data:load', (e) => { if (trusted(e)) return readData(); });
     ipcMain.handle('data:save', (e, data) => { if (trusted(e)) writeData(data); });
+    ipcMain.handle('books:import', async e => {
+      if (!trusted(e)) return;
+      const { canceled, filePaths } = await dialog.showOpenDialog(win, { properties: ['openFile', 'multiSelections'], filters: [{ name: 'Livros', extensions: ['pdf', 'epub', 'mobi', 'azw', 'azw3'] }] });
+      if (canceled) return [];
+      return filePaths.map(file => {
+        try { return { book: books.import(file) }; }
+        catch (error) { return { error: `${path.basename(file)}: ${error.message}` }; }
+      });
+    });
+    ipcMain.handle('books:read', (e, hash, format) => { if (trusted(e)) { readingBooks = true; return books.read(hash, format); } });
+    ipcMain.handle('books:restore', (e, token) => {
+      if (!trusted(e) || !pendingBookRestore || token !== pendingBookRestore.token) throw new Error('Selecione o backup novamente.');
+      const prepared = pendingBookRestore; pendingBookRestore = null; return books.restore(prepared.verified);
+    });
+    ipcMain.handle('books:cancel-restore', (e, token) => {
+      if (trusted(e) && token === pendingBookRestore?.token) pendingBookRestore = null;
+    });
     ipcMain.handle('window:appearance', (e, theme) => {
       if (!trusted(e)) return;
       nativeTheme.themeSource = ['light', 'dark'].includes(theme) ? theme : 'system';
@@ -189,7 +210,7 @@ else {
       if (!canceled && filePath) {
         const snapshot = data ?? readData();
         if (snapshot?.version !== 1 || !Array.isArray(snapshot.plans) || !snapshot.records) throw new Error('Formato de dados inválido.');
-        fs.writeFileSync(filePath, JSON.stringify(snapshot), 'utf8'); return true;
+        books.export(filePath, snapshot); return true;
       }
       return false;
     });
@@ -197,7 +218,10 @@ else {
       if (!trusted(e)) return;
       const { canceled, filePaths } = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: 'Backup JSON', extensions: ['json'] }] });
       if (canceled) return null;
-      return JSON.parse(fs.readFileSync(filePaths[0], 'utf8'));
+      const verified = books.verifyBackup(JSON.parse(fs.readFileSync(filePaths[0], 'utf8')));
+      const token = require('node:crypto').randomUUID();
+      pendingBookRestore = { token, verified };
+      return { ...verified.metadata, _booksRestoreToken: token };
     });
     win.loadFile(path.join(__dirname, '../dist/index.html'));
   });

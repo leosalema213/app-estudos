@@ -4,6 +4,14 @@
 
 Prefira alterações incrementais e localizadas. Preserve a estrutura dos arquivos e mantenha o diff pequeno. Não reescreva arquivos inteiros nem use delete + recreate, salvo necessidade estrutural real.
 
+## Testes e validação com o usuário
+
+- Por preferência explícita do usuário, a execução dos testes fica, por padrão, no terminal dele. Não rode automaticamente suítes completas, integrações/E2E ou verificações amplas de cores e aparência.
+- Quando houver testes a fazer, avise e forneça um único comando copiável para PowerShell, focado no que mudou, explicando brevemente o que ele verifica. O usuário executa e envia o resumo do resultado ou o erro; não peça logs completos de execuções bem-sucedidas.
+- O usuário pode rodar os testes em paralelo ao trabalho independente do agente. Não fique consultando ou aguardando repetidamente a execução; retome a análise quando o retorno chegar. Não trate ausência de retorno como aprovação nem declare testes pendentes como aprovados.
+- O agente pode executar somente verificações essenciais e focadas que dependam de sua inspeção direta, por exemplo reproduzir um erro específico ou conferir uma imagem. Avise antes e explique a necessidade. Se depender de imagem, captura ou configuração adicional, combine o procedimento com o usuário primeiro.
+- Reaproveite resultados válidos já obtidos. Não repita testes nem amplie a suíte sem mudança relevante, falha ou dúvida concreta que justifique. Uma alteração apenas documental destas regras não exige nova execução.
+
 ## Encerramento de um lote e publicação
 
 - Implemente e valide todos os pedidos do lote, incluindo mensagens adicionais recebidas durante o trabalho.

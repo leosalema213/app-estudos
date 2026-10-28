@@ -3,6 +3,8 @@ const hash = value => createHash('sha256').update(value).digest('hex');
 const canonical = value => JSON.stringify(value, function (key, item) { return item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item; });
 const imagePattern = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/;
 function packDocument(data) {
+  // Book binaries live outside the snapshot. Never advertise an incomplete remote backup.
+  if (data.books?.length) throw new Error('A sincronização de livros ainda não está disponível. Exporte um backup local completo.');
   const assets = new Map();
   function visit(value) {
     if (typeof value === 'string') {

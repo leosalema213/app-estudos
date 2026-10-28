@@ -1,0 +1,3 @@
+tests/fixtures/*.pdf binary
+tests/fixtures/*.epub binary
+tests/fixtures/*.mobi binary

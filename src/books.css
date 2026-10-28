@@ -1,0 +1,38 @@
+.books-filters{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.books-filters input{flex:1;min-width:150px}.books-filters select{max-width:260px}
+.books-format-help{font-size:12px;line-height:1.7;color:var(--muted);margin:16px 0}
+.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.reading-card{border:1px solid var(--line);border-radius:12px;padding:18px;background:#fff;min-width:0}
+.reading-cover{display:flex;align-items:center;justify-content:center;gap:18px;background:#ece8f4;color:#74658b;border-radius:7px;width:100%;height:135px;margin-bottom:16px}
+.reading-cover span{font-size:12px;letter-spacing:3px}.reading-card h2{font-size:17px;line-height:1.5;overflow-wrap:anywhere}
+.reading-card p{font-size:12px;color:var(--muted);margin:9px 0}.reading-card progress{width:100%;height:5px;accent-color:var(--violet)}
+.reading-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:18px;font-size:12px}.reading-actions>button{display:flex;align-items:center;gap:5px}
+.reading-actions [aria-pressed=true]{color:var(--green)}.reading-plan-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}.reading-plan-tags span{border:1px solid var(--line);border-radius:4px;padding:4px 7px;font-size:11px}
+.books-empty{padding:80px 20px;text-align:center;color:var(--muted);font-size:14px}
+.book-link-form{padding:22px 28px}.book-link-form>label:first-child{display:grid;gap:8px}.book-link-form p{font-size:12px;line-height:1.7;color:var(--muted);margin:18px 0}
+.book-plan-check{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:13px}.plan-books-link{display:flex;align-items:center;gap:5px;font-size:12px;padding:10px 0}
+.book-reader{position:fixed;inset:0;z-index:35;display:flex;flex-direction:column;background:#f6f7f9;color:#282938}
+.book-reader>header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 25px;border-bottom:1px solid var(--line);flex-shrink:0}
+.reader-window-actions,.reader-zoom-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}.reader-window-actions button,.reader-zoom-actions button{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:5px}.reader-window-actions button:hover,.reader-zoom-actions button:hover{background:#8882}.reader-zoom-actions{gap:2px;margin-left:-12px}
+.book-reader h2{font-size:17px;line-height:1.5;overflow-wrap:anywhere;max-height:54px;overflow:hidden}.book-reader small{font-size:10px;letter-spacing:2px;color:var(--muted)}
+.reader-toolbar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:10px 25px;flex-shrink:0;border-bottom:1px solid var(--line)}
+.reader-toolbar label{display:flex;align-items:center;gap:7px;font-size:12px}.reader-toolbar select{font-size:12px;padding:7px}.reader-toolbar>span{font-size:11px;color:var(--muted);margin-left:auto}
+.reader-pages{flex:1;min-height:0;overflow:auto;padding:18px 30px;background:#e3e4e7;overscroll-behavior:contain}
+.reader-pages>p{padding:35px;text-align:center;line-height:1.8}.pdf-spread{display:flex;align-items:flex-start;justify-content:safe center;gap:12px;min-width:100%;width:max-content;min-height:100%}
+.ebook-area{position:relative;flex:1;min-height:0;background:white}.ebook-area.night{background:#181818}.ebook-area.sepia{background:#f3e7cf}.ebook-host{height:100%;width:100%}.ebook-host>foliate-paginator,.ebook-host>foliate-fxl{display:block;width:100%;height:100%}.ebook-message{position:absolute;inset:30px;display:grid;place-content:center;background:inherit;line-height:1.7}.ebook-message[role=alert]{z-index:1}
+.pdf-sheet{position:relative;flex-shrink:0;box-shadow:0 2px 9px #0003;background:white;color:black;--scale-round-x:1px;--scale-round-y:1px}
+.pdf-sheet canvas{display:block}.reader-pages.night{background:#111}.reader-pages.night .pdf-sheet{filter:invert(.9) hue-rotate(180deg)}
+.reader-pages.sepia{background:#d7ccb5}.reader-pages.sepia .pdf-sheet{filter:sepia(.5)}
+.book-reader>footer{display:flex;align-items:center;gap:12px;padding:12px 25px;margin:0;font-size:12px;color:inherit;border-top:1px solid var(--line);flex-shrink:0}
+.book-reader footer form{display:flex;align-items:center;gap:8px}.book-reader footer input{width:75px;padding:6px}.book-reader footer form button{padding:6px 10px;border:1px solid var(--line);border-radius:5px}
+.book-reader footer>span{margin-left:auto;font-size:11px;color:var(--muted)}.book-reader footer .reader-save-error{color:#df7484}
+[data-theme=dark] :is(.reading-card,.book-reader){background:#191919;color:#ededed}
+[data-theme=dark] .reading-cover{background:#26222c;color:#c3b1dc}
+[data-theme=dark] .reader-pages.paper{background:#303030}
+.completed-book-list{margin:20px 0;border:1px solid var(--line);border-radius:10px;padding:20px}.completed-book-list h2{font-size:16px}.completed-book-list p{font-size:12px;color:var(--muted);margin:10px 0}.completed-book-list ul{list-style:none;padding:0}.completed-book-list li{display:flex;gap:14px;justify-content:space-between;font-size:13px;margin-top:12px}
+/* TextLayer positioning follows Mozilla PDF.js (Apache-2.0). Keep text selectable over canvas. */
+.pdf-sheet .textLayer{position:absolute;inset:0;overflow:clip;line-height:1;letter-spacing:normal;word-spacing:normal;text-align:initial;text-size-adjust:none;forced-color-adjust:none;transform-origin:0 0;caret-color:CanvasText;--min-font-size:1;--text-scale-factor:calc(var(--total-scale-factor) * var(--min-font-size));--min-font-size-inv:calc(1 / var(--min-font-size))}
+.pdf-sheet .textLayer :is(span,br){color:transparent;position:absolute;white-space:pre;cursor:text;transform-origin:0 0;user-select:text}
+.pdf-sheet .textLayer>:not(.markedContent),.pdf-sheet .textLayer .markedContent span:not(.markedContent){z-index:1;--font-height:0;font-size:calc(var(--text-scale-factor) * var(--font-height));--scale-x:1;--rotate:0deg;transform:rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv))}
+.pdf-sheet .textLayer .markedContent{display:contents}.pdf-sheet .textLayer ::selection{background:#8080ff70;color:transparent}
+@media(max-width:900px){.reader-toolbar{gap:8px;padding:10px 16px}.reader-toolbar>span{display:none}.book-reader>footer{flex-wrap:wrap;gap:6px;padding:10px 16px}.book-reader footer>span{font-size:10px}.books-filters .tabs{width:100%}}

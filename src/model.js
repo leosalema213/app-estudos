@@ -2,6 +2,7 @@ import { isNoteImage, validNoteDocument } from './note-document.js';
 import { isNotebookColor, notebookIcons } from './book-appearance.js';
 import { calendarDate, validReminders } from './reminders.js';
 import { validKind, validKinds } from './block-kinds.js';
+import { validBooks } from './books.js';
 
 export const uid = () => crypto.randomUUID();
 export const dayKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -25,7 +26,7 @@ export { notebookIcons } from './book-appearance.js';
 export function newPage() { return { id: uid(), title: '', date: dayKey(), text: '', images: [] }; }
 export function newNotebook() { return { id: uid(), name: '', icon: 'book', color: 'violet', cover: null, pages: [newPage()] }; }
 export function seed() {
-  return { version: 1, plans: [], notebooks: [], reminders: [], blockKinds: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
+  return { version: 1, plans: [], notebooks: [], books: [], reminders: [], blockKinds: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
 }
 export function firstPlan() {
   const plan = newPlan();
@@ -137,6 +138,7 @@ export function focusMs(state, from, to) { return Object.entries(state.records).
 export function validateData(data) {
   if (data?.version !== 1 || !Array.isArray(data.plans) || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw new Error('O arquivo não é um backup válido do Organon.');
   const ids = new Set();
+  if (data.books !== undefined && !validBooks(data.books)) throw new Error('Livros inválidos no backup.');
   if (data.blockKinds !== undefined && !validKinds(data.blockKinds)) throw new Error('Tipos de atividade inválidos no backup.');
   for (const p of data.plans) {
     if (!p.id || ids.has(p.id) || typeof p.name !== 'string' || !isNotebookColor(p.color) || (p.icon !== undefined && !notebookIcons.includes(p.icon)) || (p.completedAt !== undefined && p.completedAt !== null && !calendarDate(p.completedAt)) || !Array.isArray(p.days) || p.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || !Array.isArray(p.blocks) || !Array.isArray(p.notes)) throw new Error('Plano inválido no backup.');
@@ -166,5 +168,5 @@ export function validateData(data) {
     if (!block || !calendarDate(session.date) || session.type !== block.type || !Number.isFinite(session.totalMs) || session.totalMs <= 0 || !Number.isFinite(session.remainingMs) || session.remainingMs < 0 || session.remainingMs > session.totalMs || !Number.isFinite(session.startedAt) || typeof session.running !== 'boolean') throw new Error('Cronômetro inválido no backup.');
     if (!plan.completedAt) active = { ...session, running: false };
   }
-  return { ...data, notebooks: data.notebooks || [], reminders: data.reminders || [], blockKinds: data.blockKinds || [], active, settings: preferences(data.settings) };
+  return { ...data, notebooks: data.notebooks || [], books: data.books || [], reminders: data.reminders || [], blockKinds: data.blockKinds || [], active, settings: preferences(data.settings) };
 }

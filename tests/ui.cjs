@@ -10,8 +10,8 @@ fs.mkdirSync(output, { recursive: true });
 const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
 let app;
 const launchOptions = process.env.COMPASSO_EXECUTABLE
-  ? { executablePath: path.resolve(process.env.COMPASSO_EXECUTABLE), args: [`--user-data-dir=${userData}`], env }
-  : { args: [root, `--user-data-dir=${userData}`], env };
+  ? { executablePath: path.resolve(process.env.COMPASSO_EXECUTABLE), args: [`--user-data-dir=${userData}`, '--skip-account-prompt'], env }
+  : { args: [root, `--user-data-dir=${userData}`, '--skip-account-prompt'], env };
 (async () => {
   app = await electron.launch(launchOptions);
   const page = await app.firstWindow();

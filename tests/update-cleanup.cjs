@@ -1,6 +1,8 @@
 const { _electron: electron } = require('playwright');
 const assert = require('node:assert/strict'), fs = require('node:fs'), os = require('node:os'), path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { version } = require('../package.json');
+const futureVersion = version.replace(/\d+$/, patch => String(Number(patch) + 1));
 const root = path.resolve(__dirname, '..'), profile = fs.mkdtempSync(path.join(os.tmpdir(), 'organon-cleanup-ui-'));
 const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
 let app;
@@ -10,11 +12,11 @@ let app;
   const plan = model.firstPlan(); plan.name = 'Plano preservado'; data.plans = [plan];
   fs.writeFileSync(path.join(profile, 'compasso.json'), JSON.stringify(data));
   const put = relative => { const file = path.join(profile, 'updates', relative); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, 'fixture'); return file; };
-  const old = put('0.4.5/Compasso-Instalar.exe'), current = put('0.4.8/Organon-Instalar.exe');
-  const future = put('0.4.9/Organon-Instalar.exe'), unknown = put('0.4.7/keep.txt');
+  const old = put('0.0.0/Compasso-Instalar.exe'), current = put(`${version}/Organon-Instalar.exe`);
+  const future = put(`${futureVersion}/Organon-Instalar.exe`), unknown = put('0.4.7/keep.txt');
   const options = process.env.COMPASSO_EXECUTABLE
-    ? { executablePath: path.resolve(process.env.COMPASSO_EXECUTABLE), args: [`--user-data-dir=${profile}`], env }
-    : { args: [root, `--user-data-dir=${profile}`], env };
+    ? { executablePath: path.resolve(process.env.COMPASSO_EXECUTABLE), args: [`--user-data-dir=${profile}`, '--skip-account-prompt'], env }
+    : { args: [root, `--user-data-dir=${profile}`, '--skip-account-prompt'], env };
   app = await electron.launch(options);
   const page = await app.firstWindow();
   await page.getByRole('heading', { name: 'Meu dia', exact: true }).waitFor();

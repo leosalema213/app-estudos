@@ -8,6 +8,7 @@ import { Dropcursor, Gapcursor, TrailingNode, UndoRedo } from '@tiptap/extension
 import { Selection, TextSelection } from '@tiptap/pm/state';
 import { documentText, isNoteImage, noteDocument } from './note-document.js';
 import { FormatToolbar, richExtensions } from './RichText.jsx';
+import { optimizeImage } from './images.js';
 
 const Image = Node.create({
   name: 'image', group: 'block', atom: true, draggable: true,
@@ -103,15 +104,20 @@ export default forwardRef(function NoteEditor({ note, onChange, notify, rich = f
       },
       capture,
       cancel: token => bookmarks.delete(token),
-      insert: (src, token) => insert([src], token),
+      async insert(src, token) {
+        pending++;
+        try { insert([await optimizeImage(src)], token); }
+        catch (error) { bookmarks.delete(token); notify(error.message); }
+        finally { pending--; if (detached && !pending) editor.destroy(); }
+      },
       async images(files, token = capture()) {
         pending++;
         try {
           const sources = [];
           for (const file of files) {
             if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) { notify('Use imagens PNG, JPG ou WebP.'); continue; }
-            if (file.size > 4 * 1024 * 1024) { notify('Cada imagem pode ter até 4 MB.'); continue; }
-            const src = await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => resolve(null); reader.readAsDataURL(file); });
+            let src;
+            try { src = await optimizeImage(file); } catch (error) { notify(error.message); continue; }
             if (isNoteImage(src)) sources.push(src); else notify('Não foi possível ler esta imagem.');
           }
           if (sources.length) insert(sources, token); else bookmarks.delete(token);

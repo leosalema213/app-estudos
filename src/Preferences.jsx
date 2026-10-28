@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Bell, Check, Download, Monitor, Moon, Palette, Sun, Upload } from 'lucide-react';
 import { themePresets } from './model.js';
 import { UpdateSettings } from './Updates.jsx';
+import { CloudPanel } from './CloudAccount.jsx';
 
-const sections = [['appearance', 'Aparência'], ['general', 'Geral'], ['backup', 'Backup'], ['updates', 'Atualizações']];
+const allSections = [['appearance', 'Aparência'], ['general', 'Geral'], ['account', 'Conta'], ['backup', 'Backup'], ['updates', 'Atualizações']];
 const modes = [['system', 'Dispositivo', Monitor], ['light', 'Claro', Sun], ['dark', 'Escuro', Moon], ['custom', 'Personalizado', Palette]];
 
-export default function Preferences({ settings, onChange, onClose, onTestSound, onBackup, onImport, onTutorial, updates, Modal }) {
-  const [tab, setTab] = useState('appearance');
+export default function Preferences({ settings, onChange, onClose, onTestSound, onBackup, onImport, onTutorial, updates, account, Modal }) {
+  const [tab, setTab] = useState(account?.status?.user ? 'account' : 'appearance');
+  const sections = allSections.filter(([key]) => key !== 'account' || account?.status?.enabled !== false);
   const [startup, setStartup] = useState(null);
   const [startupBusy, setStartupBusy] = useState(false);
   useEffect(() => { window.desktop?.startup?.status().then(setStartup).catch(() => setStartup({ error: 'Não foi possível consultar a inicialização do Windows.' })); }, []);
@@ -40,6 +42,7 @@ export default function Preferences({ settings, onChange, onClose, onTestSound, 
         <div className="preference-section"><div className="setting-row"><div><h3>Som de conclusão</h3><p>Um aviso quando a aula ou o descanso terminar.</p></div><button className={`toggle ${settings.sound ? 'on' : ''}`} role="switch" aria-checked={settings.sound} aria-label="Som de conclusão" onClick={() => onChange({ sound: !settings.sound })}><i /></button></div><button className="secondary" onClick={onTestSound}><Bell size={15} />Testar som</button></div>
         <div className="preference-section"><h3>Como funciona</h3><p>O próximo bloco começa quando você der play. Fechar o aplicativo pausa a sessão.</p><button className="secondary" onClick={onTutorial}>Como usar o Organon</button></div>
       </>}
+      {tab === 'account' && <CloudPanel account={account} />}
       {tab === 'backup' && <div className="preference-section"><h3>Seus dados</h3><p>Exporte planos, histórico, anotações e imagens em um único arquivo. O backup permite restaurar seus dados ou levá-los para outro computador.</p><div className="button-row"><button className="primary" onClick={onBackup}><Download size={16} />Exportar backup</button>{window.desktop ? <button className="secondary" onClick={() => onImport()}><Upload size={16} />Importar backup</button> : <label className="secondary file-label"><Upload size={16} />Importar backup<input type="file" accept=".json" onChange={e => e.target.files[0] && onImport(e.target.files[0])} /></label>}</div></div>}
       {tab === 'updates' && <div className="preference-section"><h3>Versão e atualizações</h3><UpdateSettings updates={updates} /><p>Novas versões são verificadas ao abrir. Você escolhe quando baixar e aplicar a atualização.</p></div>}
     </section>

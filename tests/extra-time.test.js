@@ -28,7 +28,7 @@ test('paused extra time survives serialization and earns metrics only when studi
   const { state, plan, block } = fixture();
   let next = pause(play(state, plan, block, date, now), now + 60000);
   next = extendLesson(next, 5, now + 10 * 60000);
-  const restored = JSON.parse(JSON.stringify(next)); validateData(restored);
+  const restored = validateData(JSON.parse(JSON.stringify(next)));
   assert.equal(restored.active.running, false);
   assert.equal(restored.active.remainingMs, 29 * 60000);
   assert.equal(focusMs(restored, date, date), 60000);
@@ -36,6 +36,16 @@ test('paused extra time survives serialization and earns metrics only when studi
   next = tick(next, now + 50 * 60000).state;
   assert.equal(focusMs(next, date, date), 30 * 60000);
   assert.equal(getRecord(next, date, plan.id, block.id).done, true);
+});
+
+test('backup validates timer bounds and pauses a running extended session', () => {
+  const { state, plan, block } = fixture();
+  const next = extendLesson(play(state, plan, block, date, now), 5, now + 60000);
+  assert.deepEqual(validateData(JSON.parse(JSON.stringify(next))).active, { ...next.active, running: false });
+  for (const fields of [{ remainingMs: -1 }, { remainingMs: next.active.totalMs + 1 }, { totalMs: 0 }, { startedAt: null }, { blockId: 'missing' }, { date: '2026-02-30' }, { type: 'break' }]) {
+    assert.throws(() => validateData({ ...next, active: { ...next.active, ...fields } }), /Cronômetro inválido/);
+  }
+  assert.equal(validateData({ ...next, plans: [{ ...plan, completedAt: date }] }).active, null);
 });
 
 test('completed lessons reopen paused without losing their recorded time', () => {

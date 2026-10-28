@@ -20,8 +20,8 @@ const saved = () => JSON.parse(fs.readFileSync(file, 'utf8'));
   fs.writeFileSync(file, JSON.stringify(state)); fs.mkdirSync(output, { recursive: true });
   const launch = async () => {
     const options = process.env.COMPASSO_EXECUTABLE
-      ? { executablePath: path.resolve(process.env.COMPASSO_EXECUTABLE), args: [`--user-data-dir=${userData}`], env }
-      : { args: [root, `--user-data-dir=${userData}`], env };
+      ? { executablePath: path.resolve(process.env.COMPASSO_EXECUTABLE), args: [`--user-data-dir=${userData}`, '--skip-account-prompt'], env }
+      : { args: [root, `--user-data-dir=${userData}`, '--skip-account-prompt'], env };
     app = await electron.launch(options); return app.firstWindow();
   };
   let page = await launch();

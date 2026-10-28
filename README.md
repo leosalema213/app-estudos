@@ -2,6 +2,8 @@
 
 Aplicativo para Windows com planos de estudo, cronômetro de aulas e descansos, histórico e cadernos pessoais com páginas, imagens e desenhos. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
 
+A versão 0.4.9 inclui tipos personalizados de atividade e o código de conta opcional/sincronização com Supabase. A conexão permanece desativada nesta compilação enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração e os testes](docs/SUPABASE.md).
+
 **[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Organon-Instalar.exe)**
 
 [Versões e novidades](https://github.com/leosalema213/app-estudos/releases) · [Código-fonte](https://github.com/leosalema213/app-estudos)
@@ -68,6 +70,7 @@ npm run dist
 - Em Meu progresso, consultar quantos planos foram concluídos na semana ou no mês selecionado, o total geral e a lista com as datas. Os checks de aulas e descansos continuam sendo diários e não encerram o plano automaticamente.
 - Exibir os planos em **cards** ou **lista**, pelo seletor ao lado de Seus planos. A preferência fica salva.
 - Adicionar aulas e descansos, renomear, ajustar duração e reordenar arrastando ou pelas setas.
+- Criar tipos como Revisão, Exercícios ou Leitura pelo **+** na própria edição do plano, escolhendo nome e ícone. Os atalhos ocupam até duas linhas; quando não couberem todos, o botão de lista abre os demais. Tipos personalizados contam como foco e são reutilizados entre planos, sem nova seção na sidebar.
 - Ver o roteiro da data selecionada, filtrando planos pendentes, em progresso e concluídos.
 - Iniciar ou pausar qualquer bloco. Existe apenas um cronômetro ativo de cada vez.
 - Ao terminar, o bloco é marcado e um aviso visual, sonoro e uma notificação do Windows são emitidos. O próximo bloco sempre começa manualmente. A notificação nativa depende das permissões de notificações do Windows.
@@ -79,13 +82,15 @@ npm run dist
 - O modo compacto lembra sua última posição, inclusive após reiniciar. Se o monitor usado não estiver mais disponível, a janela retorna para uma área visível. Tamanhos personalizados de versões anteriores voltam ao padrão.
 - Novos perfis seguem o tema do dispositivo. Alterações manuais pelo sol/lua ou pelas preferências ficam salvas, independentemente do Windows. Nas preferências, **Seguir dispositivo** restaura o modo automático. O escuro usa preto e cinzas neutros, com vidro nativo Acrylic no Windows 11 22H2 ou superior e fundo sólido nos sistemas sem suporte.
 - Consultar horas de estudo, aulas concluídas e médias semanais e mensais. Descansos e pausas não contam como foco. Por padrão, marcar uma aula manualmente não acrescenta horas; nas preferências, a contagem manual pode ser ativada.
-- Usar um caderno por plano, com páginas datadas, vínculo opcional com a aula, texto, imagens, prints colados e rabiscos. Imagens PNG/JPG/WebP até 4 MB cada.
+- Usar um caderno por plano, com páginas datadas, vínculo opcional com a aula, texto, imagens, prints colados e rabiscos. Imagens PNG/JPG/WebP de até 20 MB são otimizadas em segundo plano para até 1 MB; imagens antigas são preservadas.
 - Escrever como em um documento: cole prints ou insira imagens e rabiscos na posição do cursor, continue o texto abaixo e intercale novos trechos. Desfazer/refazer e a ordem do documento são preservados durante a edição; conteúdo e posição ficam salvos ao reabrir. Notas antigas mantêm o texto seguido das imagens na ordem anterior.
 - Expandir as últimas notas no próprio plano ou abrir o caderno ampliado. A lista tem busca e pode ser recolhida; textos longos crescem no editor, com uma única área de rolagem. A exclusão de uma nota pede confirmação separada.
 - Fixar notas pelo ícone de alfinete: elas ficam primeiro no caderno e nas prévias do plano. A escolha é preservada ao reabrir e nos backups.
 - Filtrar notas por uma data específica pelo calendário ao lado de Buscar notas, combinando com a busca por texto. A rolagem permanece dentro das modais enquanto estiverem abertas.
 - Usar preferências separadas em Aparência, Geral, Backup e Atualizações. Em Aparência, escolha Dispositivo, Claro, Escuro ou Personalizado; o último oferece temas prontos em rosa, azul, verde e roxo. Tema, cor e espaçamento ficam salvos.
 - Exportar e restaurar backup JSON, incluindo histórico e imagens.
+
+A [auditoria de backup e o roteiro de reinstalação segura](docs/AUDITORIA-BACKUP.md) registram a cobertura, os testes e as correções da 0.4.9 em relação à 0.4.8. A [avaliação do Google Drive](docs/GOOGLE-DRIVE.md) compara pasta sincronizada e conexão direta; a integração com Drive ainda não foi implementada.
 
 ## Cadernos pessoais
 
@@ -121,6 +126,7 @@ Na visualização web, a persistência usa o armazenamento do navegador, separad
 npm test
 npm run build
 npm run test:ui
+npm run test:cloud
 npm run test:notebook
 npm run test:library
 npm run test:reminders

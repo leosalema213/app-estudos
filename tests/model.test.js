@@ -68,7 +68,7 @@ test('backups preserve notes and history and restore with no running session', (
   plan.notes.push({ id: 'test-note', date, text: 'Hoje aprendi sobre DNS.', images: [] });
   const restored = validateData(JSON.parse(JSON.stringify(s)));
   assert.equal(restored.plans[0].notes[0].text, 'Hoje aprendi sobre DNS.');
-  assert.equal(restored.active, null);
+  assert.deepEqual(restored.active, { ...s.active, running: false });
 });
 test('malformed backups and duplicate ids are rejected', () => {
   assert.throws(() => validateData({ version: 2 }));

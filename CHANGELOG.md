@@ -1,5 +1,18 @@
 # Histórico de versões
 
+## 0.4.9
+
+- Tipos personalizados de atividade, com nome e ícone, criados diretamente no editor do plano. Atalhos ocupam até duas linhas; a lista completa aparece quando há tipos excedentes.
+- Catálogo de tipos e identificação dos blocos preservados em backups, histórico e no payload preparado para sincronização. Atividades personalizadas contam como foco, mantendo o comportamento dos descansos e dos dados antigos.
+- Conta opcional preparada com e-mail e senha, escolha de continuar offline lembrada neste computador e acesso posterior em Preferências → Conta. A conexão fica desativada nesta compilação até concluir a configuração e validação remota do Supabase.
+- Sincronização de snapshots e imagens privadas com Supabase, envio ao abrir/fechar ou após um dia, detecção de conflitos e recuperação local antes de trazer dados da nuvem.
+- Sessão protegida pelo Windows, fora do arquivo de backup; dados locais preservados ao sair da conta.
+- Novas imagens, capas e rabiscos passam por uma fila de otimização fora da interface, com saída de até 1 MB e sem recompressão nos próximos backups/envios. Imagens antigas são preservadas.
+- Backup restaura o cronômetro pausado com a duração e o tempo extra preservados.
+- Remove a restrição de importação de 40 MB, que impedia restaurar backups grandes exportados pelo próprio aplicativo.
+- Exportação usa o estado atual em memória mesmo quando o salvamento automático local falha; restauração só confirma sucesso após salvar.
+- Auditoria de backup com teste Electron de exportação/importação, perfil limpo, reinício, migração e falha de gravação local.
+
 ## 0.4.8
 
 - Após abrir e salvar os dados com sucesso, remove instaladores do atualizador da versão instalada e das anteriores, incluindo o acúmulo legado.

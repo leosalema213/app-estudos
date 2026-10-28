@@ -4,6 +4,7 @@ import { newNotebook, newPage } from './model.js';
 import CoverPicker, { coverIcons } from './CoverPicker.jsx';
 import { customCoverStyle } from './book-appearance.js';
 import { documentHeadings, isNoteImage } from './note-document.js';
+import { optimizeImage } from './images.js';
 
 const NoteEditor = lazy(() => import('./NoteEditor.jsx'));
 function indexedTitle(page) { return page.title.trim() || documentHeadings(page.document).find(heading => heading.text.trim())?.text || ''; }
@@ -47,11 +48,10 @@ export default function Library({ notebooks, onChange, notify, saveError, Modal,
   }
   async function coverImage(image) {
     if (!image) return;
-    if (!['image/png', 'image/jpeg', 'image/webp'].includes(image.type) || image.size > 4 * 1024 * 1024) { notify('Use uma imagem PNG, JPG ou WebP de até 4 MB.'); return; }
     const id = draft.id; setLoadingCover(true);
-    const src = await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => resolve(null); reader.readAsDataURL(image); });
-    if (isNoteImage(src)) setDraft(current => current?.id === id ? { ...current, cover: src } : current); else notify('Não foi possível ler a capa.');
-    setLoadingCover(false);
+    try { const src = await optimizeImage(image); if (isNoteImage(src)) setDraft(current => current?.id === id ? { ...current, cover: src } : current); }
+    catch (error) { notify(error.message); }
+    finally { setLoadingCover(false); }
   }
   function pickImage() {
     if (!editor.current) return;

@@ -1,10 +1,11 @@
-const { app, BrowserWindow, ipcMain, Notification, dialog, powerMonitor, nativeTheme, nativeImage, net, screen, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, dialog, powerMonitor, nativeTheme, nativeImage, net, screen, shell, safeStorage } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { AppUpdates } = require('./updates.cjs');
 const { fitCompactBounds } = require('./compact-bounds.cjs');
 const { WindowsStartup } = require('./startup.cjs');
+const { CloudSync } = require('./cloud.cjs');
 const { ReminderNotifications, openRemindersWindow } = require('./reminder-notifications.cjs');
 const { APP_ID, DEVELOPMENT_APP_ID, legacyUserData, repairDevelopmentShortcut } = require('./branding.cjs');
 if (!process.argv.some(value => value.startsWith('--user-data-dir'))) {
@@ -20,6 +21,9 @@ let compactBounds;
 let changingMode = false;
 let windowSaveTimer;
 let startup;
+let cloud;
+let closing = false;
+let imagesPending = 0;
 const supportsGlass = process.platform === 'win32' && Number(require('node:os').release().split('.')[2]) >= 22621;
 const dataPath = () => path.join(app.getPath('userData'), 'compasso.json');
 const windowStatePath = () => path.join(app.getPath('userData'), 'window-state.json');
@@ -49,6 +53,7 @@ function writeData(data) {
   fs.writeFileSync(file + '.tmp', JSON.stringify(data), 'utf8');
   fs.renameSync(file + '.tmp', file);
   startup?.sync(data.settings);
+  cloud?.markDirty();
 }
 function trusted(event) { return win && event.sender === win.webContents; }
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -70,6 +75,33 @@ else {
       icon: nativeImage.createFromPath(path.join(__dirname, '../assets/icon.png')), title: 'Organon',
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
     win.setMenu(null);
+    cloud = new CloudSync({ directory: app.getPath('userData'), safeStorage, fetchImpl: net.fetch.bind(net), readData,
+      enabled: require('./cloud-config.cjs').enabled || (isolated && process.argv.includes('--enable-cloud-test')),
+      skipPrompt: isolated && process.argv.includes('--skip-account-prompt'),
+      emit: status => { if (!win.isDestroyed()) win.webContents.send('cloud:status', status); } });
+    const cloudAction = (channel, action) => ipcMain.handle(channel, async (event, ...args) => { if (trusted(event)) { await cloud.ready; return action(...args); } });
+    cloudAction('cloud:status', () => cloud.status());
+    cloudAction('cloud:authenticate', (mode, email, password) => cloud.authenticate(mode, email, password));
+    cloudAction('cloud:skip', () => cloud.skip());
+    cloudAction('cloud:signout', () => cloud.signOut());
+    cloudAction('cloud:sync', () => cloud.sync());
+    cloudAction('cloud:local', () => cloud.chooseLocal());
+    cloudAction('cloud:download', () => cloud.download());
+    cloudAction('cloud:accept', () => cloud.acceptDownload());
+    const dailySync = setInterval(() => { if (cloud.session && cloud.meta.pending && !cloud.busy && Date.now() - new Date(cloud.meta.lastSync || 0).getTime() >= 86400000) cloud.sync().catch(() => {}); }, 60000);
+    dailySync.unref();
+    win.on('close', event => {
+      if ((!cloud.session && !imagesPending) || closing) return;
+      event.preventDefault(); closing = true;
+      win.webContents.send('cloud:prepare-close');
+      const fallback = setTimeout(() => { if (!win.isDestroyed()) win.destroy(); }, 60000); fallback.unref();
+    });
+    ipcMain.on('images:pending', (event, count) => { if (trusted(event) && Number.isInteger(count) && count >= 0 && count <= 1000) imagesPending = count; });
+    ipcMain.handle('cloud:close-ready', async event => {
+      if (!trusted(event) || !closing) return;
+      await Promise.race([cloud.sync().catch(() => {}), new Promise(resolve => setTimeout(resolve, 5000))]);
+      if (!win.isDestroyed()) win.destroy();
+    });
     if (process.platform === 'win32') {
       // Explorer needs a real filesystem path, rather than an icon inside app.asar.
       win.setAppDetails({ appId, appIconPath: app.isPackaged ? path.join(process.resourcesPath, 'icon.ico') : path.join(__dirname, '../assets/icon.ico'), appIconIndex: 0,
@@ -151,17 +183,20 @@ else {
     ipcMain.on('window:maximize', e => { if (trusted(e) && !compact) win.isMaximized() ? win.unmaximize() : win.maximize(); });
     ipcMain.on('window:close', e => { if (trusted(e)) win.close(); });
     ipcMain.on('timer:notify', (e, body) => { if (trusted(e) && Notification.isSupported()) new Notification({ title: 'Organon · Bloco concluído', body: String(body).slice(0, 300), silent: true }).show(); });
-    ipcMain.handle('data:export', async e => {
+    ipcMain.handle('data:export', async (e, data) => {
       if (!trusted(e)) return;
       const { canceled, filePath } = await dialog.showSaveDialog(win, { defaultPath: 'organon-backup.json', filters: [{ name: 'Backup JSON', extensions: ['json'] }] });
-      if (!canceled && filePath) { fs.copyFileSync(dataPath(), filePath); return true; }
+      if (!canceled && filePath) {
+        const snapshot = data ?? readData();
+        if (snapshot?.version !== 1 || !Array.isArray(snapshot.plans) || !snapshot.records) throw new Error('Formato de dados inválido.');
+        fs.writeFileSync(filePath, JSON.stringify(snapshot), 'utf8'); return true;
+      }
       return false;
     });
     ipcMain.handle('data:import', async e => {
       if (!trusted(e)) return;
       const { canceled, filePaths } = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: 'Backup JSON', extensions: ['json'] }] });
       if (canceled) return null;
-      if (fs.statSync(filePaths[0]).size > 40 * 1024 * 1024) throw new Error('Backup acima do limite de 40 MB.');
       return JSON.parse(fs.readFileSync(filePaths[0], 'utf8'));
     });
     win.loadFile(path.join(__dirname, '../dist/index.html'));

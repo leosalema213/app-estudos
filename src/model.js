@@ -1,6 +1,7 @@
 import { isNoteImage, validNoteDocument } from './note-document.js';
 import { isNotebookColor, notebookIcons } from './book-appearance.js';
 import { calendarDate, validReminders } from './reminders.js';
+import { validKind, validKinds } from './block-kinds.js';
 
 export const uid = () => crypto.randomUUID();
 export const dayKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -24,7 +25,7 @@ export { notebookIcons } from './book-appearance.js';
 export function newPage() { return { id: uid(), title: '', date: dayKey(), text: '', images: [] }; }
 export function newNotebook() { return { id: uid(), name: '', icon: 'book', color: 'violet', cover: null, pages: [newPage()] }; }
 export function seed() {
-  return { version: 1, plans: [], notebooks: [], reminders: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
+  return { version: 1, plans: [], notebooks: [], reminders: [], blockKinds: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
 }
 export function firstPlan() {
   const plan = newPlan();
@@ -43,7 +44,7 @@ export function setDone(state, date, planId, blockId, done) {
   const key = recordKey(date, planId, blockId);
   const plan = state.plans.find(p => p.id === planId);
   const block = plan?.blocks.find(b => b.id === blockId);
-  return { ...state, records: { ...state.records, [key]: { ...getRecord(state, date, planId, blockId), done, type: block?.type || 'lesson', planName: plan?.name, blockName: block?.name } } };
+  return { ...state, records: { ...state.records, [key]: { ...getRecord(state, date, planId, blockId), done, type: block?.type || 'lesson', ...(block?.kind ? { kind: { ...block.kind } } : {}), planName: plan?.name, blockName: block?.name } } };
 }
 export function setManualDone(state, date, planId, blockId, done, now = Date.now()) {
   const block = state.plans.find(plan => plan.id === planId)?.blocks.find(value => value.id === blockId);
@@ -73,14 +74,14 @@ export function tick(state, now = Date.now()) {
     const until = Math.min(end, midnight);
     const key = recordKey(dayKey(date), active.planId, active.blockId);
     const rec = records[key] || { elapsedMs: 0, done: false };
-    records[key] = { ...rec, elapsedMs: rec.elapsedMs + until - cursor, type: active.type, planName: active.planName, blockName: active.blockName };
+    records[key] = { ...rec, elapsedMs: rec.elapsedMs + until - cursor, type: active.type, ...(active.kind ? { kind: { ...active.kind } } : {}), planName: active.planName, blockName: active.blockName };
     cursor = until;
   }
   const remainingMs = Math.max(0, active.remainingMs - delta);
   const finished = remainingMs === 0;
   if (finished) {
     const key = recordKey(active.date, active.planId, active.blockId);
-    records[key] = { ...(records[key] || { elapsedMs: 0 }), done: true, type: active.type, planName: active.planName, blockName: active.blockName };
+    records[key] = { ...(records[key] || { elapsedMs: 0 }), done: true, type: active.type, ...(active.kind ? { kind: { ...active.kind } } : {}), planName: active.planName, blockName: active.blockName };
   }
   return { state: { ...state, records, active: { ...active, remainingMs, startedAt: Math.max(now, active.startedAt), running: !finished } }, finished };
 }
@@ -90,7 +91,7 @@ export function play(state, plan, block, date = dayKey(), now = Date.now()) {
   if (settled.active?.planId === plan.id && settled.active.blockId === block.id && settled.active.date === date && settled.active.remainingMs > 0) {
     return { ...settled, active: { ...settled.active, running: !settled.active.running, startedAt: now } };
   }
-  return { ...settled, active: { planId: plan.id, blockId: block.id, date, type: block.type, planName: plan.name, blockName: block.name, totalMs: block.minutes * 60000, remainingMs: block.minutes * 60000, startedAt: now, running: true } };
+  return { ...settled, active: { planId: plan.id, blockId: block.id, date, type: block.type, ...(block.kind ? { kind: { ...block.kind } } : {}), planName: plan.name, blockName: block.name, totalMs: block.minutes * 60000, remainingMs: block.minutes * 60000, startedAt: now, running: true } };
 }
 export function pause(state, now = Date.now()) { const next = tick(state, now).state; return { ...next, active: next.active ? { ...next.active, running: false } : null }; }
 // Extend only this active session/date; scheduled block durations stay unchanged.
@@ -136,11 +137,12 @@ export function focusMs(state, from, to) { return Object.entries(state.records).
 export function validateData(data) {
   if (data?.version !== 1 || !Array.isArray(data.plans) || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw new Error('O arquivo não é um backup válido do Organon.');
   const ids = new Set();
+  if (data.blockKinds !== undefined && !validKinds(data.blockKinds)) throw new Error('Tipos de atividade inválidos no backup.');
   for (const p of data.plans) {
     if (!p.id || ids.has(p.id) || typeof p.name !== 'string' || !isNotebookColor(p.color) || (p.icon !== undefined && !notebookIcons.includes(p.icon)) || (p.completedAt !== undefined && p.completedAt !== null && !calendarDate(p.completedAt)) || !Array.isArray(p.days) || p.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || !Array.isArray(p.blocks) || !Array.isArray(p.notes)) throw new Error('Plano inválido no backup.');
     ids.add(p.id);
     for (const b of p.blocks) {
-      if (!b.id || ids.has(b.id) || !['lesson', 'break'].includes(b.type) || typeof b.name !== 'string' || !Number.isFinite(b.minutes) || b.minutes < 1 || b.minutes > 360) throw new Error('Bloco inválido no backup.');
+      if (!b.id || ids.has(b.id) || !['lesson', 'break'].includes(b.type) || (b.kind !== undefined && (b.type !== 'lesson' || !validKind(b.kind))) || typeof b.name !== 'string' || !Number.isFinite(b.minutes) || b.minutes < 1 || b.minutes > 360) throw new Error('Bloco inválido no backup.');
       ids.add(b.id);
     }
     for (const n of p.notes) if (!n.id || typeof n.text !== 'string' || typeof n.date !== 'string' || (n.pinned !== undefined && typeof n.pinned !== 'boolean') || !Array.isArray(n.images) || n.images.some(i => typeof i !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(i)) || (n.document !== undefined && !validNoteDocument(n.document))) throw new Error('Anotação inválida no backup.');
@@ -155,6 +157,14 @@ export function validateData(data) {
     }
   }
   if (data.reminders !== undefined && !validReminders(data.reminders)) throw new Error('Notas inválidas no backup.');
-  for (const [key, rec] of Object.entries(data.records)) if (!/^\d{4}-\d{2}-\d{2}\|/.test(key) || !rec || !Number.isFinite(rec.elapsedMs) || rec.elapsedMs < 0 || typeof rec.done !== 'boolean' || (rec.manualMs !== undefined && (!Number.isFinite(rec.manualMs) || rec.manualMs < 0 || rec.manualMs > rec.elapsedMs))) throw new Error('Histórico inválido no backup.');
-  return { ...data, notebooks: data.notebooks || [], reminders: data.reminders || [], active: null, settings: preferences(data.settings) };
+  for (const [key, rec] of Object.entries(data.records)) if (!/^\d{4}-\d{2}-\d{2}\|/.test(key) || !rec || !Number.isFinite(rec.elapsedMs) || rec.elapsedMs < 0 || typeof rec.done !== 'boolean' || (rec.kind !== undefined && !validKind(rec.kind)) || (rec.manualMs !== undefined && (!Number.isFinite(rec.manualMs) || rec.manualMs < 0 || rec.manualMs > rec.elapsedMs))) throw new Error('Histórico inválido no backup.');
+  let active = null;
+  if (data.active != null) {
+    const session = data.active;
+    const plan = data.plans.find(value => value.id === session.planId);
+    const block = plan?.blocks.find(value => value.id === session.blockId);
+    if (!block || !calendarDate(session.date) || session.type !== block.type || !Number.isFinite(session.totalMs) || session.totalMs <= 0 || !Number.isFinite(session.remainingMs) || session.remainingMs < 0 || session.remainingMs > session.totalMs || !Number.isFinite(session.startedAt) || typeof session.running !== 'boolean') throw new Error('Cronômetro inválido no backup.');
+    if (!plan.completedAt) active = { ...session, running: false };
+  }
+  return { ...data, notebooks: data.notebooks || [], reminders: data.reminders || [], blockKinds: data.blockKinds || [], active, settings: preferences(data.settings) };
 }

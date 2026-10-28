@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.5.1
+
+- A biblioteca usa a primeira página dos PDFs como miniatura, com cache local leve e regeneração após restaurar backup, sem mudar o ponto de leitura.
+- Remove o texto explicativo sobre notas vistas e notas diárias no rodapé de Notas.
+
 ## 0.5.0
 
 - Corrige o conflito entre a prévia local e a Release 0.4.10, publicando um número superior para que as instalações existentes encontrem a atualização.

@@ -155,6 +155,8 @@ else {
       });
     });
     ipcMain.handle('books:read', (e, hash, format) => { if (trusted(e)) { readingBooks = true; return books.read(hash, format); } });
+    ipcMain.handle('books:thumbnail', (e, hash) => { if (trusted(e)) return books.thumbnail(hash); });
+    ipcMain.handle('books:cache-thumbnail', (e, hash, src) => { if (trusted(e)) books.cacheThumbnail(hash, src); });
     ipcMain.handle('books:restore', (e, token) => {
       if (!trusted(e) || !pendingBookRestore || token !== pendingBookRestore.token) throw new Error('Selecione o backup novamente.');
       const prepared = pendingBookRestore; pendingBookRestore = null; return books.restore(prepared.verified);

@@ -81,6 +81,16 @@ Foliate.js usa a revisão `78914aef4466eb960965702401634c2cb348e9b1`. Integraç�
 
 `npm run test:ebooks` verifica EPUB/MOBI/AZW sintéticos, fonte, duas colunas, CFI após reinício, remoção de conteúdo ativo e backup/restauração em perfil limpo. A amostra KF8/AZW3 opcional vem de [Project Gutenberg, eBook 11](https://www.gutenberg.org/ebooks/11); `ORGANON_AZW3_REFERENCE` aponta para a cópia local de teste, mantida fora do repositório e da aplicação. `npm run test:books` também verifica Ctrl + scroll, scroll comum sem zoom, botões −/+ e maximização/restauração reais da janela.
 
+## Miniaturas de PDF — 0.5.1
+
+As capas são um cache derivado da primeira página do PDF, em `<perfil>/books/thumbnails-v1/<sha256-do-pdf>.webp`, com até 240×320 pixels e 64 KiB. A imagem completa cabe no espaço existente do card, sem recorte. Os caminhos aceitam apenas hashes SHA-256; o IPC de cache aceita somente dados WebP limitados e grava por arquivo temporário/rename.
+
+Não há campo novo no snapshot, no modelo nem no payload: não exige defaults, DDL ou migração de IDs. PDFs antigos recebem miniatura quando seus cards entram na área visível. A geração usa a mesma versão local do PDF.js do leitor, em fila de um documento por vez, sem registrar páginas lidas, conclusão ou progresso. PDFs com senha/erro e outros formatos mantêm o ícone.
+
+Os arquivos PDF originais continuam imutáveis e no backup `bookFiles`. O cache não entra em exportações, checkpoints do cronômetro ou sincronização: em perfil limpo, as miniaturas são regeneradas a partir dos próprios livros restaurados. Isso preserva o backup completo dos dados autoritativos sem duplicar imagens derivadas no JSON. Cache ausente/corrompido ou falha de gravação não bloqueia a biblioteca nem a leitura. Nenhuma aplicação remota é necessária.
+
+Validação focada preparada em `tests/book-thumbnails.cjs`: executa apenas os testes de cache, verifica a renderização real da primeira página, cache após reinício, preservação do PDF/progresso, regeneração após backup e remoção da frase em Notas. Produz `test-output/book-thumbnails.png` para inspeção visual; sua execução fica a cargo do usuário conforme `AGENTS.md`.
+
 ## Para as próximas alterações
 
 Ao criar novos campos, registrar formato/defaults, compatibilidade de leitura, transporte no backup e snapshot e testes relevantes. Preparar SQL apenas se houver alteração real da estrutura relacional/RPC/permissões. Aplicação de migrations e testes de isolamento no servidor ficam explicitamente pendentes até retomar a integração. Não enviar dados pessoais como fixture de teste.

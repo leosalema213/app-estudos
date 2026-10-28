@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getDocument, GlobalWorkerOptions, TextLayer } from 'pdfjs-dist';
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { loadPdf, TextLayer } from './pdf-runtime.js';
 import { ChevronLeft, ChevronRight, Maximize2, Minus, Plus, X } from 'lucide-react';
 import { bookPosition } from './books.js';
-GlobalWorkerOptions.workerSrc = workerUrl;
 
 function PdfPage({ pdf, number, scale, onReady, onError }) {
   const canvas = useRef(), text = useRef(), [size, setSize] = useState(null);
@@ -41,9 +39,7 @@ export default function PdfReader({ book, onChange, onClose, saveError }) {
     let canceled = false, task;
     window.desktop.books.read(book.hash).then(bytes => {
       if (canceled) return;
-      const assets = new URL('./pdf-assets/', document.baseURI).href;
-      task = getDocument({ data: new Uint8Array(bytes), cMapUrl: assets + 'cmaps/', cMapPacked: true,
-        standardFontDataUrl: assets + 'standard_fonts/', wasmUrl: assets + 'wasm/', isEvalSupported: false, enableXfa: false });
+      task = loadPdf(bytes);
       task.onPassword = () => { setError('Este PDF exige senha. Nesta versão, importe uma cópia sem proteção.'); task.destroy(); };
       return task.promise;
     }).then(async document => {

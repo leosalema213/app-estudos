@@ -1,6 +1,6 @@
 {
   "name": "compasso-estudos",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Seu ritmo de estudo, um bloco de cada vez.",
   "author": "Organon",
@@ -23,6 +23,7 @@
     "test:notebook": "node tests/notebook.cjs",
     "test:library": "node tests/library.cjs",
     "test:books": "node tests/books.cjs",
+    "test:book-thumbnails": "node tests/book-thumbnails.cjs",
     "test:ebooks": "node tests/ebooks.cjs",
     "test:reminders": "node tests/reminders.cjs",
     "test:plans": "node tests/plans.cjs",

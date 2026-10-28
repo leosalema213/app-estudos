@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld('desktop', {
   books: {
     import: () => ipcRenderer.invoke('books:import'),
     read: (hash, format) => ipcRenderer.invoke('books:read', hash, format),
+    thumbnail: hash => ipcRenderer.invoke('books:thumbnail', hash),
+    cacheThumbnail: (hash, src) => ipcRenderer.invoke('books:cache-thumbnail', hash, src),
     restore: token => ipcRenderer.invoke('books:restore', token),
     cancelRestore: token => ipcRenderer.invoke('books:cancel-restore', token),
   },

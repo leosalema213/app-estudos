@@ -5,6 +5,8 @@ const LIMIT = 200 * 1024 * 1024;
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const validHash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const formats = ['pdf', 'epub', 'mobi', 'azw', 'azw3'];
+const THUMBNAIL_LIMIT = 64 * 1024;
+const isWebp = bytes => bytes.length >= 16 && bytes.length <= THUMBNAIL_LIMIT && bytes.subarray(0, 4).toString() === 'RIFF' && bytes.subarray(8, 12).toString() === 'WEBP';
 
 // Immutable, content-addressed files. Neither original paths nor binaries enter compasso.json.
 class BookFiles {
@@ -42,6 +44,25 @@ class BookFiles {
       view: { spread: 1, zoom: 1, contrast: 'paper' } };
   }
   read(hash, format = 'pdf') { const bytes = fs.readFileSync(this.file(hash, format)); this.check(bytes, hash, undefined, format); return bytes; }
+  thumbnailFile(hash) { this.file(hash); return path.join(this.directory, 'thumbnails-v1', hash + '.webp'); }
+  thumbnail(hash) {
+    const file = this.thumbnailFile(hash);
+    try {
+      if (fs.statSync(file).size > THUMBNAIL_LIMIT) return null;
+      const bytes = fs.readFileSync(file);
+      return isWebp(bytes) ? `data:image/webp;base64,${bytes.toString('base64')}` : null;
+    } catch { return null; }
+  }
+  cacheThumbnail(hash, src) {
+    const file = this.thumbnailFile(hash);
+    if (typeof src !== 'string' || src.length > 87500 || !/^data:image\/webp;base64,[A-Za-z0-9+/]+={0,2}$/.test(src)) throw new Error('Miniatura inválida.');
+    const bytes = Buffer.from(src.slice(src.indexOf(',') + 1), 'base64');
+    if (!isWebp(bytes) || !fs.existsSync(this.file(hash))) throw new Error('Miniatura inválida ou livro ausente.');
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const temporary = file + '.' + randomUUID() + '.tmp';
+    try { fs.writeFileSync(temporary, bytes); fs.renameSync(temporary, file); }
+    finally { if (fs.existsSync(temporary)) fs.unlinkSync(temporary); }
+  }
   // Verify the entire portable manifest before copying anything or replacing personal metadata.
   verifyBackup(data) {
     const files = new Map();

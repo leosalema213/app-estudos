@@ -2,7 +2,7 @@
 
 Aplicativo para Windows com planos de estudo, cronômetro de aulas e descansos, histórico e cadernos pessoais com páginas, imagens e desenhos. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
 
-A versão 0.5.0 mantém a biblioteca offline da 0.4.10 e corrige a identificação de previews e versões finais para o atualizador. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração e os testes](docs/SUPABASE.md).
+A versão 0.5.1 inclui miniaturas automáticas dos PDFs e simplifica o rodapé de Notas. Mantém a biblioteca offline e a identificação distinta de previews e versões finais. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração e os testes](docs/SUPABASE.md).
 
 **[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Organon-Instalar.exe)**
 
@@ -95,6 +95,8 @@ A [auditoria de backup e o roteiro de reinstalação segura](docs/AUDITORIA-BACK
 ## Livros
 
 A seção **Livros** importa PDF, EPUB refluível, MOBI, AZW e AZW3 sem DRM, até **200 MiB por arquivo**, inclusive sem plano. O Organon guarda uma cópia offline no perfil: mover o original não interrompe a leitura. Importar o mesmo conteúdo novamente mantém uma única entrada, com sua posição e seus vínculos.
+
+PDFs mostram a primeira página como miniatura do card. A imagem é gerada uma vez e guardada em cache separado, sem alterar o arquivo ou o progresso. Depois de restaurar um backup em outro perfil, a miniatura é regenerada a partir do PDF incluído no próprio backup. Se não for possível gerar a imagem, permanece o ícone do formato.
 
 O leitor abre dentro do aplicativo e retoma a última posição após fechar e reiniciar. Há uma ou duas páginas por tela, contraste papel/noturno/sépia, atalhos de navegação e maximizar/restaurar. Em PDF, use zoom, os botões −/+ ou **Ctrl + scroll**; o scroll sem Ctrl continua rolando normalmente. PDF tem layout fixo: ampliar a página não altera a fonte nem redistribui o texto. Não há OCR, reflow ou formulários de PDF nesta entrega. Em EPUB/Kindle, o controle **Fonte** e Ctrl + scroll ajustam a fonte, preservando um localizador CFI do início do trecho; o campo de posição usa porcentagem em vez de um número de página dependente da fonte.
 

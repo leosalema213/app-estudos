@@ -5,6 +5,7 @@ const imagePattern = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})
 function packDocument(data) {
   // Book binaries live outside the snapshot. Never advertise an incomplete remote backup.
   if (data.books?.length) throw new Error('A sincronização de livros ainda não está disponível. Exporte um backup local completo.');
+  if (Object.keys(data.anki?.media || {}).length) throw new Error('A sincronização de mídia Anki ainda não está disponível. Exporte um backup local completo.');
   const assets = new Map();
   function visit(value) {
     if (typeof value === 'string') {

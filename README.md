@@ -1,8 +1,8 @@
 # Organon
 
-Aplicativo para Windows com planos de estudo, cronômetro de aulas e descansos, histórico e cadernos pessoais com páginas, imagens e desenhos. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
+Seu espaço de estudo no Windows: planos, cronômetro, livros, anotações e revisões com cartas. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
 
-A versão 0.5.1 inclui miniaturas automáticas dos PDFs e simplifica o rodapé de Notas. Mantém a biblioteca offline e a identificação distinta de previews e versões finais. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração e os testes](docs/SUPABASE.md).
+A versão **0.5.2** adiciona a área Anki, vínculos entre baralhos e planos e indicadores de revisão em Meu progresso. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração](docs/SUPABASE.md).
 
 **[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Organon-Instalar.exe)**
 
@@ -10,29 +10,24 @@ A versão 0.5.1 inclui miniaturas automáticas dos PDFs e simplifica o rodapé d
 
 O link de download permanece o mesmo em todas as versões publicadas. A versão em trabalho está no `package.json`; o instalador da última Release é a versão distribuída.
 
-![Organon no modo compacto de espaçamento, com tema escuro](docs/interface.png)
+## Índice
 
-![Planos de estudo na visualização em lista](docs/planos-lista.png)
+- [Instalação](#instalação) — baixar, instalar e atualizar no Windows.
+- [Meu dia](#meu-dia) — roteiro, cronômetro e próximas atividades.
+- [Planos de estudo](#planos-de-estudo) — organizar aulas, pausas e materiais.
+- [Livros](#livros) — biblioteca e leitura offline.
+- [Anki](#anki) — baralhos, cartas e revisão espaçada.
+- [Cadernos pessoais](#cadernos-pessoais) — páginas de anotações, imagens e desenhos.
+- [Notas do dia](#notas-do-dia-e-tempo-manual) — lembretes e tarefas rápidas.
+- [Meu progresso](#meu-progresso) — tempo de foco, conclusões e revisões.
+- [Preferências e backup](#preferências-e-backup) — aparência, dados e cópias de segurança.
+- [Desenvolvimento](#desenvolvimento-e-validação) · [Publicação](#publicar-uma-versão)
 
-![Caderno de anotações ampliado](docs/caderno.png)
-
-![Preferências em abas e temas personalizados](docs/preferencias.png)
-
-![Cadernos pessoais com capas e ícones](docs/cadernos.png)
-
-![Página com formatação e índice de títulos](docs/pagina-caderno.png)
-
-![Notas do dia abaixo dos indicadores](docs/notas-do-dia.png)
-
-![Ícones e cores personalizáveis nos planos](docs/aparencia-plano.png)
-
-![Planos concluídos no progresso](docs/planos-concluidos.png)
-
-![Opção de lembrar uma nota ao abrir](docs/lembrar-nota.png)
+As imagens de apresentação usam um perfil fictício, criado para ilustrar um roteiro de inglês, redes e Linux. Nenhum dado pessoal foi usado nas capturas.
 
 O Organon era chamado Compasso. Os dados locais, identificadores internos e um instalador com o nome anterior são mantidos para compatibilidade com atualizações existentes.
 
-## Abrir
+## Instalação
 
 Baixe e execute o instalador acima para adicionar o Organon ao menu Iniciar e à área de trabalho. O aplicativo verifica novas versões ao abrir e pergunta antes de baixar ou instalar uma atualização. Também é possível verificar manualmente nas preferências. Seus planos, histórico e anotações são mantidos na atualização.
 
@@ -60,7 +55,114 @@ npm run dist
 
 `npm run dist:portable` gera o formato portátil opcional. `npm run icon` renderiza o ícone a partir de `assets/icon.svg`, produzindo PNG e ICO com sete resoluções.
 
-## O que você pode testar
+## Meu dia
+
+Acompanhe o roteiro da data, marque o que concluiu e use o cronômetro para aulas e pausas. Ao terminar um bloco, o player prepara o próximo da sequência, sempre pausado, para você começar quando quiser. Livros, anotações e Anki do plano ficam a um clique.
+
+![Meu dia com roteiro de estudos, lembretes e atalhos do plano](docs/interface.png)
+
+## Planos de estudo
+
+Monte uma sequência de aulas e descansos, escolha os dias e personalize ícone e cor. Alterne entre cards e lista, consulte planos finalizados e reúna materiais relacionados. O menu de opções permite editar, duplicar, concluir, excluir e vincular baralhos Anki.
+
+![Planos em lista: informações à esquerda, dias no centro e atalhos à direita](docs/planos-lista.png)
+
+## Livros
+
+Importe sua biblioteca, retome a leitura de onde parou e vincule livros aos planos que fazem sentido. As miniaturas, a posição e o progresso ficam salvos no próprio computador.
+
+![Biblioteca com guias de inglês, redes e Linux e progresso de leitura](docs/livros.png)
+
+<details>
+<summary>Formatos, leitor e armazenamento</summary>
+
+A seção **Livros** importa PDF, EPUB refluível, MOBI, AZW e AZW3 sem DRM, até **200 MiB por arquivo**, inclusive sem plano. O Organon guarda uma cópia offline no perfil: mover o original não interrompe a leitura. Importar o mesmo conteúdo novamente mantém uma única entrada, com sua posição e seus vínculos.
+
+PDFs mostram a primeira página como miniatura do card. A imagem é gerada uma vez e guardada em cache separado, sem alterar o arquivo ou o progresso. Depois de restaurar um backup em outro perfil, a miniatura é regenerada a partir do PDF incluído no próprio backup. Se não for possível gerar a imagem, permanece o ícone do formato.
+
+O leitor abre dentro do aplicativo e retoma a última posição após fechar e reiniciar. Há uma ou duas páginas por tela, contraste papel/noturno/sépia, atalhos de navegação e maximizar/restaurar. Em PDF, use zoom, os botões −/+ ou **Ctrl + scroll**; o scroll sem Ctrl continua rolando normalmente. PDF tem layout fixo: ampliar a página não altera a fonte nem redistribui o texto. Não há OCR, reflow ou formulários de PDF nesta entrega. Em EPUB/Kindle, o controle **Fonte** e Ctrl + scroll ajustam a fonte, preservando um localizador CFI do início do trecho; o campo de posição usa porcentagem em vez de um número de página dependente da fonte.
+
+**Ponto mais avançado** é a maior página exibida dividida pelo total; voltar uma página não reduz esse indicador. Ele não comprova leitura de todas as páginas. **Concluir** registra separadamente o livro como lido, na data do check; **Meu progresso** mostra os livros lidos no período semanal/mensal e o total. Abrir a última página não conclui o livro automaticamente e não cria horas de foco.
+
+Em **Planos** no card do livro, escolha quantos planos quiser. Cada plano pode ter vários livros e oferece o botão **Livros**. Livros independentes permanecem na biblioteca sem obrigações no Meu dia. Excluir um plano não exclui livros. Excluir um livro pede confirmação e remove a entrada e sua participação no progresso; o original é preservado.
+
+O backup JSON inclui os arquivos dos livros, posição, preferências e vínculos. Restaure pelo aplicativo desktop; a visualização web não armazena binários de livros. Backups grandes usam memória durante a importação e podem demorar. Mantenha espaço para o JSON portátil (base64 acrescenta aproximadamente um terço ao tamanho dos PDFs) e para as cópias restauradas. Arquivos internos sem referência são retidos por segurança e não entram em novos backups.
+
+PDF usa [PDF.js](https://github.com/mozilla/pdf.js), empacotado com worker, fontes e CMaps. EPUB/Kindle usam parsers e paginação do [Foliate.js](https://github.com/johnfactotum/foliate-js), fixado em uma revisão e empacotado offline. O conteúdo dos livros passa por remoção de scripts/handlers, política de recursos sem acesso externo e iframe sem permissão de scripts. EPUB de layout fixo, KFX e arquivos com senha/DRM não são suportados; não há conversor integrado.
+
+O contrato de armazenamento, backup e transporte futuro está em [Dados e migrações](docs/DADOS-E-MIGRACOES.md). A nuvem continua desativada; snapshots com livros são recusados pelo transporte atual para impedir uma cópia online incompleta.
+
+</details>
+
+## Anki
+
+Crie baralhos e cartas ou importe pacotes `.apkg` e `.colpkg`, com mídia e estado de estudo compatíveis. Revise com o card que vira ao mostrar a resposta e responda **Errei** ou **Acertei**. Explore a coleção, edite notas e acompanhe suas revisões.
+
+Ao criar ou editar um baralho, escolha os planos vinculados, se quiser. O caminho inverso fica no menu do plano, em **Vincular baralhos Anki**. A ação **Anki do plano** abre os baralhos associados.
+
+![Baralhos com novas cartas, aprendizagem e revisões disponíveis](docs/anki-baralhos.png)
+
+<details>
+<summary>Ver a revisão de uma carta</summary>
+
+![Revisão de vocabulário com resposta e botões Errei e Acertei](docs/anki-revisao.png)
+
+</details>
+
+O agendamento importado é preservado na entrada. As próximas respostas usam o agendador local, com opções tradicionais ou FSRS; há diferenças em relação ao Anki e os intervalos futuros não são garantidos como idênticos. Backups automáticos do Anki podem exigir a pasta de mídia externa; para transportar tudo, exporte a coleção com **Incluir mídia**. Veja [compatibilidade e limites da integração](docs/ANKI.md).
+
+## Cadernos pessoais
+
+Organize ideias em páginas independentes dos planos, com formatação, imagens e desenhos. Use busca e índice de títulos para voltar ao que precisa.
+
+![Cadernos pessoais organizados por assunto](docs/cadernos.png)
+
+<details>
+<summary>Páginas, edição e imagens</summary>
+
+![Página de vocabulário com conteúdo de exemplo](docs/pagina-caderno.png)
+
+Abra **Cadernos** na sidebar para criar espaços independentes dos planos, como Diário, Casa ou Pensamentos. Escolha nome, cor pastel ou personalizada e um ícone da biblioteca com busca, compartilhada com os planos. Tanto a imagem de capa quanto o ícone são opcionais: use **Sem ícone** para deixar somente a imagem ou a cor. Cada caderno pode ter várias páginas, com busca pelo título ou conteúdo.
+
+O título da página aparece no índice da esquerda. Se ele estiver vazio, o primeiro título do texto identifica a página automaticamente. Dentro da página, títulos de nível 1, 2 e 3 formam outro índice clicável. Digite `# `, `## ` ou `### ` no início de uma linha para criar um título, ou use o seletor de estilo da barra.
+
+A barra oferece negrito, itálico, tamanho de fonte, títulos, listas e desfazer/refazer. Imagens podem ser coladas, escolhidas por arquivo ou arrastadas para o texto; rabiscos usam a mesma posição do cursor. Páginas, capas e formatação ficam salvas localmente e entram no backup. Excluir uma página ou um caderno exige confirmação.
+
+</details>
+
+## Notas do dia e tempo manual
+
+Lembretes com data ou recorrência diária aparecem no seu roteiro. Marque como vistos e mantenha por perto os próximos passos do estudo.
+
+![Notas com lembretes para revisar vocabulário e praticar redes](docs/notas.png)
+
+<details>
+<summary>Lembretes ao abrir e crédito manual de tempo</summary>
+
+Em **Notas**, crie lembretes com título, descrição e uma data ou a opção **Todos os dias**. As notas pendentes aparecem abaixo dos indicadores de Meu dia, respeitando a data selecionada. Marcar como vista oculta a nota; quando todas forem vistas, a seção desaparece. Notas diárias voltam no dia seguinte. Na área Notas é possível editar, excluir ou desfazer a confirmação.
+
+Cada nota tem **Lembrar-me**, desativado por padrão. Ao ativar, ela participa da notificação do Windows na abertura do aplicativo quando estiver prevista para hoje e ainda não tiver sido vista. Várias notas são agrupadas em um aviso com a quantidade. Clicar abre **Notas → Hoje**, restaurando a janela mesmo se estiver minimizada ou em modo compacto. A notificação não marca a nota como vista. Notas futuras, já vistas ou sem Lembrar-me ficam fora do aviso. A exibição segue as permissões de notificação e o modo Não incomodar do Windows.
+
+Em **Preferências → Geral**, **Iniciar com o Windows** vem ativado e abre a janela normal ao entrar na conta. A escolha fica salva e pode ser desativada. O registro usa o executável em execução, é atualizado ao mudar de instalação e removido ao desinstalar. Prévias sem instalação, execuções de desenvolvimento e perfis temporários de teste guardam a preferência sem alterar a inicialização real do Windows. A inicialização automática é efetivada ao executar a versão instalada pelo instalador. Se a inicialização foi desativada pelo Gerenciador de Tarefas, a sincronização automática respeita essa escolha; para reativar pelo app, desligue e ligue a opção novamente.
+
+Em **Preferências → Geral**, **Tempo ao concluir manualmente** vem desativado. Ao ativar, dar check completa o tempo cadastrado sem duplicar o que o cronômetro já registrou. Por exemplo, uma aula de 25 minutos com 3 cronometrados recebe 22 minutos manuais. Desfazer o check retira esses 22 minutos e mantém os 3 reais. Descansos continuam fora do tempo de foco. A preferência vale para todos os planos e fica salva.
+
+</details>
+
+## Meu progresso
+
+Veja seu tempo de foco, aulas e planos concluídos e livros lidos, por semana ou mês. O resumo Anki mostra revisões, minutos registrados, dias ativos e acertos no mesmo período, separado do cronômetro para evitar dupla contagem.
+
+![Indicadores semanais de foco e histórico por plano](docs/progresso.png)
+
+![Revisões Anki no mesmo período, com tempo e percentual de acertos](docs/progresso-anki.png)
+
+## Preferências e backup
+
+Escolha tema claro, escuro ou uma paleta personalizada e ajuste a densidade da interface. Exporte um backup portátil com seus planos, notas, livros e mídia das cartas para guardar uma cópia ou mudar de computador.
+
+<details>
+<summary>Mais recursos e opções de uso</summary>
 
 - No primeiro uso, um tutorial curto orienta a criação do seu primeiro plano, com **Aula 1**, **Descanso** e **Aula 2** editáveis. Nenhum plano é adicionado automaticamente. O tutorial pode ser pulado; dados de versões anteriores são mantidos.
 - Criar, editar, duplicar e excluir planos; escolher dias da semana e cores.
@@ -73,7 +175,7 @@ npm run dist
 - Criar tipos como Revisão, Exercícios ou Leitura pelo **+** na própria edição do plano, escolhendo nome e ícone. Os atalhos ocupam até duas linhas; quando não couberem todos, o botão de lista abre os demais. Tipos personalizados contam como foco e são reutilizados entre planos, sem nova seção na sidebar.
 - Ver o roteiro da data selecionada, filtrando planos pendentes, em progresso e concluídos.
 - Iniciar ou pausar qualquer bloco. Existe apenas um cronômetro ativo de cada vez.
-- Ao terminar, o bloco é marcado e um aviso visual, sonoro e uma notificação do Windows são emitidos. O próximo bloco sempre começa manualmente. A notificação nativa depende das permissões de notificações do Windows.
+- Ao terminar, o bloco é marcado e um aviso visual, sonoro e uma notificação do Windows são emitidos. O player prepara o próximo bloco pendente, inclusive de outro plano do dia, sempre pausado; o início continua manual. A notificação nativa depende das permissões de notificações do Windows.
 - Marcar e desmarcar conclusões manualmente, separadamente por dia.
 - O resumo de Meu dia e a meta diária contam todos os blocos programados, incluindo aulas e descansos. As horas de foco continuam excluindo os descansos.
 - Editar o nome e a duração de cada aula ou descanso pelo lápis na própria linha, mantendo o tempo já estudado.
@@ -92,41 +194,7 @@ npm run dist
 
 A [auditoria de backup e o roteiro de reinstalação segura](docs/AUDITORIA-BACKUP.md) registram a cobertura, os testes e as correções da 0.4.9 em relação à 0.4.8. A [avaliação do Google Drive](docs/GOOGLE-DRIVE.md) compara pasta sincronizada e conexão direta; a integração com Drive ainda não foi implementada.
 
-## Livros
-
-A seção **Livros** importa PDF, EPUB refluível, MOBI, AZW e AZW3 sem DRM, até **200 MiB por arquivo**, inclusive sem plano. O Organon guarda uma cópia offline no perfil: mover o original não interrompe a leitura. Importar o mesmo conteúdo novamente mantém uma única entrada, com sua posição e seus vínculos.
-
-PDFs mostram a primeira página como miniatura do card. A imagem é gerada uma vez e guardada em cache separado, sem alterar o arquivo ou o progresso. Depois de restaurar um backup em outro perfil, a miniatura é regenerada a partir do PDF incluído no próprio backup. Se não for possível gerar a imagem, permanece o ícone do formato.
-
-O leitor abre dentro do aplicativo e retoma a última posição após fechar e reiniciar. Há uma ou duas páginas por tela, contraste papel/noturno/sépia, atalhos de navegação e maximizar/restaurar. Em PDF, use zoom, os botões −/+ ou **Ctrl + scroll**; o scroll sem Ctrl continua rolando normalmente. PDF tem layout fixo: ampliar a página não altera a fonte nem redistribui o texto. Não há OCR, reflow ou formulários de PDF nesta entrega. Em EPUB/Kindle, o controle **Fonte** e Ctrl + scroll ajustam a fonte, preservando um localizador CFI do início do trecho; o campo de posição usa porcentagem em vez de um número de página dependente da fonte.
-
-**Ponto mais avançado** é a maior página exibida dividida pelo total; voltar uma página não reduz esse indicador. Ele não comprova leitura de todas as páginas. **Concluir** registra separadamente o livro como lido, na data do check; **Meu progresso** mostra os livros lidos no período semanal/mensal e o total. Abrir a última página não conclui o livro automaticamente e não cria horas de foco.
-
-Em **Planos** no card do livro, escolha quantos planos quiser. Cada plano pode ter vários livros e oferece o botão **Livros**. Livros independentes permanecem na biblioteca sem obrigações no Meu dia. Excluir um plano não exclui livros. Excluir um livro pede confirmação e remove a entrada e sua participação no progresso; o original é preservado.
-
-O backup JSON inclui PDFs, posição, preferências e vínculos. Restaure pelo aplicativo desktop; a visualização web não armazena binários de livros. Backups grandes usam memória durante a importação e podem demorar. Mantenha espaço para o JSON portátil (base64 acrescenta aproximadamente um terço ao tamanho dos PDFs) e para as cópias restauradas. Arquivos internos sem referência são retidos por segurança e não entram em novos backups.
-
-PDF usa [PDF.js](https://github.com/mozilla/pdf.js), empacotado com worker, fontes e CMaps. EPUB/Kindle usam parsers e paginação do [Foliate.js](https://github.com/johnfactotum/foliate-js), fixado em uma revisão e empacotado offline. O conteúdo dos livros passa por remoção de scripts/handlers, política de recursos sem acesso externo e iframe sem permissão de scripts. EPUB de layout fixo, KFX e arquivos com senha/DRM não são suportados; não há conversor integrado.
-
-O contrato de armazenamento, backup e transporte futuro está em [Dados e migrações](docs/DADOS-E-MIGRACOES.md). A nuvem continua desativada; snapshots com livros são recusados pelo transporte atual para impedir uma cópia online incompleta.
-
-## Cadernos pessoais
-
-Abra **Cadernos** na sidebar para criar espaços independentes dos planos, como Diário, Casa ou Pensamentos. Escolha nome, cor pastel ou personalizada e um ícone da biblioteca com busca, compartilhada com os planos. Tanto a imagem de capa quanto o ícone são opcionais: use **Sem ícone** para deixar somente a imagem ou a cor. Cada caderno pode ter várias páginas, com busca pelo título ou conteúdo.
-
-O título da página aparece no índice da esquerda. Se ele estiver vazio, o primeiro título do texto identifica a página automaticamente. Dentro da página, títulos de nível 1, 2 e 3 formam outro índice clicável. Digite `# `, `## ` ou `### ` no início de uma linha para criar um título, ou use o seletor de estilo da barra.
-
-A barra oferece negrito, itálico, tamanho de fonte, títulos, listas e desfazer/refazer. Imagens podem ser coladas, escolhidas por arquivo ou arrastadas para o texto; rabiscos usam a mesma posição do cursor. Páginas, capas e formatação ficam salvas localmente e entram no backup. Excluir uma página ou um caderno exige confirmação.
-
-## Notas do dia e tempo manual
-
-Em **Notas**, crie lembretes com título, descrição e uma data ou a opção **Todos os dias**. As notas pendentes aparecem abaixo dos indicadores de Meu dia, respeitando a data selecionada. Marcar como vista oculta a nota; quando todas forem vistas, a seção desaparece. Notas diárias voltam no dia seguinte. Na área Notas é possível editar, excluir ou desfazer a confirmação.
-
-Cada nota tem **Lembrar-me**, desativado por padrão. Ao ativar, ela participa da notificação do Windows na abertura do aplicativo quando estiver prevista para hoje e ainda não tiver sido vista. Várias notas são agrupadas em um aviso com a quantidade. Clicar abre **Notas → Hoje**, restaurando a janela mesmo se estiver minimizada ou em modo compacto. A notificação não marca a nota como vista. Notas futuras, já vistas ou sem Lembrar-me ficam fora do aviso. A exibição segue as permissões de notificação e o modo Não incomodar do Windows.
-
-Em **Preferências → Geral**, **Iniciar com o Windows** vem ativado e abre a janela normal ao entrar na conta. A escolha fica salva e pode ser desativada. O registro usa o executável em execução, é atualizado ao mudar de instalação e removido ao desinstalar. Prévias sem instalação, execuções de desenvolvimento e perfis temporários de teste guardam a preferência sem alterar a inicialização real do Windows. A inicialização automática é efetivada ao executar a versão instalada pelo instalador. Se a inicialização foi desativada pelo Gerenciador de Tarefas, a sincronização automática respeita essa escolha; para reativar pelo app, desligue e ligue a opção novamente.
-
-Em **Preferências → Geral**, **Tempo ao concluir manualmente** vem desativado. Ao ativar, dar check completa o tempo cadastrado sem duplicar o que o cronômetro já registrou. Por exemplo, uma aula de 25 minutos com 3 cronometrados recebe 22 minutos manuais. Desfazer o check retira esses 22 minutos e mantém os 3 reais. Descansos continuam fora do tempo de foco. A preferência vale para todos os planos e fica salva.
+</details>
 
 ## Persistência e comportamento do relógio
 
@@ -168,11 +236,15 @@ Depois de `npm run dist`, execute `npm run test:installer` para validar o modo s
 
 Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lote está encerrado e que ele autoriza a publicação, conforme `AGENTS.md`. PATCH vai de 0 a 9; após 9, avance MINOR e volte PATCH a zero (`0.5.9` → `0.6.0`). MAJOR só muda por pedido explícito. A Release 0.4.10 permanece no histórico; a correção seguinte é 0.5.0.
 
-1. Prepare os testes locais com `npm run version:preview`: após 0.5.0, gera 0.5.1-preview.1 e, nas próximas chamadas, 0.5.1-preview.2 etc. Cada instalador entregue deve ter um identificador exclusivo. Quando o lote estiver pronto, `npm run version:final` prepara 0.5.1. Esses comandos atualizam os dois arquivos do pacote e o cabeçalho do changelog, preservando as notas existentes, e não fazem commit nem publicação. Não entregue o instalador estável antes da publicação.
+1. Prepare os testes locais com `npm run version:preview`: após 0.5.0, gera 0.5.1-preview.1 e, nas próximas chamadas, 0.5.1-preview.2 etc. Cada instalador entregue deve ter um identificador exclusivo. Quando o lote estiver pronto, `npm run version:final` promove a prévia à versão final da mesma base. Esses comandos atualizam os dois arquivos do pacote e o cabeçalho do changelog, preservando as notas existentes, e não fazem commit nem publicação. Não entregue o instalador estável antes da publicação.
 2. Confira os resultados dos testes pertinentes ao lote. Conforme `AGENTS.md`, envie ao usuário um comando focado para execução no terminal dele quando houver validação pendente; reaproveite resultados válidos e não repita automaticamente suítes completas.
 3. Gere os arquivos com `npm run dist` e `npm run checksums`.
 4. Faça commit e envie para `origin/main`.
 5. Execute `npm run release`.
+
+Depois de uma geração bem-sucedida, `dist` e `dist:portable` executam a limpeza local: ficam somente a compilação atual e a anterior em `release/`. Para chamadas diretas ao electron-builder, execute `npm run releases:prune` após o sucesso. `node scripts/prune-releases.cjs --dry-run` mostra os caminhos antes de remover. Essa limpeza não altera tags ou Releases publicadas no GitHub.
+
+As imagens do README podem ser renovadas com `npm run docs:screenshots` depois do build. O script abre um perfil temporário com conteúdo fictício coerente, captura as telas e remove o perfil ao terminar; não acessa os dados pessoais.
 
 O script usa a autenticação existente do Git, ou `GH_TOKEN`/`GITHUB_TOKEN` no ambiente. Credenciais não são gravadas em arquivos. Ele cria uma Release em rascunho, envia `Organon-Instalar.exe`, uma cópia idêntica `Compasso-Instalar.exe` para clientes anteriores e os respectivos checksums e só então publica como a versão mais recente. O README continua apontando para o mesmo endereço de download. Executáveis, dependências, dados de teste, atalhos e arquivos `.env` ficam fora do Git.
 

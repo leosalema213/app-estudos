@@ -10,7 +10,8 @@ test('timer completes at configured duration and never starts the next block', (
   const next = tick(play(state, plan, block, date, baseTime), baseTime + 30 * 60000);
   assert.equal(next.finished, true);
   assert.equal(next.state.active.running, false);
-  assert.equal(next.state.active.blockId, block.id);
+  assert.equal(next.state.active.blockId, plan.blocks[1].id);
+  assert.equal(next.completed.blockId, block.id);
   assert.equal(getRecord(next.state, date, plan.id, block.id).done, true);
   assert.equal(focusMs(next.state, date, date), block.minutes * 60000);
   assert.equal(getRecord(next.state, date, plan.id, plan.blocks[1].id).done, false);
@@ -110,7 +111,8 @@ test('editing one block preserves ids, other blocks and logged study time', () =
 test('reducing a running block below elapsed time completes only that block', () => {
   const { state, plan, block, date } = fixture();
   const edited = editBlock(play(state, plan, block, date, baseTime), plan.id, block.id, { name: block.name, minutes: 2 }, baseTime + 5 * 60000);
-  assert.equal(edited.active.remainingMs, 0);
+  assert.equal(edited.active.remainingMs, plan.blocks[1].minutes * 60000);
+  assert.equal(edited.active.blockId, plan.blocks[1].id);
   assert.equal(edited.active.running, false);
   assert.equal(getRecord(edited, date, plan.id, block.id).done, true);
   assert.equal(focusMs(edited, date, date), 5 * 60000);

@@ -27,7 +27,7 @@ export default function Preferences({ settings, onChange, onClose, onTestSound, 
     const next = event.key === 'Home' ? 0 : event.key === 'End' ? sections.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + sections.length) % sections.length;
     setTab(sections[next][0]); tabRefs.current[next]?.focus();
   }
-  return <Modal title="Preferências" onClose={onClose} className="preferences-modal">
+  return <Modal panel title="Preferências" onClose={onClose} className="preferences-modal">
     <div className="preferences-tabs" role="tablist" aria-label="Categorias de preferências">{sections.map(([key, label], i) => <button key={key} ref={el => tabRefs.current[i] = el} role="tab" id={`preferences-tab-${key}`} aria-controls={`preferences-panel-${key}`} aria-selected={tab === key} tabIndex={tab === key ? 0 : -1} onClick={() => setTab(key)} onKeyDown={e => navigate(e, i)}>{label}</button>)}</div>
     <section className="preferences-panel" role="tabpanel" id={`preferences-panel-${tab}`} aria-labelledby={`preferences-tab-${tab}`} tabIndex={0}>
       {tab === 'appearance' && <>

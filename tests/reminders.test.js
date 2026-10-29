@@ -19,13 +19,14 @@ test('manual completion fills only the missing duration, is idempotent and undo 
   next = setManualDone(next, date, plan.id, block.id, true, started + 180000);
   assert.equal(getRecord(next, date, plan.id, block.id).elapsedMs, 25 * 60000);
   assert.equal(getRecord(next, date, plan.id, block.id).manualMs, 22 * 60000);
-  assert.equal(next.active.running, false); assert.equal(next.active.remainingMs, 0);
+  assert.equal(next.active.running, false); assert.equal(next.active.blockId, plan.blocks[1].id); assert.equal(next.active.remainingMs, 5 * 60000);
   next = setManualDone(next, date, plan.id, block.id, true, started + 181000);
   assert.equal(getRecord(next, date, plan.id, block.id).elapsedMs, 25 * 60000);
   next = { ...next, settings: { ...next.settings, creditManualTime: false } };
   next = setManualDone(next, date, plan.id, block.id, false, started + 182000);
   assert.equal(getRecord(next, date, plan.id, block.id).elapsedMs, 3 * 60000);
-  assert.equal(next.active.remainingMs, 22 * 60000);
+  assert.equal(next.active.remainingMs, 5 * 60000);
+  assert.equal(next.active.blockId, plan.blocks[1].id);
   assert.equal(getRecord(next, date, plan.id, block.id).manualMs, 0);
   assert.equal(getRecord(state, date, plan.id, block.id).elapsedMs, 0);
 });

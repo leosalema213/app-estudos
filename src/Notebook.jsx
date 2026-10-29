@@ -64,7 +64,7 @@ export default function Notebook({ plan, date, initialNote, saveError, onClose, 
   const actions = <><Tool label={sidebar ? 'Recolher lista de notas' : 'Mostrar lista de notas'} onClick={() => setSidebar(!sidebar)}>{sidebar ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}</Tool><button className="primary notebook-new" onClick={add}><Plus size={16} /><span>Nova anotação</span></button></>;
 
   return <>
-    <Modal title={`Anotações · ${plan.name}`} onClose={() => sketchNote ? closeSketch() : onClose()} className="notebook-modal" actions={actions}>
+    <Modal panel title={`Anotações · ${plan.name}`} onClose={() => sketchNote ? closeSketch() : onClose()} className="notebook-modal" actions={actions}>
       <div className={`notebook-workspace ${sidebar ? '' : 'list-collapsed'}`}>
         {sidebar && <aside className="notebook-list" aria-label="Lista de anotações">
           <div className="notebook-search-row"><label className="notebook-search"><Search size={14} /><input aria-label="Buscar anotações" placeholder="Buscar notas" value={query} onChange={e => setQuery(e.target.value)} /></label><Tool label="Filtrar notas por data" className={`icon-button notebook-date-toggle ${dateFilter ? 'active' : ''}`} aria-expanded={filterOpen} aria-pressed={!!dateFilter} onClick={() => setFilterOpen(!filterOpen)}><CalendarDays size={16} /></Tool></div>

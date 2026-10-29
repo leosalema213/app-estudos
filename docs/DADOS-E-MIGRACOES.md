@@ -91,6 +91,77 @@ Os arquivos PDF originais continuam imutáveis e no backup `bookFiles`. O cache 
 
 Validação focada preparada em `tests/book-thumbnails.cjs`: executa apenas os testes de cache, verifica a renderização real da primeira página, cache após reinício, preservação do PDF/progresso, regeneração após backup e remoção da frase em Notas. Produz `test-output/book-thumbnails.png` para inspeção visual; sua execução fica a cargo do usuário conforme `AGENTS.md`.
 
+## Anki — 0.5.2-preview.1
+
+Campo opcional `anki` no snapshot versão 1. Perfis antigos recebem `emptyAnki()` durante carga; `validateData` aplica o mesmo default aos backups antigos, sem alterar planos, livros, cadernos, notas, histórico do cronômetro, preferências ou identificadores legados. A comparação de checkpoints do timer inclui a identidade de `anki`, para que uma resposta ou edição seja salva imediatamente pelo fluxo normal.
+
+Contrato resumido:
+
+```js
+anki: {
+  version: 1,
+  decks: [{ id, name, presetId, options?, today?: { day, options }, source? }],
+  presets: [{ id, name, options }],
+  models: [{ id, name, kind, fields: ['Front', 'Back'], templates: [{ name, q, a }], css, sourceConfig?, sourceTemplates? }],
+  notes: [{ id, modelId, fields: ['conteúdo'], tags: [], guid?, source? }],
+  cards: [{ id, noteId, deckId, ord, position, state, due, interval, ease, reps, lapses, step, suspended, buriedUntil?, lastReview?, fsrs?, unsupported?, source? }],
+  reviews: [{ id, cardId, at, rating, previousState, interval, elapsedMs, source? }],
+  media: { 'nome-canônico.ext': { hash, size, mime } },
+  sourceMedia?: { 'namespace-da-coleção': { 'nome-original.ext': 'nome-canônico.ext' } },
+  settings: { fsrs: false, rollover: 4, newIgnoreReview: false, limitsFromTop: false, source? }
+}
+```
+
+`state` usa 0 novo, 1 aprendizagem, 2 revisão, 3 reaprendizagem. `due`, `at`, `buriedUntil` e `lastReview` são timestamps em milissegundos; intervalo é em dias. Novos têm `due:0` e posição independente. `fsrs` preserva estabilidade/dificuldade e estado serializado da biblioteca; datas desse estado são números, reconstruídos antes de chamar o scheduler. Dados de origem são JSON/string/base64 inertes. Fonte, scheduler, conversões de data, reimportação e diferenças conhecidas são descritos em `ANKI.md`.
+
+Opções têm defaults definidos em `src/anki.js`. Padrões de switches de novos baralhos foram explicitamente definidos pela implementação, sem inferir que eram os switches da captura. Importação obtém os valores efetivos do pacote. Opções por baralho/dia sobrescrevem apenas limites; opções de preset se aplicam aos baralhos vinculados. `today.day` usa a data local de estudo com rollover configurável e deixa de valer automaticamente no dia seguinte. Exclusão de nota não apaga o histórico de respostas nem arquivos físicos, para permitir recuperação em backups anteriores.
+
+### Arquivos e restauração
+
+Binários ficam em `<perfil>/anki-media/<sha256>`, imutáveis e deduplicados. O snapshot só contém os metadados; nenhum tick do timer lê ou regrava áudio/imagem. Cada recurso tem até 32 MiB; nomes/extensões e assinaturas MIME são verificados. Caminhos de leitura interna aceitam somente hashes SHA-256. Importação de pacote escreve em cópia interna, nunca no perfil Anki de origem. Cancelar o preview pode deixar arquivos sem referência; eles não entram em backups sem uma referência no snapshot e não são removidos automaticamente.
+
+O escritor de backup existente acrescenta `ankiFiles: { [hash]: base64 }` em streaming, uma vez por hash, além de `bookFiles`. Mídia ausente, tamanho/assinatura/hash incorretos abortam exportação antes de substituir um backup completo. Importação verifica todos os binários Anki e livros antes da confirmação; o token transitório existente aponta para os buffers no processo principal. Confirmar instala os arquivos verificados por temporário/rename antes de devolver metadados para restauração; cancelar não altera o snapshot. `ankiFiles` e `bookFiles` são retirados do documento de trabalho. Como no backup de livros, a leitura/restauração integral ainda usa memória proporcional ao tamanho do JSON e dos buffers.
+
+### Transporte remoto
+
+**Sem DDL adicional:** campo opcional cabe no payload JSONB existente. A sincronização remota continua desabilitada por provisionamento pendente. `packDocument` bloqueia qualquer coleção com mídia Anki, assim como faz com livros, para não anunciar uma cópia remota incompleta. Coleções sem mídia seguem o serializador genérico, incluindo tipos, opções, históricos e origem. Antes da habilitação remota, será necessário implementar assets privados de áudio/imagem por hash, cotas, MIME permitido, verificação de conteúdo e commit atômico do snapshot após upload/download dos recursos; validação no servidor permanece pendente.
+
+### Validação preparada
+
+Na prévia 3, a interface de revisão oferece Errei (1) e Acertei (Bom/3). O contrato de cards, presets e histórico não muda: avaliações 2/4 antigas são preservadas, assim como os parâmetros e vencimentos importados. Áudio e flip card são alterações da sessão visual, sem novos defaults, binários ou campos de migração. A regressão de importação da prévia 2 passou no terminal do usuário; a verificação nova de áudio/respostas fica em `tests/anki-review.cjs`, ainda pendente de execução funcional pelo usuário.
+
+`tests/anki.test.js` verifica defaults/migração, referências, agendamento/FSRS, opções, limites/enterro, mídia, backup íntegro, bloqueio de transporte incompleto e importação real de SQLite em ZIP moderno/legado. `tests/anki.cjs` compila e executa também um fluxo Electron focado em perfil descartável para revisar, reproduzir áudio, bloquear scripts e criar/editar notas/opções. Executado pelo usuário em 29/10/2026: 11 testes passaram, zero falhas; build Vite e fluxo Electron concluídos com sucesso. Não contém cards pessoais nem acessa o perfil pessoal. Validação remota e equivalência integral com o Anki não são cobertas por esse resultado.
+
+## Continuidade do player e presets — 0.5.2-preview.4
+
+`active` mantém o mesmo contrato: ao terminar pelo cronômetro ou por check manual, pode apontar para o próximo bloco pendente da sequência do dia, com `running:false`. Essa preparação não cria registros, não marca conclusão e não credita tempo; preserva tempo parcial já estudado nesse próximo bloco. Pula blocos concluídos, planos finalizados e planos fora do dia; segue a ordem dos planos/blocos sem voltar ao começo. No fim do roteiro, uma sessão terminal concluída pode permanecer para o fluxo de tempo extra. A notificação usa os dados do bloco que terminou, não os do bloco preparado. Ao carregar um perfil antigo com player em bloco já marcado, prepara o próximo sem modificar o histórico.
+
+Presets redundantes `default` local/Default importado são normalizados na carga, validação e mesclagem. A unificação só ocorre quando o padrão local está sem uso e sem personalização, ou as opções são equivalentes; os vínculos são redirecionados ao ID importado e `aliases:['default']` preserva o identificador anterior. Configurações diferentes/personalizadas são mantidas e recebem nomes únicos em caso de colisão. `aliases` é opcional e validado como lista de strings. Presets novos usam UUID; criar copia as opções atuais e salvar confirma a criação/vínculo. Limites de baralho/dia permanecem separados dos valores compartilhados do preset.
+
+Snapshot versão 1, binários e identificadores de planos/blocos/cards não mudam. `aliases` e a seleção pausada viajam pelo JSON/backup existentes e cabem no payload JSONB, sem DDL; transporte remoto de mídia e validação real do servidor continuam pendentes. Dados de CSS/templates importados são preservados mesmo sem editor visível; as adaptações de cores dark ocorrem somente na renderização.
+
+Verificação preparada em `tests/preview4.cjs`: testes focados de player/presets e regressões dos timers/crédito/tempo extra, build e fluxo Electron em perfil temporário para passagem entre planos, criação de preset e abas. A execução funcional fica pendente do usuário. A captura isolada `--screenshots-only` foi usada para inspecionar somente as telas alteradas, sem executar a suíte funcional. O agendamento Anki não foi substituído: o exemplo tradicional Errei=10m/Acertei=3d tem regressão específica, mas equivalência integral do scheduler continua pendente.
+
+## Exclusão de baralhos — 0.5.2-preview.5
+
+Não há novos campos ou versão de snapshot. `removeDeck` exclui o baralho selecionado e nomes descendentes com separador `::`, os cards desses IDs e as notas afetadas que deixaram de ter cards. Uma nota com card em outro baralho permanece intacta; notas órfãs pré-existentes e baralhos com prefixos semelhantes sem `::` também são preservados. A ação exige confirmação no renderer; cancelar não chama a mutação. Alterações invalidam o desfazer anterior, para não ressuscitar uma exclusão por um undo de revisão antigo.
+
+Histórico de respostas preserva referências a IDs de cards removidos, conforme contrato existente de exclusão de notas, mantendo estatísticas históricas. Presets, tipos de nota e manifestos/binários de mídia não são apagados por essa ação. Backups continuam completos e a aplicação não realiza limpeza física automática. A exclusão das entradas é transportada pelos arrays do snapshot completo; não há DDL, novos defaults ou aplicação remota. Contadores e novos posicionamentos de controles são derivados da sessão, sem dados persistidos adicionais.
+
+Validação preparada: `tests/anki-decks.test.js` cobre descendentes, notas compartilhadas, órfãs anteriores, histórico, ausência de mutação e categorias dos contadores. `tests/preview5.cjs` acrescenta o fluxo Electron de cancelar/confirmar, contadores após responder, edição no card e desfazer em perfil descartável. Execução funcional pendente do usuário.
+
+## Vínculos Anki e progresso — 0.5.2-preview.6
+
+`anki.decks[].planIds` é uma lista opcional de IDs de planos. Carga, validação e mesclagem atribuem `[]` quando o campo está ausente; o validador recusa tipos incorretos, IDs vazios e duplicados. Cada baralho aceita múltiplos planos. A exclusão de um plano não apaga o baralho nem seus IDs órfãos, seguindo a política da biblioteca de livros. Reimportar um baralho existente conserva os vínculos locais. Criar no contexto do filtro de um plano adiciona seu ID; criar na coleção geral começa sem vínculo.
+
+O snapshot continua na versão 1. `planIds` vai no JSON de trabalho, backup portátil e payload genérico de sincronização, sem novo binário. A restauração aceita snapshots antigos sem o campo e preserva os IDs de origem e de instalação. **Não exige DDL:** o campo cabe no JSONB existente. A sincronização de mídia permanece bloqueada, o provisionamento remoto permanece pendente e o teste de serialização não é validação de servidor.
+
+Os indicadores de Meu progresso são derivados de `anki.reviews`, sem campos persistidos adicionais: incluem somente avaliações inteiras 1–4 dentro das datas locais do período selecionado, somam `elapsedMs` registrado, contam dias com respostas e consideram 2–4 como acertos para manter históricos antigos. Referências a cartas excluídas continuam contando no histórico. Avaliação 0 (reagendamento manual) fica fora. Um baralho ligado a vários planos não multiplica revisões ou tempo; nenhuma linha é acrescentada a `records` por navegar, vincular ou exibir esses indicadores. O tempo do cronômetro permanece separado do tempo das respostas.
+
+As traduções são de apresentação, incluindo Frente/Verso, tipos conhecidos e Padrão. Não renomeiam chaves dos modelos, placeholders ou campos técnicos do snapshot. Rótulos de configurações traduzidos recebem sufixos visuais se colidirem, sem alterar seus IDs/nomes gravados. `PopupMenu` não persiste estado de abertura.
+
+Verificação preparada em `tests/anki-plan-progress.test.js` e `tests/preview6.cjs`: migração/validação de vínculos, preservação de outros planos, JSON/backup e payload, métricas sem duplicação, criação/teclado do pop-up e integração das telas em perfil temporário. Execução funcional pendente do usuário; a conferência isolada de captura não é registrada como aprovação da suíte.
+
 ## Para as próximas alterações
 
 Ao criar novos campos, registrar formato/defaults, compatibilidade de leitura, transporte no backup e snapshot e testes relevantes. Preparar SQL apenas se houver alteração real da estrutura relacional/RPC/permissões. Aplicação de migrations e testes de isolamento no servidor ficam explicitamente pendentes até retomar a integração. Não enviar dados pessoais como fixture de teste.

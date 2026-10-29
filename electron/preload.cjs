@@ -10,6 +10,11 @@ contextBridge.exposeInMainWorld('desktop', {
   notify: (body) => ipcRenderer.send('timer:notify', body),
   exportData: (data) => ipcRenderer.invoke('data:export', data),
   importData: () => ipcRenderer.invoke('data:import'),
+  anki: {
+    import: () => ipcRenderer.invoke('anki:import'),
+    addMedia: (bytes, name) => ipcRenderer.invoke('anki:media-add', bytes, name),
+    readMedia: meta => ipcRenderer.invoke('anki:media-read', meta),
+  },
   books: {
     import: () => ipcRenderer.invoke('books:import'),
     read: (hash, format) => ipcRenderer.invoke('books:read', hash, format),

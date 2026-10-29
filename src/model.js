@@ -3,6 +3,7 @@ import { isNotebookColor, notebookIcons } from './book-appearance.js';
 import { calendarDate, validReminders } from './reminders.js';
 import { validKind, validKinds } from './block-kinds.js';
 import { validBooks } from './books.js';
+import { emptyAnki, normalizePresets, validAnki } from './anki.js';
 
 export const uid = () => crypto.randomUUID();
 export const dayKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -26,7 +27,7 @@ export { notebookIcons } from './book-appearance.js';
 export function newPage() { return { id: uid(), title: '', date: dayKey(), text: '', images: [] }; }
 export function newNotebook() { return { id: uid(), name: '', icon: 'book', color: 'violet', cover: null, pages: [newPage()] }; }
 export function seed() {
-  return { version: 1, plans: [], notebooks: [], books: [], reminders: [], blockKinds: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
+  return { version: 1, plans: [], notebooks: [], books: [], anki: emptyAnki(), reminders: [], blockKinds: [], records: {}, active: null, settings: preferences(), onboardingCompleted: false, createdAt: dayKey() };
 }
 export function firstPlan() {
   const plan = newPlan();
@@ -58,8 +59,25 @@ export function setManualDone(state, date, planId, blockId, done, now = Date.now
   const elapsedMs = previous.elapsedMs + credit - (done ? 0 : previous.manualMs || 0);
   const next = setDone(settled, date, planId, blockId, done);
   next.records[recordKey(date, planId, blockId)] = { ...getRecord(next, date, planId, blockId), elapsedMs, manualMs };
-  if (matches && ((done && settled.settings.creditManualTime) || (!done && previous.manualMs))) next.active = { ...next.active, remainingMs: done ? 0 : Math.max(0, next.active.totalMs - elapsedMs), running: false };
+  if (matches && next.active?.blockId === blockId && (done || (!done && previous.manualMs))) next.active = { ...next.active, remainingMs: done ? 0 : Math.max(0, next.active.totalMs - elapsedMs), running: false };
+  if (done && !previous.done && (matches || !state.active || getRecord(state, state.active.date, state.active.planId, state.active.blockId).done)) return prepareNextBlock(next, date, planId, blockId, now);
   return next;
+}
+// Select the next unfinished block in the day's plan order; preparation never starts time.
+export function prepareNextBlock(state, date, planId, blockId, now = Date.now()) {
+  const start = state.plans.findIndex(p => p.id === planId), weekday = new Date(`${date}T12:00:00`).getDay();
+  if (start < 0) return state;
+  for (let i = start; i < state.plans.length; i++) {
+    const plan = state.plans[i];
+    if (plan.completedAt || (i !== start && !plan.days.includes(weekday))) continue;
+    const from = i === start ? plan.blocks.findIndex(b => b.id === blockId) + 1 : 0;
+    for (const block of plan.blocks.slice(from)) {
+      const rec = getRecord(state, date, plan.id, block.id); if (rec.done) continue;
+      const totalMs = block.minutes * 60000;
+      return { ...state, active: { planId: plan.id, blockId: block.id, date, type: block.type, ...(block.kind ? { kind: { ...block.kind } } : {}), planName: plan.name, blockName: block.name, totalMs, remainingMs: Math.max(0, totalMs - (rec.elapsedMs || 0)) || totalMs, startedAt: now, running: false } };
+    }
+  }
+  return state;
 }
 // Accrue wall-clock time rather than counting interval ticks. Split sessions at local midnight.
 export function tick(state, now = Date.now()) {
@@ -84,7 +102,8 @@ export function tick(state, now = Date.now()) {
     const key = recordKey(active.date, active.planId, active.blockId);
     records[key] = { ...(records[key] || { elapsedMs: 0 }), done: true, type: active.type, ...(active.kind ? { kind: { ...active.kind } } : {}), planName: active.planName, blockName: active.blockName };
   }
-  return { state: { ...state, records, active: { ...active, remainingMs, startedAt: Math.max(now, active.startedAt), running: !finished } }, finished };
+  const settled = { ...state, records, active: { ...active, remainingMs, startedAt: Math.max(now, active.startedAt), running: !finished } };
+  return { state: finished ? prepareNextBlock(settled, active.date, active.planId, active.blockId, now) : settled, finished, ...(finished ? { completed: settled.active } : {}) };
 }
 export function play(state, plan, block, date = dayKey(), now = Date.now()) {
   if (state.plans.find(value => value.id === plan.id)?.completedAt) return state;
@@ -101,7 +120,7 @@ export function extendLesson(state, minutes, now = Date.now()) {
   const plan = state.plans.find(value => value.id === active?.planId);
   const block = plan?.blocks.find(value => value.id === active?.blockId);
   if (![2, 3, 5].includes(minutes) || active?.type !== 'lesson' || block?.type !== 'lesson' || plan.completedAt) return state;
-  const next = tick(state, now).state;
+  const result = tick(state, now), next = result.completed ? { ...result.state, active: result.completed } : result.state;
   const extraMs = minutes * 60000;
   const reopened = setDone(next, active.date, active.planId, active.blockId, false);
   return { ...reopened, active: { ...next.active, totalMs: next.active.totalMs + extraMs, remainingMs: next.active.remainingMs + extraMs } };
@@ -111,7 +130,8 @@ export function setPlanCompleted(state, planId, completed, now = Date.now()) {
   if (!plan || !!plan.completedAt === completed) return state;
   let next = state;
   if (completed && state.active?.planId === planId) next = { ...pause(state, now), active: null };
-  return { ...next, plans: next.plans.map(value => value.id === planId ? { ...value, completedAt: completed ? dayKey(new Date(now)) : null } : value) };
+  const updated = { ...next, plans: next.plans.map(value => value.id === planId ? { ...value, completedAt: completed ? dayKey(new Date(now)) : null } : value) };
+  return completed && state.active?.planId === planId ? prepareNextBlock(updated, state.active.date, planId, plan.blocks.at(-1)?.id, now) : updated;
 }
 export function completedPlanSummary(plans, from, to) {
   const all = plans.filter(plan => !!plan.completedAt);
@@ -128,7 +148,7 @@ export function editBlock(state, planId, blockId, fields, now = Date.now()) {
   if (next.active?.planId === planId && next.active.blockId === blockId) {
     const elapsed = next.active.totalMs - next.active.remainingMs;
     next.active = { ...next.active, blockName: name, totalMs: minutes * 60000, remainingMs: Math.max(0, minutes * 60000 - elapsed), running: false };
-    if (next.active.remainingMs === 0) next = setDone(next, next.active.date, planId, blockId, true);
+    if (next.active.remainingMs === 0) next = prepareNextBlock(setDone(next, next.active.date, planId, blockId, true), next.active.date, planId, blockId, now);
   }
   return next;
 }
@@ -138,6 +158,7 @@ export function focusMs(state, from, to) { return Object.entries(state.records).
 export function validateData(data) {
   if (data?.version !== 1 || !Array.isArray(data.plans) || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw new Error('O arquivo não é um backup válido do Organon.');
   const ids = new Set();
+  if (data.anki !== undefined && !validAnki(data.anki)) throw new Error('Coleção Anki inválida no backup.');
   if (data.books !== undefined && !validBooks(data.books)) throw new Error('Livros inválidos no backup.');
   if (data.blockKinds !== undefined && !validKinds(data.blockKinds)) throw new Error('Tipos de atividade inválidos no backup.');
   for (const p of data.plans) {
@@ -168,5 +189,5 @@ export function validateData(data) {
     if (!block || !calendarDate(session.date) || session.type !== block.type || !Number.isFinite(session.totalMs) || session.totalMs <= 0 || !Number.isFinite(session.remainingMs) || session.remainingMs < 0 || session.remainingMs > session.totalMs || !Number.isFinite(session.startedAt) || typeof session.running !== 'boolean') throw new Error('Cronômetro inválido no backup.');
     if (!plan.completedAt) active = { ...session, running: false };
   }
-  return { ...data, notebooks: data.notebooks || [], books: data.books || [], reminders: data.reminders || [], blockKinds: data.blockKinds || [], active, settings: preferences(data.settings) };
+  return { ...data, anki: normalizePresets(data.anki || emptyAnki()), notebooks: data.notebooks || [], books: data.books || [], reminders: data.reminders || [], blockKinds: data.blockKinds || [], active, settings: preferences(data.settings) };
 }

@@ -1,6 +1,6 @@
 {
   "name": "compasso-estudos",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "description": "Seu ritmo de estudo, um bloco de cada vez.",
   "author": "Organon",
@@ -32,6 +32,10 @@
     "test:installer": "node tests/installer-mode.cjs",
     "dist": "npm run build && electron-builder --win nsis --x64",
     "dist:portable": "npm run build && electron-builder --win portable --x64",
+    "postdist": "npm run releases:prune",
+    "postdist:portable": "npm run releases:prune",
+    "releases:prune": "node scripts/prune-releases.cjs",
+    "docs:screenshots": "node scripts/docs-screenshots.cjs",
     "icon": "node scripts/create-icon.cjs",
     "release": "node scripts/publish-release.cjs",
     "checksums": "node scripts/checksums.cjs",
@@ -60,6 +64,7 @@
     "playwright": "^1.64.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "ts-fsrs": "5.2.3",
     "vite": "^8.3.5"
   },
   "build": {

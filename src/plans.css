@@ -1,5 +1,22 @@
 .view-switch { display:flex;gap:3px;border:1px solid #e6e1eb;padding:3px;border-radius:6px;background:#fff; }
 .plan-status-filters { margin:0 0 15px;display:flex;align-items:center; }
+.study-card .plan-books-link { display:inline-flex; align-items:center; gap:7px; margin:6px var(--card-x,15px) 8px; padding:5px 0; font-size:11px; color:var(--muted); }
+.plan-study-links { display:flex; flex-direction:column; align-items:flex-start; gap:2px; margin:6px var(--card-x,15px) 8px; }
+.study-card .plan-study-links .plan-books-link { margin:0; }
+.plan-study-links > button { display:inline-flex; align-items:center; gap:7px; padding:5px 0; font-size:11px; font-weight:400; color:var(--muted); }
+.plan-study-links > button svg { width:14px; height:14px; flex-shrink:0; }
+.overview-card .overview-actions { gap:12px; flex-wrap:wrap; }
+.overview-card .overview-actions > button { display:inline-flex; align-items:center; gap:6px; padding:5px 0; margin:0; font-size:11px; font-weight:400; color:var(--muted); }
+.overview-card .overview-actions > button svg { width:15px; height:15px; flex-shrink:0; }
+[data-theme=dark] .overview-card .overview-actions > button { color:var(--muted); }
+[data-palette] .overview-card .overview-actions > button { color:var(--custom-muted); }
+.anki-progress-section { margin-top:20px; }.anki-progress-section .metrics-help { margin-top:8px; }
+.study-card.daily-done .card-footer { background:linear-gradient(90deg,#87b99a19,transparent); color:#789d83; }
+.study-card.daily-progress .card-footer { background:linear-gradient(90deg,#91b4cf16,transparent); color:#809fb5; }
+.study-card.daily-done .mini-progress i { background:#91b59e; }
+.study-card.daily-progress .mini-progress i { background:#97b7ce; }
+[data-theme=dark] .study-card.daily-done .card-footer { color:#a6c6b0; }
+[data-theme=dark] .study-card.daily-progress .card-footer { color:#a5bdcf; }
 .plan-status-filters button span { margin-left:5px;font-size:9px;opacity:.6; }
 .plan-finished-label { display:inline-flex;gap:4px;align-items:center;font-size:9px;color:#78977c;font-weight:500; }
 .overview-card h2 .plan-finished-label { margin-left:8px; }
@@ -36,17 +53,17 @@
 [data-theme="dark"] .view-switch { background:#ffffff03;border-color:#ffffff12; }
 [data-theme="dark"] .view-switch [aria-pressed="true"] { background:#ffffff0c;color:#eee; }
 .plans-grid.plans-list { grid-template-columns:minmax(0,1fr);gap:9px; }
-.plans-list .overview-card { display:grid;grid-template-columns:36px minmax(100px,1fr) auto 26px auto;grid-template-areas:"icon title days edit actions" "icon meta days edit actions";align-items:center;column-gap:13px;row-gap:6px;padding:13px 16px; }
+.plans-list .overview-card { display:grid;grid-template-columns:36px minmax(0,1fr) auto minmax(0,1fr) 36px;grid-template-areas:"icon title days actions actions" "icon meta days actions actions";align-items:center;column-gap:13px;row-gap:6px;padding:13px 16px; }
 .plans-list .overview-top { display:contents; }
 .plans-list .overview-top .plan-icon { grid-area:icon;width:34px;height:34px; }
-.plans-list .overview-top>.icon-button { grid-area:edit;width:26px; }
 .plans-list .overview-card h2 { grid-area:title;font-size:13px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .plans-list .overview-card>p { display:none; }
-.plans-list .weekdays { grid-area:days;margin:0;gap:4px; }
+.plans-list .weekdays { grid-area:days;justify-self:center;margin:0;gap:4px; }
 .plans-list .weekdays span { width:20px;height:23px;font-size:9px; }
 .plans-list .overview-meta { grid-area:meta;font-size:10px;margin:0; }
-.plans-list .overview-actions { grid-area:actions;border:0;padding:0;gap:5px; }
-.plans-list .overview-actions>button:first-child { margin-right:8px;font-size:11px; }
+.plans-list .overview-actions { grid-area:actions;justify-self:end;justify-content:flex-end;border:0;padding:0;gap:10px; }
+.plans-list .overview-actions>button { margin:0;font-size:11px; }
+.overview-card .overview-actions > .icon-button { padding:0;flex-shrink:0; }
 .plans-list .add-plan-card { min-height:55px;flex-direction:row;gap:10px; }
 .plans-list .add-plan-card>span { height:27px;width:27px;margin:0; }
 .plans-list .add-plan-card>span svg { width:17px;height:17px; }
@@ -60,5 +77,5 @@
 [data-theme="dark"] .tutorial-body strong { color:#ddd; }
 [data-theme="dark"] .tutorial-body p { color:#999; }
 [data-theme="dark"] .tutorial-body li>svg { color:#aaa; }
-@media(max-width:1000px) { .plans-list .weekdays { display:none; }.plans-list .overview-card { grid-template-columns:34px minmax(90px,1fr) 26px auto;grid-template-areas:"icon title edit actions" "icon meta edit actions"; } }
-@media(max-width:640px) { .plans-list .overview-card { gap:7px;padding:12px; }.plans-list .overview-actions>button:first-child { font-size:0;margin:0; }.plans-list .overview-meta { font-size:8px;gap:7px; }.plans-list .overview-card h2 { font-size:11px; }.plans-list .overview-actions { gap:0; }.plans-list .overview-actions .icon-button { width:22px; } }
+@media(max-width:1000px) { .plans-list .overview-card { grid-template-columns:34px minmax(0,1fr) auto minmax(0,1fr) 34px;column-gap:8px; }.plans-list .weekdays { gap:2px; }.plans-list .weekdays span { width:18px; } }
+@media(max-width:640px) { .plans-list .overview-card { grid-template-columns:34px minmax(0,1fr) auto;grid-template-areas:"icon title actions" "meta meta meta" "days days days";gap:7px;padding:12px; }.plans-list .overview-actions>button { font-size:0;margin:0; }.plans-list .overview-meta { font-size:8px;gap:7px; }.plans-list .overview-card h2 { font-size:11px; }.plans-list .overview-actions { gap:0; }.plans-list .overview-actions .icon-button { width:22px; } }

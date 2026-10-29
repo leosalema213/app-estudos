@@ -30,6 +30,7 @@ Prefira alterações incrementais e localizadas. Preserve a estrutura dos arquiv
 - Todo instalador de teste entregue ao usuário deve ter versão distinta da final: por exemplo, `0.5.1-preview.1`, `0.5.1-preview.2` e depois `0.5.1`. Nunca entregue um preview identificado apenas com o número estável, nem reutilize o identificador de um preview já entregue.
 - Use `npm run version:preview` para iniciar/avançar previews e `npm run version:final` para promover o preview à versão estável de destino. Os comandos atualizam as duas versões do pacote e o cabeçalho do changelog; não fazem commit nem publicação. Não use `npm version patch` para contornar a virada após 9.
 - Previews não entram no canal de atualização de produção. O atualizador deve oferecer a final para um preview com a mesma base, e o publicador deve recusar versões com sufixo preview. Não disponibilize o instalador final para teste antes da publicação; entregue um preview identificado ou aguarde a Release.
+- Após gerar um instalador com sucesso, mantenha no máximo duas compilações na pasta local `release/`: a atual e a anterior. Execute `npm run releases:prune` também quando usar o electron-builder diretamente (os comandos `dist` já fazem isso). Confira os caminhos resolvidos dentro de `release/` antes de qualquer exclusão; não siga links nem apague dados pessoais. A regra vale apenas para artefatos locais: preserve tags, histórico e Releases/instaladores publicados no GitHub.
 
 ## Dados existentes
 
@@ -41,3 +42,10 @@ Preserve planos, anotações, imagens, histórico e preferências do usuário ao
 - Ao adicionar ou alterar dados persistidos, prepare a migração/defaults para perfis e backups antigos e confira exportação/importação e o payload de sincronização. Registre o contrato em `docs/DADOS-E-MIGRACOES.md`.
 - Se a alteração exigir DDL no Supabase, prepare o SQL correspondente no repositório e registre a aplicação remota como pendente. Não apresente testes com serviço simulado como validação do servidor real.
 - Campos opcionais dentro do snapshot JSONB podem dispensar mudança de tabela; documente essa decisão em vez de criar uma migration vazia. Preserve os identificadores legados de dados e instalação.
+
+## Padrão visual
+
+- Modais usam o componente compartilhado `src/Modal.jsx`, com espaçamento compacto e corpo/ações consistentes. Não acrescente padding duplicado nos formulários. Painéis completos podem usar a variante `panel`.
+- O modo dark usa superfícies de cinza neutro, sem cinza azulado. Preserve a identidade visual, a escala tipográfica e os padrões existentes de busca/controles ao adicionar seções. Paletas personalizadas explícitas continuam respeitadas.
+- Toda tela nova deve seguir primeiro o layout e os componentes existentes da aplicação. A identidade da marca usa acentos pastel: verde para acerto/conclusão, vermelho suave para erro e azul discreto para progresso, sem fundos saturados ou bordas pesadas.
+- Menus de ações em pop-up usam `src/PopupMenu.jsx`, ancorados ao botão, sem fundo de modal, com teclado/Esc e clique fora. Controles novos usam português: carta, baralho, configuração e marcadores; preserve os identificadores e o conteúdo original dos dados importados.

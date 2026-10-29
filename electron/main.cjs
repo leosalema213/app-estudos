@@ -9,6 +9,8 @@ const { CloudSync } = require('./cloud.cjs');
 const { BookFiles } = require('./books.cjs');
 const { ReminderNotifications, openRemindersWindow } = require('./reminder-notifications.cjs');
 const { APP_ID, DEVELOPMENT_APP_ID, legacyUserData, repairDevelopmentShortcut } = require('./branding.cjs');
+// Native dialogs fall back to app.getName(), which otherwise uses the legacy package name.
+app.setName('Organon');
 if (!process.argv.some(value => value.startsWith('--user-data-dir'))) {
   const profile = legacyUserData(app.getPath('appData'));
   fs.mkdirSync(profile, { recursive: true });
@@ -145,6 +147,22 @@ else {
     win.webContents.on('will-navigate', (event) => event.preventDefault());
     ipcMain.handle('data:load', (e) => { if (trusted(e)) return readData(); });
     ipcMain.handle('data:save', (e, data) => { if (trusted(e)) writeData(data); });
+    ipcMain.handle('anki:import', async e => {
+      if (!trusted(e)) return;
+      const result = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: 'Pacote Anki', extensions: ['apkg', 'colpkg'] }] });
+      if (result.canceled) return null;
+      let mediaDirectory;
+      const choice = await dialog.showMessageBox(win, { title: 'Organon', type: 'question', message: 'Onde estão os áudios e imagens?', detail: 'Se você escolheu um backup automático do Anki, selecione a pasta collection.media. Se exportou um pacote com a opção Incluir mídia, use a mídia do pacote. Sem esses arquivos, os cards serão importados com um aviso de mídia ausente.', buttons: ['Usar mídia do pacote', 'Selecionar collection.media', 'Cancelar'], cancelId: 2, defaultId: 0 });
+      if (choice.response === 2) return null;
+      if (choice.response === 1) { const folder = await dialog.showOpenDialog(win, { properties: ['openDirectory'], title: 'Selecione collection.media' }); if (folder.canceled) return null; mediaDirectory = folder.filePaths[0]; }
+      return require('./anki-package.cjs').importPackage(result.filePaths[0], books.ankiMedia, mediaDirectory);
+    });
+    ipcMain.handle('anki:media-add', (e, bytes, name) => {
+      if (!trusted(e)) return;
+      const meta = books.ankiMedia.put(Buffer.from(bytes), String(name));
+      return { name: meta.hash + path.extname(String(name)).toLowerCase(), meta };
+    });
+    ipcMain.handle('anki:media-read', (e, meta) => { if (trusted(e)) return books.ankiMedia.read(meta); });
     ipcMain.handle('books:import', async e => {
       if (!trusted(e)) return;
       const { canceled, filePaths } = await dialog.showOpenDialog(win, { properties: ['openFile', 'multiSelections'], filters: [{ name: 'Livros', extensions: ['pdf', 'epub', 'mobi', 'azw', 'azw3'] }] });

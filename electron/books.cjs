@@ -10,7 +10,7 @@ const isWebp = bytes => bytes.length >= 16 && bytes.length <= THUMBNAIL_LIMIT &&
 
 // Immutable, content-addressed files. Neither original paths nor binaries enter compasso.json.
 class BookFiles {
-  constructor(profile) { this.directory = path.join(profile, 'books'); }
+  constructor(profile) { this.directory = path.join(profile, 'books'); this.ankiMedia = new (require('./anki-media.cjs').AnkiMedia)(profile); }
   file(hash, format = 'pdf') {
     if (!validHash(hash) || !formats.includes(format)) throw new Error('Identificador de livro inválido.');
     return path.join(this.directory, hash + '.' + (['azw', 'azw3'].includes(format) ? 'mobi' : format));
@@ -73,12 +73,13 @@ class BookFiles {
       if (typeof encoded !== 'string' || encoded.length > Math.ceil(LIMIT / 3) * 4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) throw new Error('O backup não contém todos os arquivos dos livros.');
       const bytes = Buffer.from(encoded, 'base64'); this.check(bytes, book.hash, book.size, book.format); files.set(book.hash, bytes);
     }
-    const { bookFiles, ...metadata } = data;
-    return { metadata, files };
+    const ankiFiles = this.ankiMedia.verifyBackup(data);
+    const { bookFiles, ankiFiles: portableAnkiFiles, ...metadata } = data;
+    return { metadata, files, ankiFiles };
   }
-  restore(verified) { for (const book of verified.metadata.books || []) this.put(verified.files.get(book.hash), book.hash, book.format); return verified.metadata; }
+  restore(verified) { for (const { bytes, meta } of verified.ankiFiles?.values() || []) this.ankiMedia.install(bytes, meta); for (const book of verified.metadata.books || []) this.put(verified.files.get(book.hash), book.hash, book.format); return verified.metadata; }
   export(file, data) {
-    const { bookFiles, ...metadata } = data;
+    const { bookFiles, ankiFiles, ...metadata } = data;
     const temporary = file + '.' + randomUUID() + '.tmp';
     let descriptor;
     try {
@@ -95,6 +96,17 @@ class BookFiles {
           // Chunk multiples of three keep base64 padding only at the end.
           for (let offset = 0; offset < bytes.length; offset += 3 * 1024 * 1024) fs.writeSync(descriptor, bytes.subarray(offset, offset + 3 * 1024 * 1024).toString('base64'));
           fs.writeSync(descriptor, '"'); seen.add(book.hash);
+        }
+        fs.writeSync(descriptor, '}');
+      }
+      if (Object.keys(metadata.anki?.media || {}).length) {
+        fs.writeSync(descriptor, ',"ankiFiles":{'); const seen = new Set();
+        for (const meta of Object.values(metadata.anki.media)) {
+          if (seen.has(meta.hash)) continue;
+          const bytes = this.ankiMedia.read(meta);
+          fs.writeSync(descriptor, (seen.size ? ',' : '') + JSON.stringify(meta.hash) + ':"');
+          for (let offset = 0; offset < bytes.length; offset += 3 * 1024 * 1024) fs.writeSync(descriptor, bytes.subarray(offset, offset + 3 * 1024 * 1024).toString('base64'));
+          fs.writeSync(descriptor, '"'); seen.add(meta.hash);
         }
         fs.writeSync(descriptor, '}');
       }

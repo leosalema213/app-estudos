@@ -1,5 +1,45 @@
 # Histórico de versões
 
+## 0.5.2
+
+- Área Anki com importação de coleções, cartas com mídia, revisão em flip card, edição de notas, estatísticas e respostas Errei/Acertei.
+- Vínculos opcionais entre baralhos e planos; revisões e tempo aparecem em Meu progresso sem duplicar o cronômetro.
+- Próxima atividade preparada automaticamente e sempre pausada ao concluir um bloco. Planos recebem atalhos uniformes e menu de ações compartilhado.
+- README com índice, instalação e imagens novas com exemplos fictícios; limpeza local mantém somente a compilação atual e a anterior, preservando Releases publicadas.
+- O agendamento importado é mantido na entrada; o agendador local tem diferenças em relação ao Anki e não garante intervalos futuros idênticos.
+
+<details>
+<summary>Refinamentos feitos durante as prévias</summary>
+
+- Preview 8: planos em lista centralizam os dias entre informações e atalhos; menu de opções fica por último, depois de Anki, também na visualização em cards.
+
+- Preview 7: criação e edição de baralhos incluem vínculos opcionais com planos, retirados das opções de agendamento. Planos usam o pop-up compartilhado para editar, duplicar, concluir/reabrir, excluir e vincular baralhos Anki; atalhos Livros, Anotações e Anki têm tipografia, ícones e contadores uniformes.
+
+- Preview 6: botão Adicionar abre pop-up reutilizável, com Criar baralho/Criar carta e suporte a teclado, Esc e clique fora. Criação direta de carta continua dentro do baralho; controles Anki recebem termos em português sem alterar as chaves dos dados importados.
+- Preview 6: baralhos podem ser vinculados opcionalmente a um ou mais planos, pelas opções ou pelo filtro Anki do plano. Meu dia oferece o atalho abaixo de Livros, abrindo os baralhos vinculados.
+- Preview 6: Meu progresso inclui revisões Anki, tempo registrado, dias ativos e acertos no período selecionado, separados do cronômetro dos planos para evitar dupla contagem.
+
+- Preview 5: exclusão de baralhos/sub-baralhos com confirmação, preservando notas compartilhadas, histórico e mídia; lista com ação de lixeira.
+- Preview 5: cabeçalhos Anki/Livros sem subtítulo, breadcrumb de baralho com tipografia uniforme e Opções à direita. Edição fica no cabeçalho do card, desfazer tem ícone/texto alinhados e a frente mostra Novos + Aprendendo + Revisão à esquerda de Mostrar resposta.
+
+- Preview 4: opções Anki em abas, rodapé de ações espaçado, criação de presets a partir das opções atuais e migração do Default local redundante sem perder vínculos/configurações diferentes.
+- Preview 4: cards mais altos, pilha mais visível, tipografia maior, play alinhado e respostas pastel; conteúdo escuro respeita fundo neutro/texto claro, inclusive após alternar tema. Remove o editor de CSS/templates da interface e preserva os templates importados.
+- Preview 4: ao concluir um bloco, o player prepara o próximo pendente, inclusive do plano seguinte do dia, sempre pausado e sem creditar tempo antecipadamente. Espaçamento do atalho Livros corrigido e progresso/conclusão recebem acentos sutis azul/verde.
+
+- Preview 3: modais compartilham corpo, cabeçalho e ações compactos, corrigindo o espaçamento de importação e edição de notas e reduzindo padding duplicado nas demais janelas.
+- Preview 3: revisão em flip card com pilha discreta e transição entre cartas, respeitando redução de movimento; botão Mostrar resposta dentro do card e apenas Errei/Acertei (Acertei usa Bom/3).
+- Preview 3: áudio automático somente ao entrar no card, sem repetir ao revelar o verso; play junto ao texto e tecla R, sem barra nativa nem texto de repetição. Remove o atalho visível de enterrar e aplica superfícies neutras e tipografia do Organon ao Anki.
+
+- Preview 2: corrige a importação de bancos Anki com `unicase` e tabelas `WITHOUT ROWID` no SQLite do executável; a adaptação ocorre exclusivamente em cópia temporária, preservando o backup original. Acrescenta regressão pelo IPC Electron, com e sem mídia.
+- Preview 2: modal de baralho segue o formulário do Organon, com nome, Cancelar e Criar baralho, sem dica de hierarquia. Criação fica no topo da lista; Adicionar card aparece dentro do baralho. Diálogos nativos usam o nome Organon e explicam as opções de mídia.
+
+- Nova seção Anki local com baralhos, contadores New/Learn/Due, notas, templates, cloze, pesquisa e revisão por quatro respostas, áudio automático/repetição com R e mídia por arrastar/selecionar.
+- Importação real de pacotes Anki modernos e legados com estado de estudo, histórico e mídia; backups automáticos permitem selecionar collection.media. Dados existentes do Organon e perfis do Anki são preservados.
+- Presets e opções efetivas de estudo; agendamento tradicional local e FSRS via ts-fsrs. Diferenças conhecidas e recursos ainda não suportados estão em docs/ANKI.md; não há promessa de equivalência integral com Anki.
+- Backup portátil inclui mídia Anki por hash e rejeita arquivos ausentes/corrompidos. Cards importados têm scripts e conteúdo ativo bloqueados; testes focados preparados para execução pelo usuário.
+
+</details>
+
 ## 0.5.1
 
 - A biblioteca usa a primeira página dos PDFs como miniatura, com cache local leve e regeneração após restaurar backup, sem mudar o ponto de leitura.

@@ -50,6 +50,7 @@ test('backup validates timer bounds and pauses a running extended session', () =
 
 test('completed lessons reopen paused without losing their recorded time', () => {
   const { state, plan, block } = fixture();
+  plan.blocks = [block]; // Terminal lesson: no subsequent block is available to prepare.
   let next = tick(play(state, plan, block, date, now), now + 25 * 60000).state;
   next = extendLesson(next, 2, now + 30 * 60000);
   assert.equal(next.active.running, false);

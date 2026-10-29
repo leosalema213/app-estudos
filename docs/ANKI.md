@@ -1,6 +1,8 @@
-# Estudo Anki no Organon — preview 0.5.2
+# Estudo Anki no Organon — 0.5.3
 
 Implementação local independente. Não é um cliente AnkiWeb e ainda não tem equivalência completa com o Anki. Antes de substituir seu fluxo de estudo, valide o preview e mantenha o pacote original do Anki.
+
+A partir da 0.5.3, os campos Frente/Verso usam o editor visual compartilhado com os cadernos: negrito, itálico, sublinhado, títulos, tamanho de fonte, listas, desfazer/refazer e cores (pastel ou personalizadas). As cores explícitas do editor são preservadas nos temas claro e escuro. Áudio/imagens continuam como referências na coleção; HTML avançado importado permanece no editor do original, preservado sem conversão automática. Básico, Básico e invertido e Omissão continuam disponíveis; nenhum tipo nem agendamento foi removido. O acesso ao HTML fica no ícone de código dentro da barra do campo, com indicação do modo ativo. A validação funcional em `tests/rich-format.cjs` foi aprovada pelo usuário.
 
 ## Funcionalidades
 

@@ -11,6 +11,7 @@
 [data-theme=dark] .overview-card .overview-actions > button { color:var(--muted); }
 [data-palette] .overview-card .overview-actions > button { color:var(--custom-muted); }
 .anki-progress-section { margin-top:20px; }.anki-progress-section .metrics-help { margin-top:8px; }
+.daily-plan-label { color:var(--muted); font-size:10px; }.daily-plan-empty { padding:14px 0; color:var(--muted); font-size:12px; }
 .study-card.daily-done .card-footer { background:linear-gradient(90deg,#87b99a19,transparent); color:#789d83; }
 .study-card.daily-progress .card-footer { background:linear-gradient(90deg,#91b4cf16,transparent); color:#809fb5; }
 .study-card.daily-done .mini-progress i { background:#91b59e; }

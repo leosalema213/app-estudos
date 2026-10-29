@@ -61,7 +61,7 @@ let app;
   assert.equal(await page.locator('.metrics-stats').evaluate(el => el.scrollWidth > el.clientWidth), false);
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1260, 850));
   await page.getByRole('button', { name: 'Ver finalizados', exact: true }).click();
-  await page.getByRole('button', { name: 'Reabrir plano Infraestrutura', exact: true }).click();
+  await page.getByRole('button', { name: 'Opções de Infraestrutura', exact: true }).click(); await page.getByRole('menuitem', { name: 'Reabrir plano', exact: true }).click();
   await page.getByRole('button', { name: /^Meu dia/ }).click(); assert.equal(await page.locator('.study-card').count(), 1);
   assert.equal(await page.getByRole('heading', { name: 'Infraestrutura', exact: true }).count(), 1);
   await page.getByRole('button', { name: 'Planos de estudo', exact: true }).click();

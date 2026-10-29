@@ -2,7 +2,7 @@
 
 Seu espaço de estudo no Windows: planos, cronômetro, livros, anotações e revisões com cartas. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
 
-A versão **0.5.2** adiciona a área Anki, vínculos entre baralhos e planos e indicadores de revisão em Meu progresso. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração](docs/SUPABASE.md).
+A versão **0.5.3** inclui roteiros de estudo por dia e editor de texto compartilhado com formatação e cores em cartas, cadernos, anotações e Notas. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração](docs/SUPABASE.md).
 
 **[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Organon-Instalar.exe)**
 
@@ -58,6 +58,8 @@ npm run dist
 ## Meu dia
 
 Acompanhe o roteiro da data, marque o que concluiu e use o cronômetro para aulas e pausas. Ao terminar um bloco, o player prepara o próximo da sequência, sempre pausado, para você começar quando quiser. Livros, anotações e Anki do plano ficam a um clique.
+
+Em Meu dia, **Opções → Editar roteiro do dia** permite adaptar aulas e pausas só para a data selecionada. O lápis de cada aula também altera somente esse dia. **Editar modelo do plano** muda a sequência recorrente a partir de hoje, preservando as versões anteriores e os roteiros diários que você personalizou.
 
 ![Meu dia com roteiro de estudos, lembretes e atalhos do plano](docs/interface.png)
 
@@ -245,6 +247,8 @@ Antes de qualquer commit, push, tag ou Release, confirme com o usuário que o lo
 Depois de uma geração bem-sucedida, `dist` e `dist:portable` executam a limpeza local: ficam somente a compilação atual e a anterior em `release/`. Para chamadas diretas ao electron-builder, execute `npm run releases:prune` após o sucesso. `node scripts/prune-releases.cjs --dry-run` mostra os caminhos antes de remover. Essa limpeza não altera tags ou Releases publicadas no GitHub.
 
 As imagens do README podem ser renovadas com `npm run docs:screenshots` depois do build. O script abre um perfil temporário com conteúdo fictício coerente, captura as telas e remove o perfil ao terminar; não acessa os dados pessoais.
+
+O build grava `dist/build-manifest.json`. Antes de gerar o instalador, o hook `scripts/verify-package.cjs` confere todos os arquivos empacotados contra seus tamanhos e SHA-256 e verifica se correspondem ao build de origem. Se outro comando recompilar a pasta durante o empacotamento, a verificação deve falhar e o pacote precisa ser refeito. Para investigar a inicialização do instalador gerado, `node tests/packaged-startup.cjs` abre seu executável real em perfil temporário e aguarda a tela Meu dia, sem usar dados pessoais.
 
 O script usa a autenticação existente do Git, ou `GH_TOKEN`/`GITHUB_TOKEN` no ambiente. Credenciais não são gravadas em arquivos. Ele cria uma Release em rascunho, envia `Organon-Instalar.exe`, uma cópia idêntica `Compasso-Instalar.exe` para clientes anteriores e os respectivos checksums e só então publica como a versão mais recente. O README continua apontando para o mesmo endereço de download. Executáveis, dependências, dados de teste, atalhos e arquivos `.env` ficam fora do Git.
 

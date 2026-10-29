@@ -1,3 +1,5 @@
+import { textColor } from './text-format.js';
+
 export function renderTemplate(model, note, card, back = false, typed = '') {
   const fields = Object.fromEntries(model.fields.map((name, i) => [name, note.fields[i] || '']));
   const cloze = (value, answer) => value.replace(/\{\{c(\d+)::([\s\S]*?)(?:::(.*?))?\}\}/gi, (_, number, content, hint) => Number(number) === card.ord + 1 ? answer ? `<strong class="cloze">${content}</strong>` : `<strong class="cloze">[${hint || '…'}]</strong>` : content);
@@ -21,7 +23,7 @@ export function renderTemplate(model, note, card, back = false, typed = '') {
 export const escapeHtml = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 export async function cardDocument(html, css, media, dark, loadMedia) {
-  html = html.replace(/\[sound:([^\]]+)\]/g, (_, name) => `<audio data-anki-name="${escapeHtml(name)}"></audio>`);
+  html = html.replace(/\[sound:([^\]]+)\]/g, (_, name) => { const decoded = new DOMParser().parseFromString(`<textarea>${name.replace(/</g, '&lt;')}</textarea>`, 'text/html').body.textContent; return `<audio data-anki-name="${escapeHtml(decoded)}"></audio>`; });
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const allowed = new Set('DIV SPAN P BR HR STRONG B EM I U S SMALL SUB SUP H1 H2 H3 H4 H5 H6 UL OL LI TABLE THEAD TBODY TR TD TH BLOCKQUOTE PRE CODE IMG AUDIO SOURCE RUBY RT RP'.split(' '));
   const dangerous = new Set('SCRIPT STYLE IFRAME OBJECT EMBED SVG MATH FORM INPUT BUTTON TEXTAREA SELECT BASE META LINK TEMPLATE'.split(' '));
@@ -32,6 +34,8 @@ export async function cardDocument(html, css, media, dark, loadMedia) {
     for (const key of ['class', 'title', 'alt', 'colspan', 'rowspan']) if (original[key]) el.setAttribute(key, original[key].slice(0, 500));
     if (original.style && !/url\s*\(|@|expression|behavior|binding/i.test(original.style)) el.setAttribute('style', original.style);
     if (dark) for (const property of Array.from(el.style)) if (property === 'color' || property.startsWith('background')) el.style.removeProperty(property);
+    const chosenColor = textColor(original['data-organon-color']);
+    if (chosenColor) { el.setAttribute('data-organon-color', chosenColor); el.style.setProperty('color', chosenColor, 'important'); }
     if (['IMG', 'AUDIO', 'SOURCE'].includes(el.tagName)) {
       let name = original['data-anki-name'] || original.src || (el.tagName === 'AUDIO' ? el.querySelector('source')?.getAttribute('src') : '') || ''; try { name = decodeURIComponent(name); } catch { /* literal name */ }
       const meta = Object.hasOwn(media, name) ? media[name] : null;

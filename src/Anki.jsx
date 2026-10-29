@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Plus, Layers, Copy, Upload, Pencil, Settings, Play, ChevronRight, RotateCcw, Pause, Trash2 } from 'lucide-react';
 import { answer, afterDays, basicModel, clozeModel, counts, dayStart, defaultOptions, emptyAnki, mergeAnki, newCard, optionsFor, queue, removeDeck, reversedModel, schedule, validAnki } from './anki.js';
 import CardFace from './AnkiCard.jsx';
+import AnkiField from './AnkiField.jsx';
 import DeckOptions from './DeckOptions.jsx';
 import PopupMenu from './PopupMenu.jsx';
 import AnkiPlanLinks from './AnkiPlanLinks.jsx';
@@ -77,6 +78,9 @@ function NoteEditor({ a, editor, Modal, notify, onClose, onSave }) {
   const [draft, setDraft] = useState(editor), [tags, setTags] = useState(editor.tags.join(' ')), [working, setWorking] = useState(false), [deleting, setDeleting] = useState(false), [model, setModel] = useState(structuredClone(models.find(m => m.id === editor.modelId)));
   const media = useRef({ ...a.media }), refs = useRef([]), [preview, setPreview] = useState(false);
   async function insert(files, index) {
+    if (working || !files.length) return;
+    if (!refs.current[index]?.ready()) { notify('Aguarde o editor abrir para adicionar mídia.'); return; }
+    const field = refs.current[index], bookmark = field?.capture();
     setWorking(true);
     try {
       let text = '';
@@ -85,13 +89,12 @@ function NoteEditor({ a, editor, Modal, notify, onClose, onSave }) {
         const item = await window.desktop.anki.addMedia(new Uint8Array(await file.arrayBuffer()), file.name); media.current[item.name] = item.meta;
         text += item.meta.mime.startsWith('audio/') ? `[sound:${item.name}]` : `<img src="${item.name}">`;
       }
-      const input = refs.current[index], start = input?.selectionStart ?? draft.fields[index].length, end = input?.selectionEnd ?? start;
-      setDraft(s => ({ ...s, fields: s.fields.map((v, i) => i === index ? v.slice(0, start) + text + v.slice(end) : v) }));
-    } catch (e) { notify(e.message); } finally { setWorking(false); }
+      field?.insert(text, bookmark);
+    } catch (e) { field?.cancel(bookmark); notify(e.message); } finally { setWorking(false); }
   }
   function save(e) {
     e.preventDefault(); if (working) return;
-    if (!draft.fields.some(f => f.trim())) { notify('Preencha ao menos um campo.'); return; }
+    if (!draft.fields.some(f => /<img\b|\[sound:/i.test(f) || new DOMParser().parseFromString(f, 'text/html').body.textContent.trim())) { notify('Preencha ao menos um campo.'); return; }
     let ords = model.templates.map((_, i) => i);
     if (model.kind === 1) { ords = [...new Set(draft.fields.flatMap(f => [...f.matchAll(/\{\{c(\d+)::/g)].map(x => Number(x[1]) - 1)))].filter(n => n >= 0 && n < 1000); if (!ords.length) { notify('Use {{c1::texto}} para criar uma omissão.'); return; } }
     const { deckId, isNew, ...note } = draft; note.tags = tags.trim().split(/\s+/).filter(Boolean);
@@ -104,7 +107,7 @@ function NoteEditor({ a, editor, Modal, notify, onClose, onSave }) {
     onSave(next);
   }
   return <Modal title={draft.isNew ? 'Criar carta' : 'Editar nota'} wide onClose={() => { if (!working) onClose(); }}><form className="anki-editor" onSubmit={save}><div className="anki-form-grid"><label>Baralho<select value={draft.deckId} onChange={e => setDraft({ ...draft, deckId: e.target.value })}>{a.decks.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label>Tipo de nota<select disabled={!draft.isNew} value={draft.modelId} onChange={e => { const m = models.find(m => m.id === e.target.value); setModel(structuredClone(m)); setDraft({ ...draft, modelId: m.id, fields: m.fields.map((_, i) => draft.fields[i] || '') }); }}>{models.map(m => <option key={m.id} value={m.id}>{modelLabel(m.name)}</option>)}</select></label></div>
-      {model.fields.map((name, index) => <label key={index}>{fieldLabel(name)}<textarea ref={el => { refs.current[index] = el; }} rows={4} value={draft.fields[index] || ''} onChange={e => setDraft({ ...draft, fields: draft.fields.map((v, i) => i === index ? e.target.value : v) })} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); if (!working) insert([...e.dataTransfer.files], index); }} /><span className="anki-field-help">Texto/HTML · arraste áudio ou imagem aqui <input type="file" multiple accept="audio/*,image/png,image/jpeg,image/webp,image/gif" disabled={working || !window.desktop?.anki} onChange={e => { insert([...e.target.files], index); e.target.value = ''; }} /></span></label>)}
+      {model.fields.map((name, index) => <div className="anki-field" key={`${draft.modelId}-${index}`}><span className="anki-field-label">{fieldLabel(name)}</span><AnkiField ref={el => { refs.current[index] = el; }} identity={`${draft.id}-${draft.modelId}-${index}`} label={fieldLabel(name)} value={draft.fields[index] || ''} disabled={working} onChange={html => setDraft(s => ({ ...s, fields: s.fields.map((v, i) => i === index ? html : v) }))} onFiles={files => insert(files, index)} loadImage={async name => { let key = name; try { key = decodeURIComponent(name); } catch {} const meta = media.current[key]; return meta?.mime.startsWith('image/') ? { bytes: await window.desktop.anki.readMedia(meta), mime: meta.mime } : null; }} /><span className="anki-field-help">Arraste áudio ou imagem aqui <input aria-label={`Adicionar mídia a ${fieldLabel(name)}`} type="file" multiple accept="audio/*,image/png,image/jpeg,image/webp,image/gif" disabled={working || !window.desktop?.anki} onChange={e => { insert([...e.target.files], index); e.target.value = ''; }} /></span></div>)}
       <label>Marcadores<input value={tags} onChange={e => setTags(e.target.value)} placeholder="Separadas por espaço" /></label><div className="anki-actions"><button type="button" onClick={() => setPreview(!preview)}>Prévia</button></div>
       {preview && <CardFace a={{ ...a, notes: [draft], models: [model], media: media.current }} card={{ noteId: draft.id, id: draft.id, ord: 0 }} back preview typed="" autoplay={false} />}
       <div className="anki-actions"><button className="primary" disabled={working} type="submit">{working ? 'Copiando mídia…' : draft.isNew ? 'Criar carta' : 'Salvar nota'}</button>{!draft.isNew && <button type="button" onClick={() => setDeleting(true)}><Trash2 size={16} />Excluir nota e suas cartas</button>}</div>

@@ -1,3 +1,5 @@
+import { textColor } from './text-format.js';
+
 export const isNoteImage = value => typeof value === 'string' && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value);
 
 // Legacy notes keep their text and attachments, in the order previously displayed.
@@ -20,7 +22,7 @@ export function documentImages(note) {
 }
 export function validNoteDocument(doc) {
   if (!doc || doc.type !== 'doc' || !Array.isArray(doc.content) || !doc.content.length) return false;
-  const inline = part => part && !part.content && ((part.type === 'text' && typeof part.text === 'string' && part.text.length > 0) || part.type === 'hardBreak') && (!part.marks || (Array.isArray(part.marks) && part.marks.every(mark => mark && (['bold', 'italic'].includes(mark.type) || (mark.type === 'fontSize' && fontSizes.includes(mark.attrs?.size))))));
+  const inline = part => part && !part.content && ((part.type === 'text' && typeof part.text === 'string' && part.text.length > 0) || part.type === 'hardBreak') && (!part.marks || (Array.isArray(part.marks) && part.marks.every(mark => mark && (['bold', 'italic', 'underline'].includes(mark.type) || (mark.type === 'fontSize' && fontSizes.includes(mark.attrs?.size)) || (mark.type === 'textColor' && /^#[a-f0-9]{6}$/i.test(mark.attrs?.color) && !!textColor(mark.attrs.color))))));
   const block = (node, depth = 0) => {
     if (!node || depth > 256 || node.marks?.length) return false;
     if (node.type === 'image') return isNoteImage(node.attrs?.src) && !node.content;

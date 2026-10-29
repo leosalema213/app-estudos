@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ArrowUpRight, BookOpen, CalendarDays, Check, ImagePlus, NotebookText, PanelLeftClose, PanelLeftOpen, PenLine, Pin, Plus, Search, SlidersHorizontal, Trash2, X } from 'lucide-react';
 import { orderedNotes, uid } from './model.js';
 import { documentImages } from './note-document.js';
+import { planForDate } from './daily-plans.js';
 
 const NoteEditor = lazy(() => import('./NoteEditor.jsx'));
 
@@ -36,7 +37,8 @@ export default function Notebook({ plan, date, initialNote, saveError, onClose, 
   const note = plan.notes.find(n => n.id === selected);
   const target = plan.notes.find(n => n.id === deleting);
   const filtered = orderedNotes(plan.notes).filter(n => (!dateFilter || n.date === dateFilter) && `${n.title || ''} ${n.text}`.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')));
-  const block = plan.blocks.find(b => b.id === note?.blockId);
+  const notePlan = planForDate(plan, note?.date || date);
+  const block = notePlan.blocks.find(b => b.id === note?.blockId);
 
   // Apply changes against the latest plan: reading attachments must not overwrite later typing.
   function editById(id, changes) {

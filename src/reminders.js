@@ -1,15 +1,18 @@
+import { documentImages, documentText, validNoteDocument } from './note-document.js';
+
 export function calendarDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T12:00:00Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 export function newReminder(date) { return { id: crypto.randomUUID(), title: '', description: '', schedule: 'date', date, seenDates: [], notifyOnStartup: false }; }
+export function validReminderDocument(note) { return note.descriptionDocument === undefined || (validNoteDocument(note.descriptionDocument) && !documentImages({ document: note.descriptionDocument }).length && documentText(note.descriptionDocument) === note.description); }
 export function validReminders(notes) {
   if (!Array.isArray(notes)) return false;
   const ids = new Set();
   return notes.every(note => {
     if (!note || typeof note.id !== 'string' || !note.id || ids.has(note.id) || typeof note.title !== 'string' || !note.title.trim() || note.title.length > 120 || typeof note.description !== 'string' || note.description.length > 4000 || (note.notifyOnStartup !== undefined && typeof note.notifyOnStartup !== 'boolean') || !['daily', 'date'].includes(note.schedule) || (note.schedule === 'date' && !calendarDate(note.date)) || !Array.isArray(note.seenDates) || note.seenDates.some(date => !calendarDate(date))) return false;
-    ids.add(note.id); return true;
+    ids.add(note.id); return validReminderDocument(note);
   });
 }
 export const reminderDay = (note, date) => note.schedule === 'daily' ? date : note.date;

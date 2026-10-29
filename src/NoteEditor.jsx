@@ -7,7 +7,7 @@ import HardBreak from '@tiptap/extension-hard-break';
 import { Dropcursor, Gapcursor, TrailingNode, UndoRedo } from '@tiptap/extensions';
 import { Selection, TextSelection } from '@tiptap/pm/state';
 import { documentText, isNoteImage, noteDocument } from './note-document.js';
-import { FormatToolbar, richExtensions } from './RichText.jsx';
+import { FormatToolbar, formatState, richExtensions } from './RichText.jsx';
 import { optimizeImage } from './images.js';
 
 const Image = Node.create({
@@ -33,7 +33,7 @@ const Image = Node.create({
 });
 
 // One editor per note: its history and selection survive React autosave renders.
-export default forwardRef(function NoteEditor({ note, onChange, notify, rich = false }, apiRef) {
+export default forwardRef(function NoteEditor({ note, onChange, notify, rich = true }, apiRef) {
   const host = useRef();
   const instance = useRef();
   const [format, setFormat] = useState({});
@@ -62,7 +62,7 @@ export default forwardRef(function NoteEditor({ note, onChange, notify, rich = f
       },
       onTransaction: ({ transaction, editor }) => {
         for (const token of bookmarks) token.selection = token.selection.map(transaction.mapping);
-        if (rich && !detached) setFormat({ bold: editor.isActive('bold'), italic: editor.isActive('italic'), heading: editor.isActive('heading') ? editor.getAttributes('heading').level : '', size: editor.getAttributes('fontSize').size || '14', bulletList: editor.isActive('bulletList'), orderedList: editor.isActive('orderedList'), undo: editor.can().undo(), redo: editor.can().redo() });
+        if (rich && !detached) setFormat(formatState(editor));
       },
       onUpdate: ({ editor }) => {
         editor.view.dom.dataset.empty = String(editor.isEmpty);

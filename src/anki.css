@@ -66,6 +66,8 @@ html[data-theme=dark] .anki-ratings button:last-child { background:#23362b; colo
 .anki-options-tabs { display:flex; flex-wrap:wrap; margin:12px 0; }.anki-options-panel { max-height:48vh; overflow:auto; scrollbar-width:thin; padding:0 6px 4px 0; }.anki-options-panel > :first-child { margin-top:0!important; }
 .anki-options-form .modal-actions { flex-shrink:0; }
 .anki-plan-filter { margin:0 0 16px; }.anki-plan-filter select { flex:1; max-width:360px; }
+.anki-field { margin:12px 0 18px; }.anki-field-label { display:block; font-size:13px; margin-bottom:5px; }
+.anki-field .anki-source-field > textarea { width:100%; border:0; border-radius:0 0 8px 8px; margin:0; padding:5px 10px 12px; background:transparent; font-family:Consolas,monospace; }
 .anki-deck-form fieldset { min-width:0; border:1px solid var(--line); border-radius:8px; margin:14px 0; padding:10px 12px; }
 .anki-deck-form legend { font-size:11px; color:var(--muted); padding:0 4px; }
 .anki-deck-form label.anki-check { display:flex; align-items:center; gap:8px; margin:7px 0; font-weight:400; }

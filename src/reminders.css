@@ -24,6 +24,8 @@
 .reminder-form { padding:20px 24px 0; }
 .reminder-form>label { display:flex;flex-direction:column;gap:7px;color:#999;font-size:11px;margin-bottom:16px; }
 .reminder-form textarea { resize:vertical;min-height:100px;max-height:240px; }
+.reminder-description { margin-bottom:16px; }.reminder-description > span { display:block; color:var(--muted); font-size:11px; margin-bottom:7px; }
+.reminder-copy .rich-text-view { margin:6px 0; font-size:12px; }
 .reminder-schedule { display:flex;gap:8px;margin-bottom:16px; }
 .reminder-schedule button { display:flex;align-items:center;gap:6px;border:1px solid #88888830;border-radius:6px;padding:8px 10px;font-size:11px;color:#999; }
 .reminder-schedule button.selected { border-color:currentColor;color:inherit;background:#88888810; }

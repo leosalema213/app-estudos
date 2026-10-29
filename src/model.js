@@ -4,6 +4,8 @@ import { calendarDate, validReminders } from './reminders.js';
 import { validKind, validKinds } from './block-kinds.js';
 import { validBooks } from './books.js';
 import { emptyAnki, normalizePresets, validAnki } from './anki.js';
+import { planForDate, preserveTemplate, validDailyPlans } from './daily-plans.js';
+export { planForDate } from './daily-plans.js';
 
 export const uid = () => crypto.randomUUID();
 export const dayKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -34,9 +36,10 @@ export function firstPlan() {
   return { ...plan, name: 'Meu primeiro plano', blocks: plan.blocks.map((block, i) => ({ ...block, name: block.type === 'lesson' ? `Aula ${i === 0 ? 1 : 2}` : 'Descanso' })) };
 }
 export function getRecord(state, date, planId, blockId) { return state.records[recordKey(date, planId, blockId)] || { elapsedMs: 0, done: false }; }
+export const dayPlan = (state, planId, date) => planForDate(state.plans.find(p => p.id === planId), date);
 export function dailySummary(state, date) {
   const weekday = new Date(`${date}T12:00:00`).getDay();
-  const plans = state.plans.filter(plan => !plan.completedAt && plan.days.includes(weekday));
+  const plans = state.plans.map(plan => planForDate(plan, date)).filter(plan => !plan.completedAt && (Object.hasOwn(plan.dayOverrides || {}, date) || plan.days.includes(weekday)));
   const blocks = plans.flatMap(plan => plan.blocks.map(block => ({ plan, block })));
   const completed = blocks.filter(({ plan, block }) => getRecord(state, date, plan.id, block.id).done).length;
   const studyMinutes = blocks.reduce((total, { block }) => total + (block.type === 'lesson' ? block.minutes : 0), 0);
@@ -44,12 +47,12 @@ export function dailySummary(state, date) {
 }
 export function setDone(state, date, planId, blockId, done) {
   const key = recordKey(date, planId, blockId);
-  const plan = state.plans.find(p => p.id === planId);
+  const plan = dayPlan(state, planId, date);
   const block = plan?.blocks.find(b => b.id === blockId);
   return { ...state, records: { ...state.records, [key]: { ...getRecord(state, date, planId, blockId), done, type: block?.type || 'lesson', ...(block?.kind ? { kind: { ...block.kind } } : {}), planName: plan?.name, blockName: block?.name } } };
 }
 export function setManualDone(state, date, planId, blockId, done, now = Date.now()) {
-  const block = state.plans.find(plan => plan.id === planId)?.blocks.find(value => value.id === blockId);
+  const block = dayPlan(state, planId, date)?.blocks.find(value => value.id === blockId);
   if (!block) return state;
   const matches = state.active?.planId === planId && state.active?.blockId === blockId && state.active.date === date;
   const settled = matches ? pause(state, now) : state;
@@ -68,8 +71,8 @@ export function prepareNextBlock(state, date, planId, blockId, now = Date.now())
   const start = state.plans.findIndex(p => p.id === planId), weekday = new Date(`${date}T12:00:00`).getDay();
   if (start < 0) return state;
   for (let i = start; i < state.plans.length; i++) {
-    const plan = state.plans[i];
-    if (plan.completedAt || (i !== start && !plan.days.includes(weekday))) continue;
+    const plan = planForDate(state.plans[i], date);
+    if (plan.completedAt || (i !== start && !Object.hasOwn(plan.dayOverrides || {}, date) && !plan.days.includes(weekday))) continue;
     const from = i === start ? plan.blocks.findIndex(b => b.id === blockId) + 1 : 0;
     for (const block of plan.blocks.slice(from)) {
       const rec = getRecord(state, date, plan.id, block.id); if (rec.done) continue;
@@ -106,6 +109,8 @@ export function tick(state, now = Date.now()) {
   return { state: finished ? prepareNextBlock(settled, active.date, active.planId, active.blockId, now) : settled, finished, ...(finished ? { completed: settled.active } : {}) };
 }
 export function play(state, plan, block, date = dayKey(), now = Date.now()) {
+  plan = dayPlan(state, plan.id, date); block = plan?.blocks.find(value => value.id === block.id);
+  if (!plan || !block) return state;
   if (state.plans.find(value => value.id === plan.id)?.completedAt) return state;
   const settled = tick(state, now).state;
   if (settled.active?.planId === plan.id && settled.active.blockId === block.id && settled.active.date === date && settled.active.remainingMs > 0) {
@@ -117,7 +122,7 @@ export function pause(state, now = Date.now()) { const next = tick(state, now).s
 // Extend only this active session/date; scheduled block durations stay unchanged.
 export function extendLesson(state, minutes, now = Date.now()) {
   const active = state.active;
-  const plan = state.plans.find(value => value.id === active?.planId);
+  const plan = active && dayPlan(state, active.planId, active.date);
   const block = plan?.blocks.find(value => value.id === active?.blockId);
   if (![2, 3, 5].includes(minutes) || active?.type !== 'lesson' || block?.type !== 'lesson' || plan.completedAt) return state;
   const result = tick(state, now), next = result.completed ? { ...result.state, active: result.completed } : result.state;
@@ -138,16 +143,56 @@ export function completedPlanSummary(plans, from, to) {
   return { total: all.length, inPeriod: all.filter(plan => plan.completedAt >= from && plan.completedAt <= to).sort((a, b) => b.completedAt.localeCompare(a.completedAt)) };
 }
 export function resetTimer(state, now = Date.now()) { const next = pause(state, now); return { ...next, active: next.active ? { ...next.active, remainingMs: next.active.totalMs } : null }; }
+export function savePlanTemplate(state, plan, now = Date.now()) {
+  const previous = state.plans.find(p => p.id === plan.id);
+  const next = state.active?.planId === plan.id ? { ...pause(state, now), active: null } : state;
+  const saved = previous ? preserveTemplate(previous, { ...plan, notes: previous.notes }, dayKey(new Date(now))) : plan;
+  if (!validDailyPlans(saved)) throw new Error('Roteiro inválido.');
+  return { ...next, plans: previous ? next.plans.map(p => p.id === plan.id ? saved : p) : [...next.plans, saved] };
+}
+export function saveDailyPlan(state, planId, date, fields, now = Date.now()) {
+  const plan = state.plans.find(p => p.id === planId), name = fields.name?.trim();
+  if (!plan || !calendarDate(date) || !name) throw new Error('Confira o nome e a data do roteiro.');
+  const entry = { name, blocks: structuredClone(fields.blocks) };
+  const saved = { ...plan, dayOverrides: { ...(plan.dayOverrides || {}), [date]: entry } };
+  if (!validDailyPlans(saved)) throw new Error('Confira as aulas e durações do roteiro.');
+  const matches = state.active?.planId === planId && state.active.date === date;
+  const settled = matches ? pause(state, now) : state;
+  let next = { ...settled, plans: settled.plans.map(p => p.id === planId ? { ...p, dayOverrides: saved.dayOverrides } : p) };
+  if (matches) {
+    const active = settled.active?.planId === planId && settled.active.date === date ? settled.active : null;
+    const block = entry.blocks.find(b => b.id === active?.blockId);
+    if (active && block && !getRecord(next, date, planId, block.id).done) {
+      const oldBlock = dayPlan(state, planId, date).blocks.find(b => b.id === block.id);
+      const totalMs = block.minutes === oldBlock?.minutes ? active.totalMs : block.minutes * 60000;
+      const remainingMs = Math.max(0, totalMs - (active.totalMs - active.remainingMs));
+      next.active = { ...active, planName: name, blockName: block.name, totalMs, remainingMs, running: false };
+      if (remainingMs) return next;
+      next = setDone(next, date, planId, block.id, true);
+    }
+    return prepareNextBlock({ ...next, active: null }, date, planId, null, now);
+  }
+  if (!state.active && date === dayKey(new Date(now))) return prepareNextBlock(next, date, planId, null, now);
+  return next;
+}
+export function editDailyBlock(state, planId, blockId, fields, date, now = Date.now()) {
+  const plan = dayPlan(state, planId, date), name = fields.name.trim(), minutes = Number(fields.minutes);
+  if (!plan?.blocks.some(b => b.id === blockId) || !name || name.length > 120 || !Number.isInteger(minutes) || minutes < 1 || minutes > 360) throw new Error('Preencha o nome e uma duração de 1 a 360 minutos.');
+  return saveDailyPlan(state, planId, date, { name: plan.name, blocks: plan.blocks.map(b => b.id === blockId ? { ...b, name, minutes } : b) }, now);
+}
 export function editBlock(state, planId, blockId, fields, now = Date.now()) {
   const name = fields.name.trim(); const minutes = Number(fields.minutes);
   if (!name || name.length > 120 || !Number.isInteger(minutes) || minutes < 1 || minutes > 360) throw new Error('Preencha o nome e uma duração de 1 a 360 minutos.');
   let next = tick(state, now).state;
   const plan = next.plans.find(p => p.id === planId);
   if (!plan?.blocks.some(b => b.id === blockId)) throw new Error('Esta aula não existe mais.');
-  next = { ...next, plans: next.plans.map(p => p.id === planId ? { ...p, blocks: p.blocks.map(b => b.id === blockId ? { ...b, name, minutes } : b) } : p) };
+  next = { ...next, plans: next.plans.map(p => p.id === planId ? preserveTemplate(p, { ...p, blocks: p.blocks.map(b => b.id === blockId ? { ...b, name, minutes } : b) }, dayKey(new Date(now))) : p) };
   if (next.active?.planId === planId && next.active.blockId === blockId) {
+    const effective = dayPlan(next, planId, next.active.date).blocks.find(b => b.id === blockId);
+    const old = dayPlan(state, planId, next.active.date).blocks.find(b => b.id === blockId);
+    const totalMs = effective.minutes === old.minutes ? next.active.totalMs : effective.minutes * 60000;
     const elapsed = next.active.totalMs - next.active.remainingMs;
-    next.active = { ...next.active, blockName: name, totalMs: minutes * 60000, remainingMs: Math.max(0, minutes * 60000 - elapsed), running: false };
+    next.active = { ...next.active, blockName: effective.name, totalMs, remainingMs: Math.max(0, totalMs - elapsed), running: false };
     if (next.active.remainingMs === 0) next = prepareNextBlock(setDone(next, next.active.date, planId, blockId, true), next.active.date, planId, blockId, now);
   }
   return next;
@@ -162,6 +207,7 @@ export function validateData(data) {
   if (data.books !== undefined && !validBooks(data.books)) throw new Error('Livros inválidos no backup.');
   if (data.blockKinds !== undefined && !validKinds(data.blockKinds)) throw new Error('Tipos de atividade inválidos no backup.');
   for (const p of data.plans) {
+    if (!validDailyPlans(p)) throw new Error('Roteiros diários inválidos no backup.');
     if (!p.id || ids.has(p.id) || typeof p.name !== 'string' || !isNotebookColor(p.color) || (p.icon !== undefined && !notebookIcons.includes(p.icon)) || (p.completedAt !== undefined && p.completedAt !== null && !calendarDate(p.completedAt)) || !Array.isArray(p.days) || p.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || !Array.isArray(p.blocks) || !Array.isArray(p.notes)) throw new Error('Plano inválido no backup.');
     ids.add(p.id);
     for (const b of p.blocks) {
@@ -185,7 +231,7 @@ export function validateData(data) {
   if (data.active != null) {
     const session = data.active;
     const plan = data.plans.find(value => value.id === session.planId);
-    const block = plan?.blocks.find(value => value.id === session.blockId);
+    const block = planForDate(plan, session.date)?.blocks.find(value => value.id === session.blockId);
     if (!block || !calendarDate(session.date) || session.type !== block.type || !Number.isFinite(session.totalMs) || session.totalMs <= 0 || !Number.isFinite(session.remainingMs) || session.remainingMs < 0 || session.remainingMs > session.totalMs || !Number.isFinite(session.startedAt) || typeof session.running !== 'boolean') throw new Error('Cronômetro inválido no backup.');
     if (!plan.completedAt) active = { ...session, running: false };
   }

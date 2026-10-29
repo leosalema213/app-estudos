@@ -1,5 +1,31 @@
 # Histórico de versões
 
+## 0.5.3
+
+- Roteiros diários em Meu dia: adicione, remova, reordene ou renomeie aulas e pausas somente na data selecionada. Modelos recorrentes preservam as versões anteriores e os roteiros personalizados.
+- Editor de texto compartilhado entre cartas, cadernos, anotações e Notas, com sublinhado e cores. O acesso ao HTML usa ícone de código dentro da barra de formatação das cartas.
+- Histórico, checks, tempo registrado, mídia e HTML importado são preservados. Player e tempo extra seguem a sequência de cada dia.
+- Manifesto de todos os arquivos e conferência de tamanho/SHA-256 antes do instalador evitam pacotes incompletos e a tela cinza de inicialização.
+
+<details>
+<summary>Refinamentos durante as prévias e validação</summary>
+
+- Preview 4: refaz o pacote da prévia 3, que ficou sem arquivos JavaScript/CSS principais e abriu com tela cinza. O build agora gera manifesto completo de arquivos, tamanhos e SHA-256; o empacotamento é interrompido antes do instalador se algum arquivo estiver ausente, corrompido ou diferente do build de origem.
+- Preview 4: conferência do executável empacotado real em perfil temporário confirmou a abertura de Meu dia, sem falhas de carregamento ou erros JavaScript; 217 arquivos do pacote foram verificados por tamanho e SHA-256. Os testes funcionais anteriores continuam válidos.
+
+- Preview 3: a barra compartilhada e a linha divisória ocupam toda a largura dos campos de cartas e descrições de Notas, mantendo padding interno nos controles e no texto; cadernos e anotações mantêm a largura da área de edição.
+- Preview 3: corrige a navegação do teste diário para localizar Voltar para hoje pelo título e aguardar o carregamento após reabrir. O usuário aprovou os 20 testes de dados, o fluxo de interface do editor e a continuação completa do roteiro diário, incluindo isolamento entre datas, histórico, player pausado e reabertura.
+
+- Preview 2: Meu dia permite editar o roteiro da data selecionada (nome, inclusão, remoção, ordem e duração das aulas/pausas), mantendo o modelo e as outras datas. O lápis de cada bloco segue o mesmo escopo diário.
+- Preview 2: alterações futuras no modelo guardam a sequência anterior para as datas passadas; roteiros personalizados continuam independentes. IDs, checks e horas já registradas são preservados, inclusive ao retirar uma atividade do dia. Player, tempo extra, contagens e vínculos de anotações usam o roteiro da data.
+- Preview 2: corrige a busca ambígua do campo Verso no teste de formatação, distinguindo-o do seletor de cor.
+
+- Preview 1: editor visual das cartas compartilha a barra dos cadernos, com negrito, itálico, sublinhado, títulos, tamanho, listas, desfazer/refazer e cor de texto (paleta pastel ou personalizada).
+- Preview 1: formatação e cores também ficam disponíveis nas anotações dos planos e nas descrições de Notas. Descrições antigas continuam legíveis e o texto simples permanece disponível para busca e notificações.
+- Preview 1: cores escolhidas no editor aparecem nas cartas inclusive no dark, mantendo o fundo neutro. Áudio/imagens seguem no armazenamento de mídia; campos importados com HTML avançado mantêm o editor do original e não são convertidos ao salvar sem alterações. Tipos de nota e agendamento permanecem preservados.
+
+</details>
+
 ## 0.5.2
 
 - Área Anki com importação de coleções, cartas com mídia, revisão em flip card, edição de notas, estatísticas e respostas Errei/Acertei.

@@ -18,7 +18,7 @@ export function requiresSource(html) {
   }));
 }
 
-export default forwardRef(function AnkiField({ value, label, identity, onChange, onFiles, loadImage, disabled }, ref) {
+export default forwardRef(function AnkiField({ value, label, identity, onChange, onFiles, loadImage, disabled, autoFocus = false }, ref) {
   const [source, setSource] = useState(() => requiresSource(value));
   const raw = useRef(), visual = useRef(), latest = useRef(); latest.current = { value, onChange };
   useImperativeHandle(ref, () => ({
@@ -34,6 +34,6 @@ export default forwardRef(function AnkiField({ value, label, identity, onChange,
   const complex = requiresSource(value);
   const htmlButton = <button type="button" className="icon-button" aria-label={source ? 'Voltar ao editor visual' : 'Editar HTML'} title={source && complex ? 'HTML importado: edição do original preserva a estrutura.' : source ? 'Voltar ao editor visual' : 'Editar HTML'} aria-pressed={source} disabled={disabled || source && complex} onMouseDown={e => e.preventDefault()} onClick={() => setSource(!source)}><Code2 size={15} /></button>;
   return <>{source
-    ? <div className="rich-text-field anki-source-field"><Suspense fallback={null}><FormatToolbar editor={null} state={{}}>{htmlButton}</FormatToolbar></Suspense><textarea ref={raw} aria-label={label} disabled={disabled} rows={4} value={value} onChange={e => onChange(e.target.value)} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); onFiles([...e.dataTransfer.files]); }} /></div>
-    : <Suspense fallback={<p role="status">Abrindo editor…</p>}><RichTextField key={identity} identity={identity} ref={visual} label={label} content={value} disabled={disabled} toolbarEnd={htmlButton} onChange={({ html }) => onChange(html)} onFiles={onFiles} loadImage={loadImage} /></Suspense>}</>;
+    ? <div className="rich-text-field anki-source-field"><Suspense fallback={null}><FormatToolbar editor={null} state={{}}>{htmlButton}</FormatToolbar></Suspense><textarea ref={raw} autoFocus={autoFocus} aria-label={label} disabled={disabled} rows={4} value={value} onChange={e => onChange(e.target.value)} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); onFiles([...e.dataTransfer.files]); }} /></div>
+    : <Suspense fallback={<p role="status">Abrindo editor…</p>}><RichTextField key={identity} identity={identity} ref={visual} autoFocus={autoFocus} label={label} content={value} disabled={disabled} toolbarEnd={htmlButton} onChange={({ html }) => onChange(html)} onFiles={onFiles} loadImage={loadImage} /></Suspense>}</>;
 });

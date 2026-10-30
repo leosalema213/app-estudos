@@ -36,9 +36,9 @@ let app, directory;
   await page.getByRole('heading', { name: 'Revisões em dia por enquanto.' }).waitFor();
   await page.getByRole('button', { name: 'Desfazer última resposta' }).click();
   await page.getByRole('button', { name: 'Adicionar carta', exact: true }).click();
-  const dialog = page.getByRole('dialog'); await dialog.locator('textarea').nth(0).fill('New question'); await dialog.locator('textarea').nth(1).fill('New answer'); await dialog.getByRole('button', { name: 'Criar carta', exact: true }).click();
+  const dialog = page.getByRole('dialog'); await dialog.getByRole('textbox', { name: 'Frente', exact: true }).fill('New question'); await dialog.getByRole('textbox', { name: 'Verso', exact: true }).fill('New answer'); await dialog.getByRole('button', { name: 'Criar carta', exact: true }).click(); await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
   await page.getByRole('button', { name: 'Explorar', exact: true }).click(); await page.getByLabel('Buscar cartas').fill('New question'); await page.getByRole('button', { name: /New question/ }).click();
-  await page.getByRole('dialog').locator('textarea').nth(1).fill('Edited answer'); await page.getByRole('button', { name: 'Salvar nota', exact: true }).click();
+  await page.getByRole('dialog').getByRole('textbox', { name: 'Verso', exact: true }).fill('Edited answer'); await page.getByRole('button', { name: 'Salvar nota', exact: true }).click();
   await page.getByRole('button', { name: 'Baralhos', exact: true }).click(); await page.getByRole('button', { name: 'Opções', exact: true }).click();
   await page.getByRole('dialog').getByLabel('Novas por dia', { exact: true }).fill('7'); await page.getByRole('button', { name: 'Salvar opções', exact: true }).click();
   // Read after the renderer's existing save debounce, not from a modified real profile.

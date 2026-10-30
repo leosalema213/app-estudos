@@ -37,7 +37,7 @@ async function format(scope, box, text) {
   assert.equal(await dialog.frameLocator('iframe[title="Verso da carta"]').locator('[data-organon-color]').first().evaluate(el => getComputedStyle(el).color), 'rgb(154, 199, 170)');
   assert.equal(await dialog.frameLocator('iframe[title="Verso da carta"]').locator('audio').count(), 1);
   assert.equal(await dialog.frameLocator('iframe[title="Verso da carta"]').locator('img').count(), 1);
-  await dialog.getByRole('button', { name: 'Criar carta', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Criar carta', exact: true }).click(); await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
   await page.getByRole('button', { name: 'Explorar', exact: true }).click(); await page.locator('.anki-browse-text').filter({ hasText: 'Endereçamento IP' }).click();
   assert.equal(await dialog.getByRole('textbox', { name: 'Frente', exact: true }).inputValue(), original); await dialog.getByRole('button', { name: 'Salvar nota', exact: true }).click();
   await page.getByRole('button', { name: 'Cadernos', exact: true }).click(); await page.getByRole('button', { name: 'Abrir caderno Vocabulário', exact: true }).click();

@@ -6,6 +6,8 @@ A partir da 0.5.3, os campos Frente/Verso usam o editor visual compartilhado com
 
 ## Funcionalidades
 
+A partir da 0.5.4, Criar carta permite cadastro contínuo: salvar mantém a modal aberta, limpa campos e marcadores, fecha a prévia e posiciona o foco no primeiro campo. Baralho e tipo selecionados permanecem. Cada nota nova recebe um UUID independente, sem reutilizar o registro anterior, e modelos invertidos continuam gerando suas duas cartas. Envios vazios/erros de validação não limpam o que foi digitado. Fechar encerra o cadastro; salvar uma nota existente continua fechando o editor. Não há mudança do esquema do snapshot, backup ou agendamento. O usuário aprovou `tests/anki-add-many.cjs`: duas notas distintas e quatro cartas invertidas, limpeza/foco, baralho e tipo preservados, bloqueio de envio vazio e encerramento da edição existente. O roteiro usa o build já gerado.
+
 - Baralhos hierárquicos (`Pai::Filho`), contadores New/Learn/Due, pesquisa de cards, suspensão, renomeação, criação e edição de notas, exclusão explícita de nota e seus cards.
 - Notas básicas, básicas com reverso e cloze; tipos, campos, tags, templates e CSS importados. Edição de template afeta todas as notas daquele tipo. Alterações de campos preservam as revisões existentes.
 - Revisão em flip card com Errei (Again/1) e Acertei (Good/Bom/3), preservando as quatro avaliações no modelo para históricos antigos e opções de agendamento. Espaço revela/responde Acertei, teclas 1 e 3 respondem, R repete áudio. Prévia do próximo intervalo e transição entre cartas, com redução de movimento respeitada. O atalho visível de enterrar foi removido. Desfazer a última resposta disponível até outra alteração da coleção.

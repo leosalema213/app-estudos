@@ -2,7 +2,7 @@
 
 Seu espaço de estudo no Windows: planos, cronômetro, livros, anotações e revisões com cartas. Funciona localmente, sem conta e sem servidor. Feito com JavaScript, React, Vite e Electron.
 
-A versão **0.5.3** inclui roteiros de estudo por dia e editor de texto compartilhado com formatação e cores em cartas, cadernos, anotações e Notas. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração](docs/SUPABASE.md).
+A versão **0.5.4** permite cadastrar várias cartas em sequência: a modal permanece aberta, limpa os campos e mantém o baralho e o tipo selecionados. Inclui também roteiros de estudo por dia e editor compartilhado com formatação e cores. A conexão com Supabase permanece desativada enquanto o servidor não é validado; o aplicativo segue offline, sem solicitar login. Consulte o [estado da configuração](docs/SUPABASE.md).
 
 **[Baixar instalador para Windows · versão mais recente](https://github.com/leosalema213/app-estudos/releases/latest/download/Organon-Instalar.exe)**
 

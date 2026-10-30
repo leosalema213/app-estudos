@@ -22,7 +22,7 @@ let app, directory;
   await page.locator('.content').screenshot({ animations: 'disabled', path: path.join(output, 'anki-popup-preview6.png') });
   if (!shotsOnly) { await page.getByRole('heading', { name: 'Anki', exact: true }).click(); await page.getByRole('menu').waitFor({ state: 'detached' }); await add.focus(); await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter'); }
   else await page.getByRole('menuitem', { name: 'Criar carta', exact: true }).click();
-  const noteDialog = page.getByRole('dialog', { name: 'Criar carta', exact: true }); await noteDialog.getByRole('textbox', { name: /Frente/ }).fill('Bom dia'); await noteDialog.getByRole('textbox', { name: /Verso/ }).fill('Good morning'); await noteDialog.getByRole('button', { name: 'Criar carta', exact: true }).click();
+  const noteDialog = page.getByRole('dialog', { name: 'Criar carta', exact: true }); await noteDialog.getByRole('textbox', { name: /Frente/ }).fill('Bom dia'); await noteDialog.getByRole('textbox', { name: /Verso/ }).fill('Good morning'); await noteDialog.getByRole('button', { name: 'Criar carta', exact: true }).click(); await noteDialog.getByRole('button', { name: 'Fechar', exact: true }).click();
   await page.getByRole('button', { name: 'Editar baralho Inglês', exact: true }).click(); const options = page.getByRole('dialog', { name: 'Editar baralho', exact: true });
   if (!shotsOnly) assert(await options.getByRole('checkbox', { name: 'Plano de inglês', exact: true }).isChecked());
   await options.getByRole('checkbox', { name: 'Plano de conversação', exact: true }).check(); await options.getByRole('button', { name: 'Salvar', exact: true }).click();

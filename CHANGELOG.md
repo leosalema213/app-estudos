@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.5.4
+
+- Criar uma carta mantém a modal aberta para cadastro contínuo, limpa campos/marcadores e prévia, retorna o foco ao primeiro campo e preserva baralho/tipo selecionados. Cada nova nota recebe um ID próprio; salvar uma nota existente continua fechando a edição.
+
 ## 0.5.3
 
 - Roteiros diários em Meu dia: adicione, remova, reordene ou renomeie aulas e pausas somente na data selecionada. Modelos recorrentes preservam as versões anteriores e os roteiros personalizados.

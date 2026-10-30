@@ -10,7 +10,7 @@ import { FormatToolbar, formatState, richExtensions } from './RichText.jsx';
 import { documentText } from './note-document.js';
 
 // The toolbar/schema are shared with notebooks; the field owns its selection and undo history.
-export default forwardRef(function RichTextField({ content, label, identity, onChange, onFiles, loadImage, maxLength, disabled = false, toolbarEnd }, ref) {
+export default forwardRef(function RichTextField({ content, label, identity, onChange, onFiles, loadImage, maxLength, disabled = false, toolbarEnd, autoFocus = false }, ref) {
   const host = useRef(), editorRef = useRef(), callbacks = useRef();
   callbacks.current = { onChange, onFiles, loadImage, disabled };
   const [state, setState] = useState({});
@@ -34,7 +34,7 @@ export default forwardRef(function RichTextField({ content, label, identity, onC
     const Limit = Extension.create({ name: 'fieldLimit', addProseMirrorPlugins: () => [new Plugin({ filterTransaction: tr => !tr.docChanged || !maxLength || documentText(tr.doc.toJSON()).length <= maxLength })] });
     const editor = new Editor({
       element: host.current, extensions: [Document, Paragraph.extend({ parseHTML: () => [{ tag: 'p' }, { tag: 'div' }] }), Text, HardBreak, UndoRedo, ...richExtensions, ...(loadImage ? [Image] : []), Limit], content,
-      editable: !disabled,
+      editable: !disabled, autofocus: autoFocus ? 'start' : false,
       editorProps: {
         attributes: { class: 'notebook-text rich-text-content', role: 'textbox', 'aria-label': label, 'aria-multiline': 'true' },
         handlePaste: (_view, event) => {

@@ -2,6 +2,14 @@
 
 Este registro acompanha alterações persistidas enquanto a configuração do Supabase está pendente. O aplicativo continua local/offline; não é necessário aguardar o servidor para desenvolver funcionalidades. O diagnóstico e os requisitos para retomar a integração estão em `SUPABASE.md`.
 
+## Antecipação da aprendizagem Anki — 0.5.5
+
+- `anki.settings.learnAhead` é opcional no snapshot versão 1, inteiro entre 0 e 1440 minutos. Novas coleções e perfis/backups antigos sem o campo recebem 20; um zero explícito é preservado. A opção vale para toda a coleção, independentemente do preset/baralho, e fica em Opções → Aprendizagem.
+- A fila oferece primeiro todas as cartas elegíveis pelos horários e limites normais. Ao final, acrescenta aprendizagem/reaprendizagem futura até `agora + learnAhead`, em ordem de vencimento, somente antes do próximo início de dia de estudo. Suspensão, enterro, tipos incompatíveis e escopo do baralho continuam respeitados. Zero aguarda o vencimento; revisões futuras não são antecipadas. Os contadores usam a mesma fila, incluindo as cartas elegíveis à antecipação.
+- A migração e a consulta da fila não reescrevem `due`, passos, intervalos, IDs ou histórico. Responder continua registrando o horário real e usando os passos existentes. A opção não garante equivalência integral com os demais cálculos/variação aleatória do Anki.
+- Backups portáteis, restauração e payload JSONB carregam o campo dentro do snapshot; nenhuma tabela/DDL nova é necessária. Aplicação remota do Supabase continua pendente. A preferência de antecipação do perfil Anki não é inferida dos passos do pacote importado; importações sem o campo recebem o padrão 20.
+- Validado no terminal do usuário em `tests/anki-learn-ahead.cjs`: os cinco testes de dados passaram, o build Vite concluiu e o fluxo Electron confirmou padrão 20, zero persistido após reabertura, contadores, prioridade das cartas novas e vencimentos preservados em perfil temporário. Os testes de dados cobrem migração/validação, janela, limites, exclusões, virada do dia, duas respostas Bom e backup/payload. Não representa validação do servidor remoto.
+
 ## Roteiros por data e versões do modelo — 0.5.3-preview.2
 
 - `plans[].dayOverrides` é opcional: mapa de datas locais `YYYY-MM-DD` para `{name, blocks}`. Só as datas editadas recebem uma entrada. As atividades preservam IDs existentes; novas atividades recebem novos IDs. Alterar ordem/nome/duração ou remover um bloco não remove registros de horas/checks. Uma sequência vazia é permitida no dia e significa ausência de atividades.
@@ -130,7 +138,7 @@ anki: {
   reviews: [{ id, cardId, at, rating, previousState, interval, elapsedMs, source? }],
   media: { 'nome-canônico.ext': { hash, size, mime } },
   sourceMedia?: { 'namespace-da-coleção': { 'nome-original.ext': 'nome-canônico.ext' } },
-  settings: { fsrs: false, rollover: 4, newIgnoreReview: false, limitsFromTop: false, source? }
+  settings: { fsrs: false, rollover: 4, learnAhead: 20, newIgnoreReview: false, limitsFromTop: false, source? }
 }
 ```
 

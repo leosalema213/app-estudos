@@ -9,7 +9,7 @@ export const defaultOptions = {
   maxAnswerSeconds: 60, showTimer: false, stopTimer: false, questionSeconds: 0, answerSeconds: 0, waitAudio: true,
   questionAction: 0, answerAction: 0, retention: 0.9, weights: [], easyDays: [1, 1, 1, 1, 1, 1, 1],
 };
-export const emptyAnki = () => ({ version: 1, decks: [], notes: [], cards: [], models: [], presets: [{ id: 'default', name: 'Default', options: { ...defaultOptions } }], media: {}, reviews: [], settings: { fsrs: false, rollover: 4, newIgnoreReview: false, limitsFromTop: false } });
+export const emptyAnki = () => ({ version: 1, decks: [], notes: [], cards: [], models: [], presets: [{ id: 'default', name: 'Default', options: { ...defaultOptions } }], media: {}, reviews: [], settings: { fsrs: false, rollover: 4, learnAhead: 20, newIgnoreReview: false, limitsFromTop: false } });
 export function normalizePresets(a) {
   if (!a) return emptyAnki();
   const local = a.presets.find(p => p.id === 'default'), imported = a.presets.find(p => p.id !== 'default' && p.name.trim().toLowerCase() === 'default');
@@ -25,7 +25,7 @@ export function normalizePresets(a) {
     return { ...p, name, ...(removeLocal && p.id === imported.id ? { aliases: [...new Set([...(p.aliases || []), 'default'])] } : {}) };
   });
   const decks = a.decks.map(d => ({ ...d, planIds: d.planIds || [], ...(removeLocal && d.presetId === 'default' ? { presetId: imported.id } : {}) }));
-  return { ...a, presets, decks };
+  return { ...a, presets, decks, settings: { ...a.settings, learnAhead: a.settings.learnAhead ?? 20 } };
 }
 export const basicModel = { id: 'organon-basic', name: 'Básico', fields: ['Front', 'Back'], kind: 0, css: '', templates: [{ name: 'Card 1', q: '{{Front}}', a: '{{FrontSide}}<hr>{{Back}}' }] };
 export const reversedModel = { ...basicModel, id: 'organon-reverse', name: 'Básico e invertido', templates: [...basicModel.templates, { name: 'Card 2', q: '{{Back}}', a: '{{FrontSide}}<hr>{{Front}}' }] };
@@ -52,6 +52,10 @@ export function queue(a, deckId, now = Date.now()) {
   const cards = deckCards(a, deckId).filter(c => !c.suspended && (!c.buriedUntil || c.buriedUntil <= now) && !c.unsupported);
   const daily = a.reviews.filter(r => r.at >= start), used = new Map();
   const candidates = cards.filter(c => c.state === 0 || c.due <= now);
+  // Future intraday learners come only after all eligible cards in the regular queue.
+  // Keep their stored due time intact; the window affects availability, not scheduling.
+  const cutoff = now + (a.settings.learnAhead ?? 20) * 60000, tomorrow = afterDays(now, 1, a.settings.rollover);
+  const ahead = cards.filter(c => [1, 3].includes(c.state) && c.due > now && c.due <= cutoff && c.due < tomorrow).sort((a, b) => a.due - b.due || a.id.localeCompare(b.id));
   const rank = c => c.state === 0 ? opts.newMix === 1 ? 3 : opts.newMix === 2 ? -1 : 1 : c.state === 1 || c.state === 3 ? c.due >= start ? -2 : opts.interdayMix === 1 ? 2 : opts.interdayMix === 2 ? -1 : 1 : 1;
   const random = c => hash(`${day}:${c.id}`);
   const gather = c => opts.gather === 2 ? -c.position : opts.gather === 3 || opts.gather === 5 ? hash(day + c.noteId) : opts.gather === 4 ? random(c) : c.position;
@@ -78,7 +82,7 @@ export function queue(a, deckId, now = Date.now()) {
     // Deterministic interleaving, stable throughout this study day.
     return random(a) - random(b);
   });
-  return candidates.filter(c => {
+  const ready = candidates.filter(c => {
     if (c.state === 1 || c.state === 3) return true;
     const deck = a.decks.find(d => d.id === c.deckId), ancestors = a.decks.filter(d => deck.name === d.name || deck.name.startsWith(d.name + '::'));
     const limited = a.settings.limitsFromTop ? ancestors : ancestors.filter(d => d.id === deckId || d.id === c.deckId);
@@ -94,6 +98,7 @@ export function queue(a, deckId, now = Date.now()) {
     for (const d of limited) { const u = used.get(d.id) || { n: 0, v: 0 }; u[c.state === 0 ? 'n' : 'v']++; used.set(d.id, u); }
     return true;
   });
+  return [...ready, ...ahead];
 }
 export function counts(a, deckId, now = Date.now()) { const q = queue(a, deckId, now); return { new: q.filter(c => c.state === 0).length, learn: q.filter(c => [1, 3].includes(c.state)).length, due: q.filter(c => c.state === 2).length }; }
 export function newCard(noteId, deckId, ord = 0, position = Date.now()) { return { id: crypto.randomUUID(), noteId, deckId, ord, position, state: 0, due: 0, interval: 0, ease: 2.5, reps: 0, lapses: 0, step: 0, suspended: false }; }
@@ -162,6 +167,7 @@ export function mergeAnki(a, imported) {
 export function validAnki(a) {
   if (!a || a.version !== 1 || !a.settings || !Number.isInteger(a.settings.rollover) || a.settings.rollover < 0 || a.settings.rollover > 23 || !a.media || typeof a.media !== 'object' || Array.isArray(a.media)) return false;
   if (['fsrs', 'newIgnoreReview', 'limitsFromTop'].some(k => typeof a.settings[k] !== 'boolean')) return false;
+  if (a.settings.learnAhead !== undefined && (!Number.isInteger(a.settings.learnAhead) || a.settings.learnAhead < 0 || a.settings.learnAhead > 1440)) return false;
   for (const key of ['decks', 'notes', 'cards', 'models', 'presets', 'reviews']) if (!Array.isArray(a[key]) || new Set(a[key].map(x => x?.id)).size !== a[key].length || a[key].some(x => !x || typeof x.id !== 'string' || !x.id)) return false;
   const ids = key => new Set(a[key].map(x => x.id)), decks = ids('decks'), notes = ids('notes'), models = ids('models'), presets = ids('presets');
   if (a.decks.some(d => typeof d.name !== 'string' || !d.name.trim() || !presets.has(d.presetId) || (d.planIds !== undefined && (!Array.isArray(d.planIds) || d.planIds.some(id => typeof id !== 'string' || !id) || new Set(d.planIds).size !== d.planIds.length)))) return false;

@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.5.5
+
+- Antecipação da aprendizagem configurável em Opções → Aprendizagem: padrão de 20 minutos para toda a coleção; zero aguarda o intervalo completo. Cartas antecipadas vêm depois das disponíveis normalmente, e os contadores acompanham a fila. Vencimentos, passos e histórico existentes são preservados.
+
 ## 0.5.4
 
 - Criar uma carta mantém a modal aberta para cadastro contínuo, limpa campos/marcadores e prévia, retorna o foco ao primeiro campo e preserva baralho/tipo selecionados. Cada nova nota recebe um ID próprio; salvar uma nota existente continua fechando a edição.
